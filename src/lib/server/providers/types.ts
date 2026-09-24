@@ -79,3 +79,35 @@ export type Episode = {
 export function today() {
 	return new Date().toLocaleDateString('sv-SE');
 }
+
+export type Provider = { name: string; logoUrl: string };
+
+// Everything shown on a detail page (besides the episode list).
+export type Details = {
+	item: SearchResult;
+	externalUrl: string;
+	sourceLabel: 'TMDB' | 'AniList' | 'IGDB';
+	backdropUrl: string | null;
+	genres: string[];
+	rating: number | null; // 0–10
+	meta: string[]; // short facts for the header line, e.g. "2 Std. 35 Min.", "5 Staffeln"
+	facts: { label: string; value: string }[];
+	// Streaming offers in the configured region (TMDB / JustWatch). null = not available for this source.
+	watch: { link: string | null; flatrate: Provider[]; rent: Provider[]; buy: Provider[] } | null;
+	links: { name: string; url: string }[]; // e.g. anime streaming sites (not region-checked)
+	similar: SearchResult[];
+};
+
+// "2026-10-03" -> "03.10.2026"
+export function germanDate(date: string | null | undefined) {
+	if (!date) return null;
+	const [y, m, d] = date.slice(0, 10).split('-');
+	return d && m && y ? `${d}.${m}.${y}` : null;
+}
+
+export function formatRuntime(minutes: number | null | undefined) {
+	if (!minutes) return null;
+	const h = Math.floor(minutes / 60);
+	const m = minutes % 60;
+	return h ? `${h} Std.${m ? ` ${m} Min.` : ''}` : `${m} Min.`;
+}

@@ -1,5 +1,13 @@
 import { env } from '$env/dynamic/private';
-import { ProviderError, fetchJson, missingKey, type SearchResult } from './types';
+import { cached } from '../cache';
+import {
+	ProviderError,
+	fetchJson,
+	germanDate,
+	missingKey,
+	type Details,
+	type SearchResult
+} from './types';
 
 const COVER = 'https://images.igdb.com/igdb/image/upload/t_cover_big/';
 
@@ -69,7 +77,11 @@ export async function searchGames(query: string): Promise<SearchResult[]> {
 		'games',
 		`search "${safe}"; fields name,first_release_date,cover.image_id,summary; where version_parent = null; limit 30;`
 	);
-	return games.map((g) => ({
+	return games.map(gameToResult);
+}
+
+function gameToResult(g: IgdbGame): SearchResult {
+	return {
 		source: 'igdb',
 		externalId: String(g.id),
 		title: g.name,
@@ -77,5 +89,59 @@ export async function searchGames(query: string): Promise<SearchResult[]> {
 		year: g.first_release_date ? new Date(g.first_release_date * 1000).getFullYear() : null,
 		posterUrl: g.cover ? `${COVER}${g.cover.image_id}.jpg` : null,
 		overview: g.summary ?? null
-	}));
+	};
+}
+
+// ---- Detail page ----
+
+type IgdbGameFull = IgdbGame & {
+	url: string;
+	genres?: { name: string }[];
+	platforms?: { name: string }[];
+	total_rating?: number; // 0–100
+	artworks?: { image_id: string }[];
+	screenshots?: { image_id: string }[];
+	involved_companies?: { developer: boolean; company: { name: string } }[];
+	similar_games?: IgdbGame[];
+};
+
+const CACHE_MS = 10 * 60 * 1000;
+const BACKDROP = 'https://images.igdb.com/igdb/image/upload/t_1080p/';
+
+export function getGameInfo(id: string): Promise<Details> {
+	return cached(`igdb-info:${id}`, CACHE_MS, async () => {
+		const [g] = await igdb<IgdbGameFull[]>(
+			'games',
+			`fields name,url,first_release_date,cover.image_id,summary,genres.name,platforms.name,total_rating,artworks.image_id,screenshots.image_id,involved_companies.developer,involved_companies.company.name,similar_games.name,similar_games.cover.image_id,similar_games.first_release_date,similar_games.summary; where id = ${Number(id)};`
+		);
+		if (!g) throw new ProviderError('Spiel nicht gefunden.', 404);
+
+		const backdrop = g.artworks?.[0] ?? g.screenshots?.[0];
+		const developers = (g.involved_companies ?? [])
+			.filter((c) => c.developer)
+			.map((c) => c.company.name);
+		const released = g.first_release_date
+			? germanDate(new Date(g.first_release_date * 1000).toLocaleDateString('sv-SE'))
+			: null;
+
+		return {
+			item: gameToResult(g),
+			externalUrl: g.url,
+			sourceLabel: 'IGDB',
+			backdropUrl: backdrop ? `${BACKDROP}${backdrop.image_id}.jpg` : null,
+			genres: (g.genres ?? []).map((x) => x.name),
+			rating: g.total_rating ? Math.round(g.total_rating) / 10 : null,
+			meta: [],
+			facts: [
+				...(released ? [{ label: 'Erschienen', value: released }] : []),
+				...(g.platforms?.length
+					? [{ label: 'Plattformen', value: g.platforms.map((p) => p.name).join(', ') }]
+					: []),
+				...(developers.length ? [{ label: 'Entwickler', value: developers.join(', ') }] : [])
+			],
+			watch: null,
+			links: [],
+			similar: (g.similar_games ?? []).map(gameToResult)
+		};
+	});
 }

@@ -67,6 +67,21 @@ export function removeItem(category: Category, externalId: string) {
 		.run();
 }
 
+// The library entry for a title, if it is in the library.
+export function findItem(category: Category, externalId: string): LibraryItem | undefined {
+	return getDb()
+		.select()
+		.from(libraryItems)
+		.where(
+			and(
+				eq(libraryItems.category, category),
+				eq(libraryItems.source, SOURCE_FOR[category]),
+				eq(libraryItems.externalId, externalId)
+			)
+		)
+		.get();
+}
+
 // ---- Validation of item data sent by the browser ----
 
 function optionalString(value: unknown, max: number) {

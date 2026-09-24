@@ -1,5 +1,11 @@
 import { cached } from '../cache';
-import { ProviderError, fetchJson, type SearchResult, type ShowDetails } from './types';
+import {
+	ProviderError,
+	fetchJson,
+	type Details,
+	type SearchResult,
+	type ShowDetails
+} from './types';
 
 // AniList is a public GraphQL API, no key needed.
 const SEARCH_QUERY = `
@@ -69,6 +75,7 @@ query ($id: Int) {
     duration
     siteUrl
     nextAiringEpisode { episode airingAt }
+    airingSchedule(notYetAired: true, perPage: 50) { nodes { episode airingAt } }
   }
 }`;
 
@@ -78,6 +85,7 @@ type AniListDetails = AniListMedia & {
 	duration: number | null; // minutes per episode
 	siteUrl: string;
 	nextAiringEpisode: { episode: number; airingAt: number } | null;
+	airingSchedule: { nodes: { episode: number; airingAt: number }[] };
 };
 
 const CACHE_MS = 10 * 60 * 1000;
@@ -103,8 +111,14 @@ export function getAnimeDetails(id: string): Promise<ShowDetails> {
 		else if (m.status === 'NOT_YET_RELEASED') aired = 0;
 		else aired = m.episodes ?? 0;
 
-		const total = Math.max(m.episodes ?? 0, next?.episode ?? 0, aired);
-		const nextDate = next ? new Date(next.airingAt * 1000).toLocaleDateString('sv-SE') : null;
+		// Air date of every upcoming episode (YYYY-MM-DD in server timezone).
+		const upcoming = new Map(
+			m.airingSchedule.nodes.map((n) => [
+				n.episode,
+				new Date(n.airingAt * 1000).toLocaleDateString('sv-SE')
+			])
+		);
+		const total = Math.max(m.episodes ?? 0, next?.episode ?? 0, aired, ...upcoming.keys());
 
 		return {
 			item: toSearchResult(m),
@@ -119,7 +133,7 @@ export function getAnimeDetails(id: string): Promise<ShowDetails> {
 					episodes: Array.from({ length: total }, (_, i) => ({
 						number: i + 1,
 						title: null,
-						airDate: next && i + 1 === next.episode ? nextDate : null,
+						airDate: upcoming.get(i + 1) ?? null,
 						aired: i + 1 <= aired,
 						overview: null,
 						stillUrl: null,
@@ -127,6 +141,113 @@ export function getAnimeDetails(id: string): Promise<ShowDetails> {
 					}))
 				}
 			]
+		};
+	});
+}
+
+// ---- Detail page ----
+
+const INFO_QUERY = `
+query ($id: Int) {
+  Media(id: $id, type: ANIME) {
+    id
+    title { romaji english }
+    startDate { year month day }
+    coverImage { large }
+    bannerImage
+    description(asHtml: false)
+    genres
+    averageScore
+    format
+    episodes
+    duration
+    siteUrl
+    studios(isMain: true) { nodes { name } }
+    externalLinks { site url type }
+    recommendations(perPage: 12, sort: RATING_DESC) {
+      nodes {
+        mediaRecommendation {
+          id
+          type
+          title { romaji english }
+          startDate { year }
+          coverImage { large }
+          description(asHtml: false)
+        }
+      }
+    }
+  }
+}`;
+
+type AniListInfo = AniListMedia & {
+	startDate: { year: number | null; month: number | null; day: number | null };
+	bannerImage: string | null;
+	genres: string[];
+	averageScore: number | null; // 0–100
+	format: string | null;
+	episodes: number | null;
+	duration: number | null;
+	siteUrl: string;
+	studios: { nodes: { name: string }[] };
+	externalLinks: { site: string; url: string; type: string }[];
+	recommendations: { nodes: { mediaRecommendation: (AniListMedia & { type: string }) | null }[] };
+};
+
+const FORMATS: Record<string, string> = {
+	TV: 'TV-Serie',
+	TV_SHORT: 'TV-Serie (kurz)',
+	MOVIE: 'Film',
+	SPECIAL: 'Special',
+	OVA: 'OVA',
+	ONA: 'ONA',
+	MUSIC: 'Musikvideo'
+};
+
+export function getAnimeInfo(id: string): Promise<Details> {
+	return cached(`anilist-info:${id}`, CACHE_MS, async () => {
+		const data = await fetchJson<{ data: { Media: AniListInfo | null } }>(
+			'AniList',
+			'https://graphql.anilist.co',
+			{
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+				body: JSON.stringify({ query: INFO_QUERY, variables: { id: Number(id) } })
+			}
+		);
+		const m = data.data.Media;
+		if (!m) throw new ProviderError('Anime nicht gefunden.', 404);
+
+		const { year, month, day } = m.startDate;
+		const start =
+			year && month && day
+				? `${String(day).padStart(2, '0')}.${String(month).padStart(2, '0')}.${year}`
+				: null;
+		const studio = m.studios.nodes.map((s) => s.name).join(', ');
+
+		return {
+			item: toSearchResult(m),
+			externalUrl: m.siteUrl,
+			sourceLabel: 'AniList',
+			backdropUrl: m.bannerImage,
+			genres: m.genres,
+			rating: m.averageScore ? m.averageScore / 10 : null,
+			meta: [
+				m.format ? (FORMATS[m.format] ?? m.format) : null,
+				m.episodes ? `${m.episodes} Folgen` : null,
+				m.duration ? `ca. ${m.duration} Min. pro Folge` : null
+			].filter((x): x is string => !!x),
+			facts: [
+				...(start ? [{ label: 'Erstausstrahlung', value: start }] : []),
+				...(studio ? [{ label: 'Studio', value: studio }] : [])
+			],
+			watch: null,
+			links: m.externalLinks
+				.filter((l) => l.type === 'STREAMING')
+				.map((l) => ({ name: l.site, url: l.url })),
+			similar: m.recommendations.nodes
+				.map((n) => n.mediaRecommendation)
+				.filter((r): r is NonNullable<typeof r> => !!r && r.type === 'ANIME')
+				.map(toSearchResult)
 		};
 	});
 }

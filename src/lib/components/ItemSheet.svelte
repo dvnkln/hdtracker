@@ -16,9 +16,9 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
-	import { ListChecks, Trash2, X } from '@lucide/svelte';
+	import { Info, Trash2, X } from '@lucide/svelte';
 	import { STATUS_ICONS } from '$lib/statusIcons';
-	import { hasEpisodes, statusesFor, statusLabel, type Category } from '$lib/status';
+	import { statusesFor, statusLabel, type Category } from '$lib/status';
 
 	type Props = {
 		category: Category;
@@ -26,9 +26,9 @@
 		onclose: () => void;
 		// Page whose form actions save/remove live on (the category page by default)
 		actionPath?: string;
-		showEpisodesLink?: boolean;
+		showDetailsLink?: boolean;
 	};
-	let { category, item, onclose, actionPath = '', showEpisodesLink = true }: Props = $props();
+	let { category, item, onclose, actionPath = '', showDetailsLink = true }: Props = $props();
 
 	let dialog: HTMLDialogElement;
 	let confirmRemove = $state(false);
@@ -97,13 +97,13 @@
 				<p class="mt-3 line-clamp-6 text-sm text-zinc-300">{item.overview}</p>
 			{/if}
 
-			{#if showEpisodesLink && hasEpisodes(category)}
+			{#if showDetailsLink}
 				<a
 					href="/{category}/{item.externalId}"
 					class="mt-4 flex items-center justify-center gap-2 rounded-xl border border-zinc-700 p-3 text-sm font-medium hover:bg-zinc-800"
 				>
-					<ListChecks size={18} class="text-(--accent)" />
-					{category === 'anime' ? 'Folgen' : 'Staffeln & Folgen'}
+					<Info size={18} class="text-(--accent)" />
+					{category === 'serien' || category === 'anime' ? 'Details & Folgen' : 'Details'}
 				</a>
 			{/if}
 

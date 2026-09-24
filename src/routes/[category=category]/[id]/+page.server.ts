@@ -8,31 +8,59 @@ import {
 	setEpisodes,
 	watchedKeys
 } from '$lib/server/episodes';
+import { getDetails } from '$lib/server/details';
+import { libraryStatusFor } from '$lib/server/library';
+import { getSetting } from '$lib/server/settings';
 import { ProviderError } from '$lib/server/providers/types';
 import type { Actions, PageServerLoad } from './$types';
 
-// Checks the URL and loads the show from the API. Only series and anime have this page (for now).
+const ID_PATTERN = /^\d{1,12}$/;
+
+// Turns API errors into a readable error page.
+function failLoading(err: unknown): never {
+	console.error('Loading details failed', err);
+	if (err instanceof ProviderError && err.status === 404) error(404, 'Nicht gefunden');
+	error(502, err instanceof ProviderError ? err.message : 'Laden fehlgeschlagen.');
+}
+
+// Episode list of a series/anime (used by the episode form actions).
 async function loadDetails(params: { category: string; id: string }) {
 	const category = params.category as Category;
-	if (!hasEpisodes(category) || !/^\d{1,12}$/.test(params.id)) error(404, 'Nicht gefunden');
+	if (!hasEpisodes(category) || !ID_PATTERN.test(params.id)) error(404, 'Nicht gefunden');
 	try {
 		return { category, details: await getShowDetails(category, params.id) };
 	} catch (err) {
-		console.error('Loading show details failed', err);
-		if (err instanceof ProviderError && err.status === 404) error(404, 'Nicht gefunden');
-		error(502, err instanceof ProviderError ? err.message : 'Laden fehlgeschlagen.');
+		failLoading(err);
 	}
 }
 
 export const load: PageServerLoad = async ({ params }) => {
-	const { category, details } = await loadDetails(params);
-	const item = findItem(category, details.item.externalId);
-	return {
-		category,
-		details,
-		status: item?.status ?? null,
-		watched: [...watchedKeys(item?.id)]
-	};
+	const category = params.category as Category;
+	if (!ID_PATTERN.test(params.id)) error(404, 'Nicht gefunden');
+
+	try {
+		// Details and (for series/anime) the episode list are loaded in parallel.
+		const [info, show] = await Promise.all([
+			getDetails(category, params.id),
+			hasEpisodes(category) ? getShowDetails(category, params.id) : null
+		]);
+		const item = findItem(category, info.item.externalId);
+		const similarStatus = libraryStatusFor(
+			category,
+			info.similar.map((s) => s.externalId)
+		);
+		return {
+			category,
+			info,
+			show,
+			status: item?.status ?? null,
+			watched: [...watchedKeys(item?.id)],
+			similarStatus: Object.fromEntries(similarStatus),
+			region: getSetting('region')
+		};
+	} catch (err) {
+		failLoading(err);
+	}
 };
 
 function readInt(data: FormData, name: string) {

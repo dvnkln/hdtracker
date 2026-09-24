@@ -2,32 +2,18 @@ import { and, eq } from 'drizzle-orm';
 import { hasEpisodes, type Category, type Status } from '$lib/status';
 import { getDb } from './db';
 import { libraryItems, watchedEpisodes } from './db/schema';
-import { SOURCE_FOR, saveItem, type LibraryItem } from './library';
+import { findItem, saveItem } from './library';
 import { getAnimeDetails } from './providers/anilist';
 import { getTvDetails } from './providers/tmdb';
 import type { ShowDetails } from './providers/types';
 import { getSetting } from './settings';
 
-export { hasEpisodes };
+export { findItem, hasEpisodes };
 
 export type EpisodeRef = { season: number; episode: number };
 
 export function getShowDetails(category: 'serien' | 'anime', id: string) {
 	return category === 'serien' ? getTvDetails(id, getSetting('language')) : getAnimeDetails(id);
-}
-
-export function findItem(category: Category, externalId: string): LibraryItem | undefined {
-	return getDb()
-		.select()
-		.from(libraryItems)
-		.where(
-			and(
-				eq(libraryItems.category, category),
-				eq(libraryItems.source, SOURCE_FOR[category]),
-				eq(libraryItems.externalId, externalId)
-			)
-		)
-		.get();
 }
 
 const key = (season: number, episode: number) => `${season}:${episode}`;

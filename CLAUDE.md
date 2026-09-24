@@ -54,12 +54,12 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
    | completed | Gesehen        | Durchgespielt | Gesehen     |
    | dropped   | Abgebrochen    | Abgebrochen   | Abgebrochen |
 
-5. Serien/Anime: Staffeln und Episoden sehen; ganze Serie, einzelne Staffel oder einzelne Episode als gesehen markieren. Progress pro Staffel und Episode.
+5. ✅ Serien/Anime: Staffeln und Episoden sehen; ganze Serie, einzelne Staffel oder einzelne Episode als gesehen markieren. Progress pro Staffel und Episode.
    - Serien (TMDB): Staffeln mit Folgenliste (Titel, Datum). Specials (Staffel 0) unten, zählen nicht zum Fortschritt.
    - Anime (AniList): keine Staffeln/Folgentitel verfügbar → Raster mit Folgennummern. Jede Anime-Staffel ist ein eigener Eintrag.
    - Auto-Status: erste Folge abgehakt → „Schaue ich“; alle Folgen einer beendeten Serie gesehen → „Gesehen“. Später in Settings abschaltbar (Punkt 7).
-6. Detailseite mit Streaming-Anbietern DE (Flatrate/Leihen/Kaufen), Attribution TMDB + JustWatch. Plus „Ähnliche Titel“ (TMDB recommendations, AniList recommendations, IGDB similar_games).
-7. Settings-Seite (Region, Sprache, Auto-Status an/aus usw. in DB)
+6. ✅ Detailseite mit Streaming-Anbietern DE (Flatrate/Leihen/Kaufen), Attribution TMDB + JustWatch. Plus „Ähnliche Titel“ (TMDB recommendations, AniList recommendations, IGDB similar_games).
+7. Settings-Seite (Region, Sprache, Auto-Status an/aus usw. in DB), plus „Bibliothek leeren“ (mit deutlicher Rückfrage)
 8. Dashboard (Startseite) statt Kategorie-Kacheln. Zeigt Einträge mit Status „Geplant“ und „Schaue/Spiele ich“ (inkl. neuer Folgen laufender Serien/Anime) in zwei Bereichen, jeweils mit Datum:
    - Kürzlich erschienen (letzte 4 Wochen)
    - Demnächst
@@ -69,6 +69,7 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
 ## Später (nach MVP)
 
 - Pushover-Benachrichtigungen (z. B. neue Staffel/Folge, Release eines geplanten Titels).
+- Import von Yamtrack-Exporten (CSV), damit die bestehende Bibliothek nicht manuell übertragen werden muss.
 - Anime-Hybrid: AniList bleibt Quelle, zusätzlich Folgentitel/-beschreibungen von TMDB einblenden, wo eine Zuordnung AniList→TMDB bekannt ist (Community-Mapping-Listen). Watcharr nutzt übrigens nur TMDB für Anime.
 - README für GitHub aufhübschen: kurz und verständlich für Dritte mit etwas Docker-Erfahrung. Was ist das (1–2 Sätze, Screenshot), `docker-compose.yml` als Codeblock, darunter erklärt, was man anpassen muss (.env-Werte, ORIGIN, Port). Keine lange README.
 
