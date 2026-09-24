@@ -1,5 +1,6 @@
 import { env } from '$env/dynamic/private';
 import { cached } from '../cache';
+import { getStreamingLinks, type StreamingLinks } from './wikidata';
 import {
 	fetchJson,
 	formatRuntime,
@@ -109,6 +110,7 @@ type TmdbCommon = {
 	vote_count: number;
 	backdrop_path: string | null;
 	'watch/providers': TmdbWatch;
+	external_ids: { wikidata_id: string | null };
 };
 type TmdbMovieFull = TmdbMovie &
 	TmdbCommon & {
@@ -128,13 +130,41 @@ type TmdbTvFull = TmdbTv &
 		recommendations: TmdbPage<TmdbTv>;
 	};
 
+// Link for one provider logo: direct link (from Wikidata) > search on the service > TMDB page.
+function providerUrl(name: string, title: string, links: StreamingLinks, fallback: string) {
+	const n = name.toLowerCase();
+	const q = encodeURIComponent(title);
+	if (n.startsWith('netflix')) return links.netflix ?? `https://www.netflix.com/search?q=${q}`;
+	if (n.includes('disney')) return links.disney ?? fallback; // Disney+ has no search URL
+	if (n.includes('amazon') || n.includes('prime video')) {
+		return links.prime ?? `https://www.primevideo.com/search?phrase=${q}`;
+	}
+	if (n.startsWith('apple tv')) return links.apple ?? `https://tv.apple.com/search?term=${q}`;
+	if (n.includes('google play')) return `https://play.google.com/store/search?q=${q}&c=movies`;
+	if (n === 'youtube') return `https://www.youtube.com/results?search_query=${q}`;
+	if (n.includes('crunchyroll')) return `https://www.crunchyroll.com/search?q=${q}`;
+	return fallback;
+}
+
 // Streaming offers for one region, sorted like on JustWatch.
-function watchFor(data: TmdbWatch, region: string): Details['watch'] {
+async function watchFor(
+	data: TmdbWatch,
+	region: string,
+	title: string,
+	wikidataId: string | null
+): Promise<Details['watch']> {
 	const r = data.results[region] ?? {};
+	const hasOffers = !!(r.flatrate?.length || r.rent?.length || r.buy?.length);
+	const links = hasOffers ? await getStreamingLinks(wikidataId) : {};
+	const fallback = r.link ?? 'https://www.justwatch.com';
 	const list = (providers?: TmdbProvider[]) =>
 		[...(providers ?? [])]
 			.sort((a, b) => a.display_priority - b.display_priority)
-			.map((p) => ({ name: p.provider_name, logoUrl: LOGO + p.logo_path }));
+			.map((p) => ({
+				name: p.provider_name,
+				logoUrl: LOGO + p.logo_path,
+				url: providerUrl(p.provider_name, title, links, fallback)
+			}));
 	return { link: r.link ?? null, flatrate: list(r.flatrate), rent: list(r.rent), buy: list(r.buy) };
 }
 
@@ -152,7 +182,7 @@ export function getMovieInfo(id: string, language: string, region: string): Prom
 	return cached(`tmdb:movie-info:${id}:${language}:${region}`, CACHE_MS, async () => {
 		const m = await tmdb<TmdbMovieFull>(`/movie/${id}`, {
 			language,
-			append_to_response: 'release_dates,watch/providers,recommendations'
+			append_to_response: 'release_dates,watch/providers,recommendations,external_ids'
 		});
 
 		// Release types: 2/3 = cinema, 4 = digital, 5 = disc. Take the earliest of each.
@@ -171,10 +201,10 @@ export function getMovieInfo(id: string, language: string, region: string): Prom
 			externalUrl: `https://www.themoviedb.org/movie/${m.id}`,
 			meta: [formatRuntime(m.runtime)].filter((x): x is string => !!x),
 			facts: [
-				...(cinema ? [{ label: `Kinostart ${region}`, value: cinema }] : []),
-				...(home ? [{ label: `Heimkino ${region} (digital/Disc)`, value: home }] : [])
+				...(cinema ? [{ label: 'Kinostart', value: cinema }] : []),
+				...(home ? [{ label: 'Heimkino (digital/Disc)', value: home }] : [])
 			],
-			watch: watchFor(m['watch/providers'], region),
+			watch: await watchFor(m['watch/providers'], region, m.title, m.external_ids.wikidata_id),
 			similar: m.recommendations.results.slice(0, 12).map(movieToResult)
 		};
 	});
@@ -184,7 +214,7 @@ export function getTvInfo(id: string, language: string, region: string): Promise
 	return cached(`tmdb:tv-info:${id}:${language}:${region}`, CACHE_MS, async () => {
 		const s = await tmdb<TmdbTvFull>(`/tv/${id}`, {
 			language,
-			append_to_response: 'watch/providers,recommendations'
+			append_to_response: 'watch/providers,recommendations,external_ids'
 		});
 		const seasons = s.number_of_seasons;
 		return {
@@ -201,7 +231,7 @@ export function getTvInfo(id: string, language: string, region: string): Promise
 					: []),
 				{ label: 'Folgen', value: String(s.number_of_episodes) }
 			],
-			watch: watchFor(s['watch/providers'], region),
+			watch: await watchFor(s['watch/providers'], region, s.name, s.external_ids.wikidata_id),
 			similar: s.recommendations.results.slice(0, 12).map(tvToResult)
 		};
 	});
@@ -217,7 +247,12 @@ type TmdbEpisode = {
 	still_path: string | null;
 	runtime: number | null;
 };
-type TmdbSeason = { season_number: number; name: string; episodes: TmdbEpisode[] };
+type TmdbSeason = {
+	season_number: number;
+	name: string;
+	air_date: string | null;
+	episodes: TmdbEpisode[];
+};
 type TmdbTvDetails = TmdbTv & {
 	status: string; // e.g. "Returning Series", "Ended", "Canceled"
 	seasons: { season_number: number }[];
@@ -267,6 +302,7 @@ export async function getTvDetails(id: string, language: string): Promise<ShowDe
 				number: s.season_number,
 				name: s.season_number === 0 ? 'Specials' : s.name || `Staffel ${s.season_number}`,
 				special: s.season_number === 0,
+				airDate: s.air_date || null,
 				episodes: s.episodes.map((e) => ({
 					number: e.episode_number,
 					title: e.name || null,

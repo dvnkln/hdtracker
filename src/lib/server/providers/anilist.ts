@@ -130,6 +130,7 @@ export function getAnimeDetails(id: string): Promise<ShowDetails> {
 					number: 1,
 					name: 'Folgen',
 					special: false,
+					airDate: null,
 					episodes: Array.from({ length: total }, (_, i) => ({
 						number: i + 1,
 						title: null,

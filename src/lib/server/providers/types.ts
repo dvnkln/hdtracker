@@ -62,6 +62,7 @@ export type Season = {
 	number: number;
 	name: string;
 	special: boolean; // TMDB "season 0": shown, but not counted in progress
+	airDate: string | null; // start of the season (YYYY-MM-DD), if known
 	episodes: Episode[];
 };
 
@@ -80,7 +81,7 @@ export function today() {
 	return new Date().toLocaleDateString('sv-SE');
 }
 
-export type Provider = { name: string; logoUrl: string };
+export type Provider = { name: string; logoUrl: string; url: string };
 
 // Everything shown on a detail page (besides the episode list).
 export type Details = {

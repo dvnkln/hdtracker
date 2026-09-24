@@ -174,9 +174,7 @@
 		<!-- Streaming offers (movies/series, via TMDB + JustWatch) -->
 		{#if info.watch}
 			<section class="mt-6">
-				<h2 class="text-lg font-semibold">
-					Wo läuft's? <span class="text-zinc-500">({data.region})</span>
-				</h2>
+				<h2 class="text-lg font-semibold">Wo läuft's?</h2>
 				{#if hasOffers}
 					<div class="mt-2 flex flex-col gap-3">
 						{#each WATCH_ROWS as [kind, label] (kind)}
@@ -185,12 +183,7 @@
 									<p class="mb-1.5 text-xs text-zinc-500 uppercase">{label}</p>
 									<div class="flex flex-wrap gap-2">
 										{#each info.watch[kind] as provider (provider.name)}
-											<a
-												href={info.watch.link ?? info.externalUrl}
-												target="_blank"
-												rel="noreferrer"
-												title={provider.name}
-											>
+											<a href={provider.url} target="_blank" rel="noreferrer" title={provider.name}>
 												<img
 													src={provider.logoUrl}
 													alt={provider.name}
@@ -206,9 +199,7 @@
 						{/each}
 					</div>
 				{:else}
-					<p class="mt-1 text-sm text-zinc-500">
-						Aktuell bei keinem Anbieter in {data.region} verfügbar.
-					</p>
+					<p class="mt-1 text-sm text-zinc-500">Aktuell bei keinem Anbieter verfügbar.</p>
 				{/if}
 				<p class="mt-2 text-xs text-zinc-500">
 					Streaming-Daten von
@@ -237,7 +228,7 @@
 					{/each}
 				</div>
 				<p class="mt-2 text-xs text-zinc-500">
-					Offizielle Links laut AniList – Verfügbarkeit in {data.region} nicht garantiert.
+					Offizielle Links laut AniList – Verfügbarkeit in deiner Region nicht garantiert.
 				</p>
 			</section>
 		{/if}

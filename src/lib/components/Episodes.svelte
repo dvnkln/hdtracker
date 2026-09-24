@@ -3,7 +3,7 @@
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
 	import type { ShowDetails } from '$lib/server/providers/types';
-	import { Check, CheckCheck, ChevronRight } from '@lucide/svelte';
+	import { CalendarClock, Check, CheckCheck, ChevronRight } from '@lucide/svelte';
 
 	// Progress, seasons and episodes of a series/anime. Form actions live on the detail page.
 	type Props = { category: 'serien' | 'anime'; show: ShowDetails; watched: string[] };
@@ -49,6 +49,13 @@
 	const formatDate = (date: string) => dateFormat.format(new Date(`${date}T00:00:00`));
 	// "2026-10-03" -> "03.10."
 	const formatShortDate = (date: string) => `${date.slice(8, 10)}.${date.slice(5, 7)}.`;
+
+	// Start of an announced season: its own date, else the first episode's date.
+	const todayIso = new Date().toLocaleDateString('sv-SE');
+	function upcomingDate(season: Season) {
+		const start = season.airDate ?? season.episodes.find((e) => e.airDate)?.airDate ?? null;
+		return start && start >= todayIso ? `Start am ${formatDate(start)}` : 'Termin noch offen';
+	}
 
 	let nextEpisode = $derived(
 		show.seasons.flatMap((s) => s.episodes).find((e) => !e.aired && e.airDate)
@@ -150,108 +157,137 @@
 	{#each show.seasons as season (season.number)}
 		{@const p = progress(season)}
 		{@const complete = p.aired > 0 && p.done === p.aired}
-		<details
-			class="group mt-3 rounded-xl border border-zinc-800 bg-zinc-900"
-			open={untrack(() => season.number === firstOpen)}
-		>
-			<summary
-				class="flex cursor-pointer list-none items-center gap-3 p-4 select-none [&::-webkit-details-marker]:hidden"
-			>
-				<ChevronRight
-					size={18}
-					class="shrink-0 text-zinc-500 transition-transform group-open:rotate-90"
-				/>
-				<div class="min-w-0 flex-1">
-					<div class="flex items-baseline justify-between gap-2">
-						<h2 class="truncate font-semibold">{season.name}</h2>
-						<span class="shrink-0 text-sm {complete ? 'text-(--accent)' : 'text-zinc-400'}">
-							{#if complete}<Check size={14} class="inline" />{/if}
-							{p.done} / {p.aired}
-						</span>
-					</div>
-					<div class="mt-2 h-1 overflow-hidden rounded-full bg-zinc-800">
-						<div
-							class="h-full bg-(--accent) transition-all"
-							style:width="{p.aired ? (p.done / p.aired) * 100 : 0}%"
-						></div>
-					</div>
-				</div>
-			</summary>
-
-			<div class="border-t border-zinc-800 px-2 pb-2">
-				{#if season.special}
-					<p class="px-2 pt-3 text-xs text-zinc-500">Specials zählen nicht zum Fortschritt.</p>
-				{/if}
-				{#if p.aired > 0}
-					<form method="POST" action="?/season" use:enhance={confirmReset} class="px-2 pt-3">
-						<input type="hidden" name="season" value={season.number} />
-						<input type="hidden" name="watched" value={complete ? '0' : '1'} />
-						<button class="text-sm font-medium text-(--accent)">
-							{complete ? 'Staffel als ungesehen markieren' : 'Ganze Staffel gesehen'}
-						</button>
-					</form>
-				{/if}
-
-				<form method="POST" action="?/toggle" use:enhance={toggleEpisode} class="mt-1">
-					<input type="hidden" name="season" value={season.number} />
-					<ul>
-						{#each season.episodes as ep (ep.number)}
-							{@const watched = isWatched(season.number, ep.number)}
-							<li>
-								<button
-									name="episode"
-									value={ep.number}
-									disabled={!ep.aired}
-									aria-pressed={watched}
-									class="flex w-full items-start gap-3 rounded-lg p-2 text-left hover:bg-zinc-800 disabled:opacity-50 disabled:hover:bg-transparent"
-								>
-									<!-- Episode still with the check mark on top -->
-									<span
-										class="relative aspect-video w-28 shrink-0 overflow-hidden rounded-md bg-zinc-800 sm:w-36"
-									>
-										{#if ep.stillUrl}
-											<img
-												src={ep.stillUrl}
-												alt=""
-												loading="lazy"
-												referrerpolicy="no-referrer"
-												class="h-full w-full object-cover transition-opacity {watched
-													? 'opacity-40'
-													: ''}"
-											/>
-										{/if}
-										<span
-											class="absolute right-1.5 bottom-1.5 flex size-6 items-center justify-center rounded-full border-2 transition-colors {watched
-												? 'border-(--accent) bg-(--accent) text-white'
-												: 'border-white/80 bg-black/40'}"
-										>
-											{#if watched}<Check size={14} strokeWidth={3} />{/if}
-										</span>
-									</span>
-									<span class="min-w-0 flex-1">
-										<span class="line-clamp-2 text-sm leading-snug font-medium">
-											<span class="text-zinc-500">{ep.number}.</span>
-											{ep.title ?? `Folge ${ep.number}`}
-										</span>
-										<span class="mt-0.5 block text-xs text-zinc-500">
-											{[
-												// Date only matters for upcoming episodes.
-												!ep.aired && ep.airDate && `erscheint am ${formatDate(ep.airDate)}`,
-												ep.runtime && `${ep.runtime} Min.`
-											]
-												.filter(Boolean)
-												.join(' · ')}
-										</span>
-										{#if ep.overview}
-											<span class="mt-1 line-clamp-2 text-xs text-zinc-400">{ep.overview}</span>
-										{/if}
-									</span>
-								</button>
-							</li>
-						{/each}
-					</ul>
-				</form>
+		{@const upcoming = p.aired === 0}
+		{#if upcoming && season.episodes.length === 0}
+			<!-- Announced season without any episodes yet: nothing to expand -->
+			<div class="mt-3 flex items-center gap-3 rounded-xl border border-dashed border-zinc-700 p-4">
+				<CalendarClock size={18} class="shrink-0 text-zinc-500" />
+				<h2 class="min-w-0 flex-1 truncate font-semibold text-zinc-300">{season.name}</h2>
+				<span class="shrink-0 text-right text-sm leading-tight">
+					<span class="block font-medium text-(--accent)">Angekündigt</span>
+					<span class="block text-xs text-zinc-500">{upcomingDate(season)}</span>
+				</span>
 			</div>
-		</details>
+		{:else}
+			<details
+				class="group mt-3 rounded-xl border bg-zinc-900 {upcoming
+					? 'border-dashed border-zinc-700'
+					: 'border-zinc-800'}"
+				open={untrack(() => season.number === firstOpen)}
+			>
+				<summary
+					class="flex cursor-pointer list-none items-center gap-3 p-4 select-none [&::-webkit-details-marker]:hidden"
+				>
+					<ChevronRight
+						size={18}
+						class="shrink-0 text-zinc-500 transition-transform group-open:rotate-90"
+					/>
+					<div class="min-w-0 flex-1">
+						<div class="flex items-baseline justify-between gap-2">
+							<h2 class="truncate font-semibold">
+								{season.name}
+								{#if !upcoming && !season.special && season.airDate}
+									<span class="font-normal text-zinc-500">· {season.airDate.slice(0, 4)}</span>
+								{/if}
+							</h2>
+							{#if upcoming}
+								<span class="shrink-0 text-right text-sm leading-tight">
+									<span class="block font-medium text-(--accent)">Angekündigt</span>
+									<span class="block text-xs text-zinc-500">{upcomingDate(season)}</span>
+								</span>
+							{:else}
+								<span class="shrink-0 text-sm {complete ? 'text-(--accent)' : 'text-zinc-400'}">
+									{#if complete}<Check size={14} class="inline" />{/if}
+									{p.done} / {p.aired}
+								</span>
+							{/if}
+						</div>
+						{#if !upcoming}
+							<div class="mt-2 h-1 overflow-hidden rounded-full bg-zinc-800">
+								<div
+									class="h-full bg-(--accent) transition-all"
+									style:width="{(p.done / p.aired) * 100}%"
+								></div>
+							</div>
+						{/if}
+					</div>
+				</summary>
+
+				<div class="border-t border-zinc-800 px-2 pb-2">
+					{#if season.special}
+						<p class="px-2 pt-3 text-xs text-zinc-500">Specials zählen nicht zum Fortschritt.</p>
+					{/if}
+					{#if p.aired > 0}
+						<form method="POST" action="?/season" use:enhance={confirmReset} class="px-2 pt-3">
+							<input type="hidden" name="season" value={season.number} />
+							<input type="hidden" name="watched" value={complete ? '0' : '1'} />
+							<button class="text-sm font-medium text-(--accent)">
+								{complete ? 'Staffel als ungesehen markieren' : 'Ganze Staffel gesehen'}
+							</button>
+						</form>
+					{/if}
+
+					<form method="POST" action="?/toggle" use:enhance={toggleEpisode} class="mt-1">
+						<input type="hidden" name="season" value={season.number} />
+						<ul>
+							{#each season.episodes as ep (ep.number)}
+								{@const watched = isWatched(season.number, ep.number)}
+								<li>
+									<button
+										name="episode"
+										value={ep.number}
+										disabled={!ep.aired}
+										aria-pressed={watched}
+										class="flex w-full items-start gap-3 rounded-lg p-2 text-left hover:bg-zinc-800 disabled:opacity-50 disabled:hover:bg-transparent"
+									>
+										<!-- Episode still with the check mark on top -->
+										<span
+											class="relative aspect-video w-28 shrink-0 overflow-hidden rounded-md bg-zinc-800 sm:w-36"
+										>
+											{#if ep.stillUrl}
+												<img
+													src={ep.stillUrl}
+													alt=""
+													loading="lazy"
+													referrerpolicy="no-referrer"
+													class="h-full w-full object-cover transition-opacity {watched
+														? 'opacity-40'
+														: ''}"
+												/>
+											{/if}
+											<span
+												class="absolute right-1.5 bottom-1.5 flex size-6 items-center justify-center rounded-full border-2 transition-colors {watched
+													? 'border-(--accent) bg-(--accent) text-white'
+													: 'border-white/80 bg-black/40'}"
+											>
+												{#if watched}<Check size={14} strokeWidth={3} />{/if}
+											</span>
+										</span>
+										<span class="min-w-0 flex-1">
+											<span class="line-clamp-2 text-sm leading-snug font-medium">
+												<span class="text-zinc-500">{ep.number}.</span>
+												{ep.title ?? `Folge ${ep.number}`}
+											</span>
+											<span class="mt-0.5 block text-xs text-zinc-500">
+												{[
+													// Date only matters for upcoming episodes.
+													!ep.aired && ep.airDate && `erscheint am ${formatDate(ep.airDate)}`,
+													ep.runtime && `${ep.runtime} Min.`
+												]
+													.filter(Boolean)
+													.join(' · ')}
+											</span>
+											{#if ep.overview}
+												<span class="mt-1 line-clamp-2 text-xs text-zinc-400">{ep.overview}</span>
+											{/if}
+										</span>
+									</button>
+								</li>
+							{/each}
+						</ul>
+					</form>
+				</div>
+			</details>
+		{/if}
 	{/each}
 {/if}

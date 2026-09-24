@@ -10,7 +10,6 @@ import {
 } from '$lib/server/episodes';
 import { getDetails } from '$lib/server/details';
 import { libraryStatusFor } from '$lib/server/library';
-import { getSetting } from '$lib/server/settings';
 import { ProviderError } from '$lib/server/providers/types';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -55,8 +54,7 @@ export const load: PageServerLoad = async ({ params }) => {
 			show,
 			status: item?.status ?? null,
 			watched: [...watchedKeys(item?.id)],
-			similarStatus: Object.fromEntries(similarStatus),
-			region: getSetting('region')
+			similarStatus: Object.fromEntries(similarStatus)
 		};
 	} catch (err) {
 		failLoading(err);
