@@ -44,7 +44,8 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
 1. Scaffold, Dockerfile (multi-stage, ein Container, Daten unter /data), Migrationen beim Start, `/health`, docker-compose.yml, .env.example, GitHub Action (multi-arch amd64/arm64 → GHCR bei Tag `v*`) ✅
 2. First-Run-Wizard (Admin anlegen) + Login ✅
 3. Suche pro Kategorie ✅
-4. Bibliothek pro Kategorie, Kategorie-Seite unterteilt in Abschnitte nach Status. Intern 5 feste Status, Label je Kategorie:
+4. Bibliothek pro Kategorie, Kategorie-Seite unterteilt in Abschnitte nach Status. Abschnitte alphabetisch sortiert (deutsch, `localeCompare('de')`); „Gesehen/Durchgespielt“ und „Abgebrochen“ standardmäßig zugeklappt. Intern 5 feste Status, Label je Kategorie (siehe `src/lib/status.ts`):
+
    | intern    | Serien / Anime | Spiele        | Filme       |
    | --------- | -------------- | ------------- | ----------- |
    | active    | Schaue ich     | Spiele ich    | –           |
@@ -52,13 +53,20 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
    | planned   | Geplant        | Geplant       | Geplant     |
    | completed | Gesehen        | Durchgespielt | Gesehen     |
    | dropped   | Abgebrochen    | Abgebrochen   | Abgebrochen |
-5. Serien/Anime: Staffeln, Episoden, Progress pro Staffel und Episode
-6. Detailseite mit Streaming-Anbietern DE (Flatrate/Leihen/Kaufen), Attribution TMDB + JustWatch
+
+5. Serien/Anime: Staffeln und Episoden sehen; ganze Serie, einzelne Staffel oder einzelne Episode als gesehen markieren. Progress pro Staffel und Episode.
+6. Detailseite mit Streaming-Anbietern DE (Flatrate/Leihen/Kaufen), Attribution TMDB + JustWatch. Plus „Ähnliche Titel“ (TMDB recommendations, AniList recommendations, IGDB similar_games).
 7. Settings-Seite (Region, Sprache usw. in DB)
-8. Dashboard (Startseite) statt Kategorie-Kacheln, zeigt Einträge mit Status „Geplant“ und „Schaue/Spiele ich“ (inkl. neuer Folgen laufender Serien/Anime) in zwei Bereichen, jeweils mit Datum. Filme: Kinostart DE und Heimkino-Start DE (digital/Disc) als eigene Termine.
+8. Dashboard (Startseite) statt Kategorie-Kacheln. Zeigt Einträge mit Status „Geplant“ und „Schaue/Spiele ich“ (inkl. neuer Folgen laufender Serien/Anime) in zwei Bereichen, jeweils mit Datum:
    - Kürzlich erschienen (letzte 4 Wochen)
    - Demnächst
-     Keine harte Trennung nach Kategorie, sondern Kategorie-Icon/Akzentfarbe pro Eintrag. Braucht Erscheinungsdaten in der DB, die regelmäßig aktualisiert werden.
+
+   Keine harte Trennung nach Kategorie, sondern Kategorie-Icon/Akzentfarbe pro Eintrag. Filme: Kinostart DE und Heimkino-Start DE (digital/Disc) als eigene Termine. Neue Staffel einer (teilweise) gesehenen Serie (z. B. S2 gesehen, S3 angekündigt/erschienen) landet automatisch im Dashboard. Braucht Erscheinungsdaten in der DB, die regelmäßig aktualisiert werden.
+
+## Später (nach MVP)
+
+- Pushover-Benachrichtigungen (z. B. neue Staffel/Folge, Release eines geplanten Titels).
+- README für GitHub aufhübschen: kurz und verständlich für Dritte mit etwas Docker-Erfahrung. Was ist das (1–2 Sätze, Screenshot), `docker-compose.yml` als Codeblock, darunter erklärt, was man anpassen muss (.env-Werte, ORIGIN, Port). Keine lange README.
 
 ## Befehle
 
