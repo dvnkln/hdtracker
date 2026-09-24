@@ -1,0 +1,18 @@
+services:
+  hdtracker:
+    image: ghcr.io/dvnkln/hdtracker:latest
+    # Remove the next line to only use the published image instead of building locally
+    build: .
+    container_name: hdtracker
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    env_file: .env
+    environment:
+      # Public URL of the app (needed for form submissions / login). Adjust when using a domain.
+      ORIGIN: http://localhost:3000
+    volumes:
+      - hdtracker-data:/data
+
+volumes:
+  hdtracker-data:
