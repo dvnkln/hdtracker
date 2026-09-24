@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Brand from '$lib/components/Brand.svelte';
 	import type { ActionData } from './$types';
 
 	let { form }: { form: ActionData } = $props();
@@ -7,8 +8,8 @@
 <svelte:head><title>Einrichtung · hdtracker</title></svelte:head>
 
 <main class="mx-auto flex min-h-dvh max-w-sm flex-col justify-center p-4">
-	<h1 class="text-2xl font-bold">Willkommen bei hdtracker</h1>
-	<p class="mt-1 text-sm text-zinc-400">Lege dein Admin-Konto an.</p>
+	<h1 class="flex justify-center"><Brand large /></h1>
+	<p class="mt-4 text-center text-zinc-400">Willkommen! Lege dein Admin-Konto an.</p>
 
 	<form method="POST" class="mt-6 flex flex-col gap-4">
 		<label class="flex flex-col gap-1">

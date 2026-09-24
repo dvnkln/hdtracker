@@ -25,6 +25,8 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
 - Immer dunkel (kein Light-Mode).
 - Navigation: Leiste unten (Handy), mit Icon + Label je Bereich.
 - Akzentfarbe je Bereich (neutraler Hintergrund): Filme rot, Serien blau, Anime pink, Spiele grün. Definiert in `src/lib/categories.ts`.
+- Logo: Couch von vorne mit zwei Personen (links Schneidersitz/pink, rechts angewinkeltes Knie/blau) – Idee der Frau des Nutzers, die App ist für die beiden gedacht. `src/lib/components/Logo.svelte`, auch als Favicon.
+- Schriftzug „hdtracker“: Schrift Fredoka (self-hosted via `@fontsource/fredoka`, Tailwind-Klasse `font-brand`), „hd“ mit Verlauf pink→blau. `src/lib/components/Brand.svelte`.
 - Poster-Raster für Suche und Bibliothek, aber nicht zu minimalistisch (kein reines Watcharr-Raster): Bibliothek braucht sichtbare Unterteilung in Abschnitte.
 
 ## Datenquellen

@@ -1,8 +1,11 @@
 <script lang="ts">
+	import '@fontsource/fredoka/600.css';
+	import '@fontsource/fredoka/700.css';
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { page } from '$app/state';
 	import { CATEGORIES, CATEGORY_KEYS } from '$lib/categories';
+	import Brand from '$lib/components/Brand.svelte';
 	import { LogOut } from '@lucide/svelte';
 
 	let { data, children } = $props();
@@ -16,7 +19,7 @@
 {#if data.user}
 	<header class="border-b border-zinc-800">
 		<div class="mx-auto flex max-w-screen-lg items-center justify-between px-4 py-3">
-			<a href="/" class="text-lg font-bold tracking-tight">hdtracker</a>
+			<a href="/" aria-label="Startseite"><Brand /></a>
 			<form method="POST" action="/logout" class="flex items-center gap-3">
 				<span class="text-sm text-zinc-400">{data.user.username}</span>
 				<button

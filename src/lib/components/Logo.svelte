@@ -1,0 +1,46 @@
+<script lang="ts">
+	// Couch from the front with two people: left one cross-legged, right one with a knee pulled up.
+	let { size = 32 }: { size?: number } = $props();
+</script>
+
+<svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true">
+	<!-- couch -->
+	<rect x="10" y="22" width="44" height="22" rx="7" fill="#3f3f46" />
+	<rect x="4" y="30" width="12" height="20" rx="5" fill="#52525b" />
+	<rect x="48" y="30" width="12" height="20" rx="5" fill="#52525b" />
+	<rect x="13" y="40" width="38" height="10" rx="4" fill="#52525b" />
+	<rect x="9" y="50" width="4" height="5" rx="1.5" fill="#3f3f46" />
+	<rect x="51" y="50" width="4" height="5" rx="1.5" fill="#3f3f46" />
+	<!-- left person: cross-legged (wide, flat lap) -->
+	<circle cx="23" cy="19" r="5.5" fill="#ec4899" />
+	<path d="M15.5 42 v-9 a7.5 7.5 0 0 1 15 0 v9 z" fill="#ec4899" />
+	<rect
+		x="12"
+		y="38.5"
+		width="22"
+		height="5.5"
+		rx="2.75"
+		fill="#ec4899"
+		stroke="#52525b"
+		stroke-width="1.5"
+	/>
+	<!-- right person: one knee pulled up -->
+	<circle cx="41" cy="19" r="5.5" fill="#3b82f6" />
+	<path d="M33.5 42 v-9 a7.5 7.5 0 0 1 15 0 v9 z" fill="#3b82f6" />
+	<polyline
+		points="37,41 44,32 47,41"
+		fill="none"
+		stroke="#52525b"
+		stroke-width="8"
+		stroke-linecap="round"
+		stroke-linejoin="round"
+	/>
+	<polyline
+		points="37,41 44,32 47,41"
+		fill="none"
+		stroke="#3b82f6"
+		stroke-width="5"
+		stroke-linecap="round"
+		stroke-linejoin="round"
+	/>
+</svg>
