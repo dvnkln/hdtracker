@@ -18,25 +18,20 @@
 				autocomplete="username"
 				autocapitalize="off"
 				required
-				class="rounded-lg border-gray-300"
 			/>
 		</label>
 		<label class="flex flex-col gap-1">
 			<span class="text-sm font-medium">Passwort</span>
-			<input
-				name="password"
-				type="password"
-				autocomplete="current-password"
-				required
-				class="rounded-lg border-gray-300"
-			/>
+			<input name="password" type="password" autocomplete="current-password" required />
 		</label>
 
 		{#if form?.error}
-			<p class="rounded-lg bg-red-50 p-3 text-sm text-red-700">{form.error}</p>
+			<p class="rounded-lg border border-red-900 bg-red-950 p-3 text-sm text-red-300">
+				{form.error}
+			</p>
 		{/if}
 
-		<button class="rounded-lg bg-gray-900 p-3 font-medium text-white active:bg-gray-700">
+		<button class="rounded-lg bg-zinc-100 p-3 font-medium text-zinc-900 active:bg-zinc-300">
 			Anmelden
 		</button>
 	</form>

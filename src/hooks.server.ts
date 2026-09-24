@@ -13,6 +13,9 @@ import {
 // Runs once when the server starts, before the first request is handled.
 export const init: ServerInit = () => {
 	getSecret(); // fail fast if SECRET is missing
+	if (!process.env.ORIGIN && process.env.NODE_ENV === 'production') {
+		console.warn('ORIGIN is not set in .env – login and all forms will fail (HTTP 403).');
+	}
 	runMigrations();
 	deleteExpiredSessions();
 	console.log('Database migrations applied');

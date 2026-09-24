@@ -8,9 +8,6 @@ services:
     ports:
       - '3000:3000'
     env_file: .env
-    environment:
-      # Public URL of the app (needed for form submissions / login). Adjust when using a domain.
-      ORIGIN: http://localhost:3000
     volumes:
       - hdtracker-data:/data
 
