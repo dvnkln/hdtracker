@@ -9,6 +9,7 @@ import {
 	saveItem,
 	type LibraryItem
 } from '$lib/server/library';
+import { airedEpisodes, getShowDetails, hasEpisodes, setEpisodes } from '$lib/server/episodes';
 import { ProviderError, type SearchResult } from '$lib/server/providers/types';
 import { searchCategory } from '$lib/server/search';
 import type { Actions, PageServerLoad } from './$types';
@@ -54,6 +55,16 @@ export const actions: Actions = {
 			return fail(400, { error: 'Ungültige Daten' });
 		}
 		saveItem(category, item, status);
+
+		// "Gesehen" for a series/anime also ticks all aired episodes.
+		if (status === 'completed' && hasEpisodes(category)) {
+			try {
+				const details = await getShowDetails(category, item.externalId);
+				setEpisodes(category, details, airedEpisodes(details), true);
+			} catch (err) {
+				console.error('Could not mark episodes as watched', err);
+			}
+		}
 		return { success: true };
 	},
 

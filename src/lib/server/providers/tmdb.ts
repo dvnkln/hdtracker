@@ -1,8 +1,12 @@
 import { env } from '$env/dynamic/private';
-import { fetchJson, missingKey, yearOf, type SearchResult } from './types';
+import { cached } from '../cache';
+import { fetchJson, missingKey, today, yearOf, type SearchResult, type ShowDetails } from './types';
+
+const CACHE_MS = 10 * 60 * 1000;
 
 const BASE = 'https://api.themoviedb.org/3';
 const POSTER = 'https://image.tmdb.org/t/p/w342';
+const STILL = 'https://image.tmdb.org/t/p/w300';
 
 type TmdbMovie = {
 	id: number;
@@ -68,4 +72,78 @@ export async function searchTv(query: string, language: string): Promise<SearchR
 		posterUrl: poster(s.poster_path),
 		overview: s.overview || null
 	}));
+}
+
+// ---- Series details with all seasons and episodes ----
+
+type TmdbEpisode = {
+	episode_number: number;
+	name: string;
+	air_date: string | null;
+	overview: string;
+	still_path: string | null;
+	runtime: number | null;
+};
+type TmdbSeason = { season_number: number; name: string; episodes: TmdbEpisode[] };
+type TmdbTvDetails = TmdbTv & {
+	status: string; // e.g. "Returning Series", "Ended", "Canceled"
+	seasons: { season_number: number }[];
+	[key: `season/${number}`]: TmdbSeason | undefined;
+};
+
+const SEASONS_PER_REQUEST = 20; // TMDB limit for append_to_response
+
+export async function getTvDetails(id: string, language: string): Promise<ShowDetails> {
+	return cached(`tmdb:tv:${id}:${language}`, CACHE_MS, async () => {
+		const first = await tmdb<TmdbTvDetails>(`/tv/${id}`, { language });
+		const numbers = first.seasons.map((s) => s.season_number);
+
+		// Load seasons in batches of 20 via append_to_response.
+		const seasons: TmdbSeason[] = [];
+		for (let i = 0; i < numbers.length; i += SEASONS_PER_REQUEST) {
+			const batch = numbers.slice(i, i + SEASONS_PER_REQUEST);
+			const data = await tmdb<TmdbTvDetails>(`/tv/${id}`, {
+				language,
+				append_to_response: batch.map((n) => `season/${n}`).join(',')
+			});
+			for (const n of batch) {
+				const season = data[`season/${n}`];
+				if (season) seasons.push(season);
+			}
+		}
+
+		const now = today();
+		const regular = seasons.filter((s) => s.season_number > 0);
+		const specials = seasons.filter((s) => s.season_number === 0);
+
+		return {
+			item: {
+				source: 'tmdb',
+				externalId: String(first.id),
+				title: first.name,
+				originalTitle: first.original_name !== first.name ? first.original_name : null,
+				year: yearOf(first.first_air_date),
+				posterUrl: poster(first.poster_path),
+				overview: first.overview || null
+			},
+			ended: first.status === 'Ended' || first.status === 'Canceled',
+			externalUrl: `https://www.themoviedb.org/tv/${first.id}`,
+			episodeRuntime: null,
+			// Regular seasons first, specials at the bottom.
+			seasons: [...regular, ...specials].map((s) => ({
+				number: s.season_number,
+				name: s.season_number === 0 ? 'Specials' : s.name || `Staffel ${s.season_number}`,
+				special: s.season_number === 0,
+				episodes: s.episodes.map((e) => ({
+					number: e.episode_number,
+					title: e.name || null,
+					airDate: e.air_date || null,
+					aired: !!e.air_date && e.air_date <= now,
+					overview: e.overview || null,
+					stillUrl: e.still_path ? STILL + e.still_path : null,
+					runtime: e.runtime || null
+				}))
+			}))
+		};
+	});
 }

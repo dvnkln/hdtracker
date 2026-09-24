@@ -16,12 +16,19 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
-	import { Trash2, X } from '@lucide/svelte';
+	import { ListChecks, Trash2, X } from '@lucide/svelte';
 	import { STATUS_ICONS } from '$lib/statusIcons';
-	import { statusesFor, statusLabel, type Category } from '$lib/status';
+	import { hasEpisodes, statusesFor, statusLabel, type Category } from '$lib/status';
 
-	type Props = { category: Category; item: SheetItem | null; onclose: () => void };
-	let { category, item, onclose }: Props = $props();
+	type Props = {
+		category: Category;
+		item: SheetItem | null;
+		onclose: () => void;
+		// Page whose form actions save/remove live on (the category page by default)
+		actionPath?: string;
+		showEpisodesLink?: boolean;
+	};
+	let { category, item, onclose, actionPath = '', showEpisodesLink = true }: Props = $props();
 
 	let dialog: HTMLDialogElement;
 	let confirmRemove = $state(false);
@@ -90,8 +97,23 @@
 				<p class="mt-3 line-clamp-6 text-sm text-zinc-300">{item.overview}</p>
 			{/if}
 
+			{#if showEpisodesLink && hasEpisodes(category)}
+				<a
+					href="/{category}/{item.externalId}"
+					class="mt-4 flex items-center justify-center gap-2 rounded-xl border border-zinc-700 p-3 text-sm font-medium hover:bg-zinc-800"
+				>
+					<ListChecks size={18} class="text-(--accent)" />
+					{category === 'anime' ? 'Folgen' : 'Staffeln & Folgen'}
+				</a>
+			{/if}
+
 			<!-- One row of equally wide status tiles: icon on top, label below -->
-			<form method="POST" action="?/save" use:enhance={submit} class="mt-5 flex gap-1.5">
+			<form
+				method="POST"
+				action="{actionPath}?/save"
+				use:enhance={submit}
+				class="mt-5 flex gap-1.5"
+			>
 				<input type="hidden" name="item" value={itemJson} />
 				{#each statusesFor(category) as status (status)}
 					{@const current = item.status === status}
@@ -114,7 +136,7 @@
 			</form>
 
 			{#if item.status}
-				<form method="POST" action="?/remove" use:enhance={submit} class="mt-4">
+				<form method="POST" action="{actionPath}?/remove" use:enhance={submit} class="mt-4">
 					<input type="hidden" name="externalId" value={item.externalId} />
 					{#if confirmRemove}
 						<button

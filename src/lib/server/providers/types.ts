@@ -48,3 +48,34 @@ export function yearOf(date: string | null | undefined) {
 	const year = date ? Number.parseInt(date.slice(0, 4), 10) : NaN;
 	return Number.isNaN(year) ? null : year;
 }
+
+// Series/anime with its episodes, as shown on the episodes page.
+export type ShowDetails = {
+	item: SearchResult;
+	ended: boolean; // no new episodes expected
+	externalUrl: string; // page on TMDB / AniList
+	episodeRuntime: number | null; // typical minutes per episode (anime)
+	seasons: Season[];
+};
+
+export type Season = {
+	number: number;
+	name: string;
+	special: boolean; // TMDB "season 0": shown, but not counted in progress
+	episodes: Episode[];
+};
+
+export type Episode = {
+	number: number;
+	title: string | null;
+	airDate: string | null; // YYYY-MM-DD
+	aired: boolean;
+	overview: string | null;
+	stillUrl: string | null; // screenshot of the episode (TMDB only)
+	runtime: number | null; // minutes
+};
+
+// Today as YYYY-MM-DD in the server timezone (TZ from .env).
+export function today() {
+	return new Date().toLocaleDateString('sv-SE');
+}

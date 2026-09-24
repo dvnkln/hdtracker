@@ -49,3 +49,8 @@ export function statusLabel(category: Category, status: Status) {
 export function isStatusFor(category: Category, value: string): value is Status {
 	return (statusesFor(category) as string[]).includes(value);
 }
+
+// Categories with seasons/episodes (they get an episodes page).
+export function hasEpisodes(category: Category): category is 'serien' | 'anime' {
+	return category === 'serien' || category === 'anime';
+}

@@ -49,3 +49,20 @@ export const libraryItems = sqliteTable(
 	},
 	(t) => [uniqueIndex('library_items_unique').on(t.category, t.source, t.externalId)]
 );
+
+// One row per watched episode. Anime use season 1.
+export const watchedEpisodes = sqliteTable(
+	'watched_episodes',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		itemId: integer('item_id')
+			.notNull()
+			.references(() => libraryItems.id, { onDelete: 'cascade' }),
+		season: integer('season').notNull(),
+		episode: integer('episode').notNull(),
+		watchedAt: integer('watched_at', { mode: 'timestamp' })
+			.notNull()
+			.$defaultFn(() => new Date())
+	},
+	(t) => [uniqueIndex('watched_episodes_unique').on(t.itemId, t.season, t.episode)]
+);
