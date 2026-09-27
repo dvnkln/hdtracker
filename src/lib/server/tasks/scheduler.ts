@@ -3,6 +3,7 @@ import { deleteExpiredSessions } from '../auth';
 import { pruneCache } from '../cache';
 import { getDb } from '../db';
 import { tasks } from '../db/schema';
+import { refreshAll } from '../releases';
 import { createBackup } from './backups';
 
 export type TaskRow = typeof tasks.$inferSelect;
@@ -23,6 +24,12 @@ export const TASKS = {
 		usesApi: false,
 		// Off by default: most people back up the whole Docker volume anyway.
 		defaults: { enabled: false, frequency: 'daily', time: '03:00', weekday: 0 }
+	},
+	metadata: {
+		// Titles, posters and release dates of all library items (for the dashboard).
+		run: refreshAll,
+		usesApi: true,
+		defaults: { enabled: true, frequency: 'daily', time: '04:30', weekday: 0 }
 	},
 	optimize: {
 		// Updates the query planner statistics and compacts the file.

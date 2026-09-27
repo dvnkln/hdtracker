@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Brand from '$lib/components/Brand.svelte';
+	import PasswordInput from '$lib/components/PasswordInput.svelte';
 	import { m } from '$lib/i18n/index.svelte';
 	import type { ActionData } from './$types';
 
@@ -24,7 +25,7 @@
 		</label>
 		<label class="flex flex-col gap-1">
 			<span class="text-sm font-medium">{m.auth.password}</span>
-			<input name="password" type="password" autocomplete="current-password" required />
+			<PasswordInput name="password" autocomplete="current-password" required />
 		</label>
 
 		{#if form?.error}

@@ -32,3 +32,32 @@
 </div>
 
 {@render children()}
+
+<!-- Data sources (TMDB asks for this attribution) -->
+<footer class="mx-auto max-w-screen-sm px-4 pt-6 text-xs text-zinc-500">
+	<p>
+		{m.footer.tmdbBefore}
+		<a
+			href="https://www.themoviedb.org"
+			class="underline hover:text-zinc-300"
+			target="_blank"
+			rel="noreferrer">TMDB</a
+		>{m.footer.tmdbAfter}
+	</p>
+	<p class="mt-1">
+		{m.footer.gamesBy}
+		<a
+			href="https://www.igdb.com"
+			class="underline hover:text-zinc-300"
+			target="_blank"
+			rel="noreferrer">IGDB</a
+		>,
+		{m.footer.animeBy}
+		<a
+			href="https://anilist.co"
+			class="underline hover:text-zinc-300"
+			target="_blank"
+			rel="noreferrer">AniList</a
+		>.
+	</p>
+</footer>

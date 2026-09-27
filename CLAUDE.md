@@ -70,7 +70,7 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
 7. Einstellungen – in drei Etappen, nach jeder kurz berichten/testen lassen:
    - **A ✅ Struktur:** englische URLs/Keys, mehrere ORIGINs, Oberfläche zweisprachig (i18n), Hover-Effekte, Standard Englisch.
    - **B ✅ Seite `/settings`** (Zahnrad oben rechts neben Abmelden), Werte in Tabelle `settings`:
-     - Darstellung: Sprache der Oberfläche (de/en), Sprache der Inhalte (TMDB), Region als Liste mit Ländernamen (Regionen von TMDB `/watch/providers/regions`, Namen via `Intl.DisplayNames`), Anime-Titel (Englisch als Haupttitel + Romaji darunter; Schalter für umgekehrt).
+     - Darstellung: Sprache der Oberfläche (de/en), Sprache der Inhalte (TMDB), Region als Liste mit Ländernamen (Regionen von TMDB `/watch/providers/regions`, Namen via `Intl.DisplayNames`), Anime-Titel (Englisch als Haupttitel + Romaji darunter; Schalter für umgekehrt), Spoiler-Schutz (Standard an: Bilder + Beschreibungen ungesehener Folgen unscharf).
      - Verhalten: Auto-Status an/aus (`episodes.ts` muss das respektieren).
      - Konto: Passwort ändern (altes + 2× neues), alle anderen Geräte abmelden.
      - Gefahrenzone: Bibliothek leeren (pro Kategorie oder alles), Bestätigung durch Eintippen von „LÖSCHEN“/„DELETE“.
@@ -82,10 +82,11 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
 
    Keine harte Trennung nach Kategorie, sondern Kategorie-Icon/Akzentfarbe pro Eintrag. Filme: Kinostart DE und Heimkino-Start DE (digital/Disc) als eigene Termine. Neue Staffel einer (teilweise) gesehenen Serie (z. B. S2 gesehen, S3 angekündigt/erschienen) landet automatisch im Dashboard. Braucht Erscheinungsdaten in der DB, die regelmäßig aktualisiert werden.
 
+9. Import von Yamtrack-Exporten (CSV), damit die bestehende Bibliothek nicht manuell übertragen werden muss. Soll ins erste Release (v0.1.0).
+
 ## Später (nach MVP)
 
 - Pushover-Benachrichtigungen (z. B. neue Staffel/Folge, Release eines geplanten Titels).
-- Import von Yamtrack-Exporten (CSV), damit die bestehende Bibliothek nicht manuell übertragen werden muss.
 - Anime-Hybrid: AniList bleibt Quelle, zusätzlich Folgentitel/-beschreibungen von TMDB einblenden, wo eine Zuordnung AniList→TMDB bekannt ist (Community-Mapping-Listen). Watcharr nutzt übrigens nur TMDB für Anime.
 - Streaming-Übersicht: alle geplanten Titel nach verfügbaren Streaming-Anbietern gruppiert (z. B. „Netflix“ antippen → alles Geplante, was dort läuft). Anbieter ohne Treffer ausblenden. Offen: eigener Menüpunkt oder Teil des Dashboards.
 

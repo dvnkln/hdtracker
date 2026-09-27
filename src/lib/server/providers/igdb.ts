@@ -7,6 +7,7 @@ import {
 	missingKey,
 	type Details,
 	type Fact,
+	type ReleaseInfo,
 	type SearchResult
 } from './types';
 
@@ -90,6 +91,23 @@ function gameToResult(g: IgdbGame): SearchResult {
 		year: g.first_release_date ? new Date(g.first_release_date * 1000).getFullYear() : null,
 		posterUrl: g.cover ? `${COVER}${g.cover.image_id}.jpg` : null,
 		overview: g.summary ?? null
+	};
+}
+
+// ---- Release date (dashboard) ----
+
+export async function getGameReleases(id: string): Promise<ReleaseInfo> {
+	const [g] = await igdb<IgdbGame[]>(
+		'games',
+		`fields name,first_release_date,cover.image_id,summary; where id = ${Number(id)};`
+	);
+	if (!g) throw new ProviderError(serverMessages().errors.gameNotFound, 404);
+	const date = g.first_release_date
+		? new Date(g.first_release_date * 1000).toLocaleDateString('sv-SE')
+		: null;
+	return {
+		item: gameToResult(g),
+		events: [{ kind: 'release', date, season: null, episode: null }]
 	};
 }
 

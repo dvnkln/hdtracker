@@ -6,6 +6,7 @@ import { findItem, saveItem } from './library';
 import { getAnimeDetails } from './providers/anilist';
 import { getTvDetails } from './providers/tmdb';
 import type { ShowDetails } from './providers/types';
+import { refreshInBackground } from './releases';
 import { getSetting } from './settings';
 
 export { findItem, hasEpisodes };
@@ -55,6 +56,7 @@ export function setEpisodes(
 	if (valid.length === 0) return;
 
 	const db = getDb();
+	let added = false;
 	db.transaction((tx) => {
 		let item = findItem(category, details.item.externalId);
 		if (!item) {
@@ -62,6 +64,7 @@ export function setEpisodes(
 			// First watched episode of a title that is not in the library yet: add it.
 			saveItem(category, details.item, 'active');
 			item = findItem(category, details.item.externalId)!;
+			added = true;
 		}
 
 		for (const t of valid) {
@@ -95,6 +98,7 @@ export function setEpisodes(
 				.run();
 		}
 	});
+	if (added) refreshInBackground(category, details.item.externalId);
 }
 
 // Status rules (see CLAUDE.md, point 5):

@@ -8,6 +8,7 @@ const DEFAULTS = {
 	language: 'en-US', // content language for TMDB (titles, descriptions)
 	region: 'US', // streaming offers and release dates
 	animeTitle: 'english', // main anime title: 'english' | 'romaji' (the other one is shown below)
+	hideSpoilers: 'on', // blur stills and descriptions of unwatched episodes: 'on' | 'off'
 	autoStatus: 'on', // change the status automatically when episodes are ticked: 'on' | 'off'
 	backupKeep: '7' // how many backup files to keep
 } as const;

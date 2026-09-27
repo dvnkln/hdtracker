@@ -29,6 +29,7 @@ export const load: PageServerLoad = async () => {
 		language: getSetting('language'),
 		region: getSetting('region'),
 		animeTitle: getSetting('animeTitle'),
+		hideSpoilers: getSetting('hideSpoilers') === 'on',
 		autoStatus: getSetting('autoStatus') === 'on'
 	};
 
@@ -65,7 +66,8 @@ export const actions: Actions = {
 		) {
 			return fail(400, { section: 'display', error: serverMessages().common.invalidData });
 		}
-		setSettings({ uiLanguage, language, region, animeTitle });
+		const hideSpoilers = data.get('hideSpoilers') === 'on' ? 'on' : 'off';
+		setSettings({ uiLanguage, language, region, animeTitle, hideSpoilers });
 		return { section: 'display', message: serverMessages().settings.saved };
 	},
 

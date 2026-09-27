@@ -1,4 +1,5 @@
 import type { Messages } from '$lib/i18n/de';
+import type { ReleaseKind } from '../db/schema';
 import { serverMessages } from '../i18n';
 
 // Common shape of a search hit, no matter which API it came from.
@@ -51,6 +52,17 @@ export function yearOf(date: string | null | undefined) {
 	const year = date ? Number.parseInt(date.slice(0, 4), 10) : NaN;
 	return Number.isNaN(year) ? null : year;
 }
+
+// A release date for the dashboard (see the `releases` table).
+export type ReleaseEvent = {
+	kind: ReleaseKind;
+	date: string | null; // YYYY-MM-DD, null = announced without date
+	season: number | null;
+	episode: number | null;
+};
+
+// Up-to-date metadata of a title plus its release dates.
+export type ReleaseInfo = { item: SearchResult; events: ReleaseEvent[] };
 
 // Series/anime with its episodes, as shown on the episodes page.
 export type ShowDetails = {

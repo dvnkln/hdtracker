@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Brand from '$lib/components/Brand.svelte';
+	import PasswordInput from '$lib/components/PasswordInput.svelte';
 	import { m } from '$lib/i18n/index.svelte';
 	import { MIN_PASSWORD_LENGTH } from '$lib/limits';
 	import type { ActionData } from './$types';
@@ -26,9 +27,8 @@
 		</label>
 		<label class="flex flex-col gap-1">
 			<span class="text-sm font-medium">{m.auth.passwordMin(MIN_PASSWORD_LENGTH)}</span>
-			<input
+			<PasswordInput
 				name="password"
-				type="password"
 				autocomplete="new-password"
 				minlength={MIN_PASSWORD_LENGTH}
 				required
@@ -36,7 +36,7 @@
 		</label>
 		<label class="flex flex-col gap-1">
 			<span class="text-sm font-medium">{m.auth.passwordRepeat}</span>
-			<input name="confirm" type="password" autocomplete="new-password" required />
+			<PasswordInput name="confirm" autocomplete="new-password" required />
 		</label>
 
 		{#if form?.error}

@@ -7,8 +7,14 @@
 	import { formatDate, formatShortDate, m } from '$lib/i18n/index.svelte';
 
 	// Progress, seasons and episodes of a series/anime. Form actions live on the detail page.
-	type Props = { category: 'series' | 'anime'; show: ShowDetails; watched: string[] };
-	let { category, show, watched }: Props = $props();
+	type Props = {
+		category: 'series' | 'anime';
+		show: ShowDetails;
+		watched: string[];
+		// Blur stills and descriptions of unwatched episodes (setting)
+		hideSpoilers: boolean;
+	};
+	let { category, show, watched, hideSpoilers }: Props = $props();
 
 	const key = (season: number, episode: number) => `${season}:${episode}`;
 
@@ -227,6 +233,7 @@
 						<ul>
 							{#each season.episodes as ep (ep.number)}
 								{@const watched = isWatched(season.number, ep.number)}
+								{@const blur = hideSpoilers && !watched}
 								<li>
 									<button
 										name="episode"
@@ -245,9 +252,9 @@
 													alt=""
 													loading="lazy"
 													referrerpolicy="no-referrer"
-													class="h-full w-full object-cover transition-opacity {watched
+													class="h-full w-full object-cover transition {watched
 														? 'opacity-40'
-														: ''}"
+														: ''} {blur ? 'scale-110 blur-md' : ''}"
 												/>
 											{/if}
 											<span
@@ -273,7 +280,11 @@
 													.join(' · ')}
 											</span>
 											{#if ep.overview}
-												<span class="mt-1 line-clamp-2 text-xs text-zinc-400">{ep.overview}</span>
+												<span
+													class="mt-1 line-clamp-2 text-xs text-zinc-400 transition {blur
+														? 'blur-[3px] select-none'
+														: ''}">{ep.overview}</span
+												>
 											{/if}
 										</span>
 									</button>

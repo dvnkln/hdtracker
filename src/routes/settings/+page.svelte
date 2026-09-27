@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { CATEGORY_KEYS } from '$lib/categories';
+	import PasswordInput from '$lib/components/PasswordInput.svelte';
 	import { LOCALES, m } from '$lib/i18n/index.svelte';
 	import { MIN_PASSWORD_LENGTH } from '$lib/limits';
 	import { FormFeedback } from '$lib/forms.svelte';
@@ -121,6 +122,14 @@
 				{/each}
 			</fieldset>
 
+			<div class="flex items-start justify-between gap-4">
+				<label for="hideSpoilers" class="flex cursor-pointer flex-col gap-1">
+					<span class={labelText}>{m.settings.hideSpoilers}</span>
+					<span class={hint}>{m.settings.hideSpoilersHint}</span>
+				</label>
+				<Switch id="hideSpoilers" name="hideSpoilers" checked={data.values.hideSpoilers} />
+			</div>
+
 			<div class={actions}>
 				<SubmitButton text={m.settings.save} busy={forms.busy === 'display'} />
 				<FeedbackText feedback={forms.messages.display} />
@@ -173,13 +182,12 @@
 			/>
 			<label class={label}>
 				<span class={labelText}>{m.settings.currentPassword}</span>
-				<input name="current" type="password" autocomplete="current-password" required />
+				<PasswordInput name="current" autocomplete="current-password" required />
 			</label>
 			<label class={label}>
 				<span class={labelText}>{m.settings.newPassword(MIN_PASSWORD_LENGTH)}</span>
-				<input
+				<PasswordInput
 					name="password"
-					type="password"
 					autocomplete="new-password"
 					minlength={MIN_PASSWORD_LENGTH}
 					required
@@ -187,9 +195,8 @@
 			</label>
 			<label class={label}>
 				<span class={labelText}>{m.settings.repeatPassword}</span>
-				<input
+				<PasswordInput
 					name="confirm"
-					type="password"
 					autocomplete="new-password"
 					minlength={MIN_PASSWORD_LENGTH}
 					required

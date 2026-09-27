@@ -12,10 +12,12 @@
 ## Features
 
 - **Four separate areas** – movies, series, anime, games – each with search and a library grouped by status (watching, paused, planned, completed, dropped)
+- **Dashboard** – what was released recently and what is coming up: new episodes, new seasons, cinema and home releases, game releases – for everything you plan to watch or are watching/playing
 - **Episode tracking** – tick off single episodes, whole seasons or entire shows; upcoming episodes and announced seasons with dates
 - **Where to watch** – streaming, rent and buy offers for your region (via JustWatch), with direct links where possible
 - **Detail pages** – runtime, genres, rating, release dates and similar titles
 - **Private** – runs on your own server, single account, data stays in one SQLite file
+- **Maintenance built in** – release dates refresh nightly; optional scheduled database backups
 
 ## Quick start
 

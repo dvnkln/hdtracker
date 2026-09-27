@@ -253,7 +253,12 @@
 			<section class="mt-6">
 				<h2 class="text-lg font-semibold">{m.detail.episodes}</h2>
 				{#key info.item.externalId}
-					<Episodes category={data.category} show={data.show} watched={data.watched} />
+					<Episodes
+						category={data.category}
+						show={data.show}
+						watched={data.watched}
+						hideSpoilers={data.hideSpoilers}
+					/>
 				{/key}
 			</section>
 		{/if}

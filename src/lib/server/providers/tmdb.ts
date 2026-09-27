@@ -9,6 +9,7 @@ import {
 	yearOf,
 	type Details,
 	type Fact,
+	type ReleaseInfo,
 	type SearchResult,
 	type ShowDetails
 } from './types';
@@ -179,6 +180,38 @@ function common(data: TmdbCommon) {
 	};
 }
 
+type TmdbReleaseDates = TmdbMovieFull['release_dates'];
+
+// Release types: 2/3 = cinema, 4 = digital, 5 = disc. Takes the earliest of each in the region.
+function regionalDates(releaseDates: TmdbReleaseDates, region: string) {
+	const dates = releaseDates.results.find((r) => r.iso_3166_1 === region)?.release_dates ?? [];
+	const earliest = (types: number[]) =>
+		dates
+			.filter((d) => types.includes(d.type))
+			.map((d) => d.release_date.slice(0, 10))
+			.sort()[0] as string | undefined;
+	return { cinema: earliest([2, 3]), home: earliest([4, 5]) };
+}
+
+// Movie metadata and its release dates in the region (for the dashboard).
+export function getMovieReleases(id: string, language: string, region: string) {
+	return cached(`tmdb:movie-releases:${id}:${language}:${region}`, CACHE_MS, async () => {
+		const m = await tmdb<TmdbMovie & { release_dates: TmdbReleaseDates }>(`/movie/${id}`, {
+			language,
+			append_to_response: 'release_dates'
+		});
+		const { cinema, home } = regionalDates(m.release_dates, region);
+		const info: ReleaseInfo = { item: movieToResult(m), events: [] };
+		const event = (kind: 'cinema' | 'home' | 'release', date: string | null) =>
+			info.events.push({ kind, date, season: null, episode: null });
+		if (cinema) event('cinema', cinema);
+		if (home) event('home', home);
+		// No dates for the region: fall back to the general release date (or "no date yet").
+		if (!cinema && !home) event('release', m.release_date || null);
+		return info;
+	});
+}
+
 export function getMovieInfo(id: string, language: string, region: string): Promise<Details> {
 	return cached(`tmdb:movie-info:${id}:${language}:${region}`, CACHE_MS, async () => {
 		const m = await tmdb<TmdbMovieFull>(`/movie/${id}`, {
@@ -186,15 +219,7 @@ export function getMovieInfo(id: string, language: string, region: string): Prom
 			append_to_response: 'release_dates,watch/providers,recommendations,external_ids'
 		});
 
-		// Release types: 2/3 = cinema, 4 = digital, 5 = disc. Take the earliest of each.
-		const dates = m.release_dates.results.find((r) => r.iso_3166_1 === region)?.release_dates ?? [];
-		const earliest = (types: number[]) =>
-			dates
-				.filter((d) => types.includes(d.type))
-				.map((d) => d.release_date.slice(0, 10))
-				.sort()[0];
-		const cinema = earliest([2, 3]);
-		const home = earliest([4, 5]);
+		const { cinema, home } = regionalDates(m.release_dates, region);
 		const facts: Fact[] = [];
 		if (cinema) facts.push({ key: 'cinema', value: cinema, isDate: true });
 		if (home) facts.push({ key: 'home', value: home, isDate: true });

@@ -12,6 +12,8 @@ export const de = {
 		search: 'Suchen',
 		logout: 'Abmelden',
 		settings: 'Einstellungen',
+		showPassword: 'Passwort anzeigen',
+		hidePassword: 'Passwort verbergen',
 		home: 'Startseite',
 		more: 'Mehr anzeigen',
 		less: 'Weniger',
@@ -67,7 +69,26 @@ export const de = {
 	},
 
 	home: {
-		hello: (name: string) => `Hallo ${name}`
+		recent: 'Kürzlich erschienen',
+		recentHint: 'Letzte 4 Wochen',
+		upcoming: 'Demnächst',
+		noRecent: 'In den letzten 4 Wochen ist nichts Neues erschienen.',
+		noUpcoming: 'Keine anstehenden Termine bekannt.',
+		emptyLibrary:
+			'Hier erscheinen neue Folgen, Kinostarts und Releases von allem, was du geplant hast oder gerade schaust bzw. spielst. Füge dazu Titel über die Bereiche unten zur Bibliothek hinzu.',
+		dateOpen: 'Datum offen',
+		kinds: {
+			cinema: 'Kinostart',
+			home: 'Heimkino-Start',
+			release: 'Erscheinungstermin'
+		} as Record<string, string>,
+		episodeCode: (season: number, episode: number) =>
+			`S${String(season).padStart(2, '0')}E${String(episode).padStart(2, '0')}`,
+		animeEpisodes: (from: number, to: number) =>
+			from === to ? `Folge ${from}` : `Folgen ${from}–${to}`,
+		seriesStart: 'Serienstart',
+		seasonStart: 'Staffelstart',
+		animeStart: 'Start'
 	},
 
 	library: {
@@ -163,6 +184,10 @@ export const de = {
 		animeTitleEnglish: 'Englischer Titel oben, Romaji darunter',
 		animeTitleRomaji: 'Romaji oben, englischer Titel darunter',
 
+		hideSpoilers: 'Spoiler-Schutz',
+		hideSpoilersHint:
+			'Bilder und Beschreibungen noch nicht gesehener Folgen werden unscharf angezeigt.',
+
 		behavior: 'Verhalten',
 		autoStatus: 'Status automatisch anpassen',
 		autoStatusHint:
@@ -204,6 +229,11 @@ export const de = {
 			backup: {
 				name: 'Backup',
 				description: 'Speichert eine Kopie der Datenbank im Ordner /data/backups.'
+			},
+			metadata: {
+				name: 'Metadaten aktualisieren',
+				description:
+					'Holt Titel, Poster und Erscheinungstermine aller Einträge neu (für das Dashboard). Abgebrochene Titel werden übersprungen.'
 			},
 			optimize: {
 				name: 'Datenbank-Pflege',
@@ -249,6 +279,8 @@ export const de = {
 		delete: 'Löschen',
 		deleteAll: 'Alle löschen',
 		deleteAllConfirm: 'Wirklich alle löschen?',
+		refreshFailed: (failed: number, total: number) =>
+			`${failed} von ${total} Einträgen konnten nicht aktualisiert werden.`,
 		restoreHint: 'Wie man ein Backup zurückspielt, steht in der README.'
 	},
 

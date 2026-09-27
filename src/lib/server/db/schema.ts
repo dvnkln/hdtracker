@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 import type { Category, Status } from '../../status';
 import type { SearchResult } from '../providers/types';
 
@@ -81,3 +81,25 @@ export const tasks = sqliteTable('tasks', {
 	lastDurationMs: integer('last_duration_ms'),
 	lastError: text('last_error')
 });
+
+// Release dates of library items, refreshed by the "metadata" background task.
+// Shown on the dashboard. `date` is YYYY-MM-DD (server time zone) or null if announced
+// without a date.
+export const releases = sqliteTable(
+	'releases',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		itemId: integer('item_id')
+			.notNull()
+			.references(() => libraryItems.id, { onDelete: 'cascade' }),
+		// cinema/home: movie in cinemas / digital or disc; release: movie (no regional date) or
+		// game; episode: one episode of a series or anime (anime use season 1)
+		kind: text('kind').$type<ReleaseKind>().notNull(),
+		date: text('date'),
+		season: integer('season'),
+		episode: integer('episode')
+	},
+	(t) => [index('releases_item').on(t.itemId)]
+);
+
+export type ReleaseKind = 'cinema' | 'home' | 'release' | 'episode';

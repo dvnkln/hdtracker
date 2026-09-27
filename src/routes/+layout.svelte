@@ -39,7 +39,6 @@
 				><Brand /></a
 			>
 			<form method="POST" action="/logout" class="flex items-center gap-1">
-				<span class="mr-2 text-sm text-zinc-400">{data.user.username}</span>
 				<a
 					href="/settings"
 					class="rounded-lg p-2 transition-colors hover:bg-zinc-800 hover:text-zinc-100 {section ===
@@ -66,34 +65,6 @@
 	<!-- pb-24 keeps content above the bottom navigation -->
 	<div class="pb-24">
 		{@render children()}
-
-		<footer class="mx-auto max-w-screen-lg px-4 pt-10 text-xs text-zinc-500">
-			<p>
-				{m.footer.tmdbBefore}
-				<a
-					href="https://www.themoviedb.org"
-					class="underline hover:text-zinc-300"
-					target="_blank"
-					rel="noreferrer">TMDB</a
-				>{m.footer.tmdbAfter}
-			</p>
-			<p class="mt-1">
-				{m.footer.gamesBy}
-				<a
-					href="https://www.igdb.com"
-					class="underline hover:text-zinc-300"
-					target="_blank"
-					rel="noreferrer">IGDB</a
-				>,
-				{m.footer.animeBy}
-				<a
-					href="https://anilist.co"
-					class="underline hover:text-zinc-300"
-					target="_blank"
-					rel="noreferrer">AniList</a
-				>.
-			</p>
-		</footer>
 	</div>
 
 	<nav

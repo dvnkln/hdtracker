@@ -5,6 +5,8 @@ import {
 	fetchJson,
 	type Details,
 	type Fact,
+	type ReleaseEvent,
+	type ReleaseInfo,
 	type SearchResult,
 	type ShowDetails
 } from './types';
@@ -146,6 +148,57 @@ export function getAnimeDetails(id: string): Promise<ShowDetails> {
 			]
 		};
 	});
+}
+
+// ---- Release dates (dashboard) ----
+
+const RELEASES_QUERY = `
+query ($id: Int, $since: Int) {
+  Media(id: $id, type: ANIME) {
+    id
+    title { romaji english }
+    startDate { year month day }
+    coverImage { large }
+    description(asHtml: false)
+    status
+  }
+  Page(perPage: 50) {
+    airingSchedules(mediaId: $id, airingAt_greater: $since, sort: TIME) { episode airingAt }
+  }
+}`;
+
+type AniListReleases = {
+	Media: (AniListDetails & { startDate: { month: number | null; day: number | null } }) | null;
+	Page: { airingSchedules: { episode: number; airingAt: number }[] };
+};
+
+// Anime metadata and the air dates of its episodes from `sinceDays` ago onwards.
+export async function getAnimeReleases(id: string, sinceDays: number): Promise<ReleaseInfo> {
+	const since = Math.floor(Date.now() / 1000) - sinceDays * 24 * 60 * 60;
+	const data = await fetchJson<{ data: AniListReleases }>('AniList', 'https://graphql.anilist.co', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+		body: JSON.stringify({ query: RELEASES_QUERY, variables: { id: Number(id), since } })
+	});
+	const m = data.data.Media;
+	if (!m) throw new ProviderError(serverMessages().errors.animeNotFound, 404);
+
+	const episode = (number: number, date: string | null): ReleaseEvent => ({
+		kind: 'episode',
+		date,
+		season: 1,
+		episode: number
+	});
+	const events = data.data.Page.airingSchedules.map((s) =>
+		episode(s.episode, new Date(s.airingAt * 1000).toLocaleDateString('sv-SE'))
+	);
+	// Not started and no schedule yet: the start date, if the exact day is known.
+	if (events.length === 0 && m.status === 'NOT_YET_RELEASED') {
+		const { year, month, day } = m.startDate;
+		const pad = (n: number) => String(n).padStart(2, '0');
+		events.push(episode(1, year && month && day ? `${year}-${pad(month)}-${pad(day)}` : null));
+	}
+	return { item: toSearchResult(m), events };
 }
 
 // ---- Detail page ----

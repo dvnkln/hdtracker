@@ -12,6 +12,7 @@ import { getDetails } from '$lib/server/details';
 import { libraryStatusFor } from '$lib/server/library';
 import { ProviderError } from '$lib/server/providers/types';
 import { serverMessages } from '$lib/server/i18n';
+import { getSetting } from '$lib/server/settings';
 import type { Actions, PageServerLoad } from './$types';
 
 const ID_PATTERN = /^\d{1,12}$/;
@@ -57,7 +58,8 @@ export const load: PageServerLoad = async ({ params }) => {
 			show,
 			status: item?.status ?? null,
 			watched: [...watchedKeys(item?.id)],
-			similarStatus: Object.fromEntries(similarStatus)
+			similarStatus: Object.fromEntries(similarStatus),
+			hideSpoilers: getSetting('hideSpoilers') === 'on'
 		};
 	} catch (err) {
 		failLoading(err);

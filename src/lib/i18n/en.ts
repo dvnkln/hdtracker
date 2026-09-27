@@ -9,6 +9,8 @@ export const en: Messages = {
 		search: 'Search',
 		logout: 'Log out',
 		settings: 'Settings',
+		showPassword: 'Show password',
+		hidePassword: 'Hide password',
 		home: 'Home',
 		more: 'Show more',
 		less: 'Show less',
@@ -63,7 +65,21 @@ export const en: Messages = {
 	},
 
 	home: {
-		hello: (name) => `Hello ${name}`
+		recent: 'Recently released',
+		recentHint: 'Last 4 weeks',
+		upcoming: 'Coming up',
+		noRecent: 'Nothing new was released in the last 4 weeks.',
+		noUpcoming: 'No upcoming dates known.',
+		emptyLibrary:
+			'New episodes, cinema dates and releases of everything you plan to watch or are currently watching or playing show up here. Add titles to your library via the areas below.',
+		dateOpen: 'Date not announced',
+		kinds: { cinema: 'In cinemas', home: 'Home release', release: 'Release' },
+		episodeCode: (season, episode) =>
+			`S${String(season).padStart(2, '0')}E${String(episode).padStart(2, '0')}`,
+		animeEpisodes: (from, to) => (from === to ? `Episode ${from}` : `Episodes ${from}–${to}`),
+		seriesStart: 'Series premiere',
+		seasonStart: 'Season premiere',
+		animeStart: 'Premiere'
 	},
 
 	library: {
@@ -157,6 +173,9 @@ export const en: Messages = {
 		animeTitleEnglish: 'English title on top, Romaji below',
 		animeTitleRomaji: 'Romaji on top, English title below',
 
+		hideSpoilers: 'Spoiler protection',
+		hideSpoilersHint: 'Images and descriptions of episodes you have not watched yet are blurred.',
+
 		behavior: 'Behavior',
 		autoStatus: 'Update status automatically',
 		autoStatusHint:
@@ -198,6 +217,11 @@ export const en: Messages = {
 				name: 'Backup',
 				description: 'Saves a copy of the database in the folder /data/backups.'
 			},
+			metadata: {
+				name: 'Refresh metadata',
+				description:
+					'Reloads titles, posters and release dates of all entries (for the dashboard). Dropped titles are skipped.'
+			},
 			optimize: {
 				name: 'Database care',
 				description: 'Tidies up the database and makes the file more compact.'
@@ -237,6 +261,7 @@ export const en: Messages = {
 		delete: 'Delete',
 		deleteAll: 'Delete all',
 		deleteAllConfirm: 'Really delete all?',
+		refreshFailed: (failed, total) => `${failed} of ${total} entries could not be refreshed.`,
 		restoreHint: 'How to restore a backup is described in the README.'
 	},
 
