@@ -7,8 +7,11 @@
 
 <span class="inline-flex items-center {large ? 'gap-3' : 'gap-2'}">
 	<Logo size={large ? 56 : 30} />
+	<!-- Nudged down a bit: the logo's visual centre is the couch, not couch + heads -->
 	<span
-		class="font-brand leading-none font-semibold tracking-tight {large ? 'text-4xl' : 'text-xl'}"
+		class="relative top-[0.14em] font-brand leading-none font-semibold tracking-tight {large
+			? 'text-4xl'
+			: 'text-xl'}"
 	>
 		<span
 			class="bg-linear-to-r from-[#ec4899] to-[#3b82f6] bg-clip-text font-extrabold text-transparent"

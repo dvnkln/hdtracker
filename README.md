@@ -80,3 +80,7 @@ npm run dev
 
 SvelteKit, TypeScript, Drizzle ORM with SQLite, Tailwind CSS. Build the Docker image from source with
 `docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build`.
+
+## License
+
+[MIT](LICENSE) – fork it, copy it, change it however you like. This is a personal project, provided as-is without support or guarantees; if it's useful to you too, even better.
