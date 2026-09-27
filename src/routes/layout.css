@@ -17,4 +17,20 @@
 	textarea {
 		@apply rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-base text-zinc-100 outline-none placeholder:text-zinc-500 focus:border-zinc-400;
 	}
+
+	/* Hand cursor on everything clickable (Tailwind v4 uses the arrow for buttons by default). */
+	button:not(:disabled),
+	summary,
+	select,
+	[role='button'] {
+		cursor: pointer;
+	}
+	button:disabled {
+		cursor: not-allowed;
+	}
+
+	/* Visible focus frame when using the keyboard (Tab), not when clicking. */
+	:focus-visible {
+		@apply outline-2 outline-offset-2 outline-zinc-300;
+	}
 }

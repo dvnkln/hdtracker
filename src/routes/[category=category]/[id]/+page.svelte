@@ -118,7 +118,7 @@
 						type="button"
 						onclick={() => (sheetOpen = true)}
 						class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium {data.status
-							? 'bg-(--accent) text-white hover:brightness-110'
+							? 'bg-(--accent) text-white hover:brightness-125'
 							: 'border border-zinc-600 bg-zinc-900/80 hover:bg-zinc-800'} transition"
 					>
 						{#if data.status}
@@ -259,13 +259,13 @@
 		{#if info.similar.length}
 			<section class="mt-8">
 				<h2 class="text-lg font-semibold">{m.detail.similar}</h2>
-				<ul class="-mx-4 mt-2 flex snap-x gap-3 overflow-x-auto px-4 pb-2">
+				<ul class="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pt-3 pb-4">
 					{#each info.similar as item (item.externalId)}
 						{@const status = data.similarStatus[item.externalId]}
 						<li class="w-28 shrink-0 snap-start sm:w-32">
-							<a href="/{data.category}/{item.externalId}" class="group block outline-none">
+							<a href="/{data.category}/{item.externalId}" class="group/poster block outline-none">
 								<div
-									class="relative aspect-[2/3] overflow-hidden rounded-lg bg-zinc-900 ring-1 ring-zinc-800 transition duration-200 group-hover:-translate-y-0.5 group-hover:shadow-lg group-hover:ring-2 group-hover:shadow-black/50 group-hover:ring-(--accent) group-focus-visible:ring-2 group-focus-visible:ring-(--accent)"
+									class="relative aspect-[2/3] overflow-hidden rounded-lg bg-zinc-900 ring-1 ring-zinc-800 transition duration-200 group-hover/poster:-translate-y-0.5 group-hover/poster:shadow-lg group-hover/poster:ring-2 group-hover/poster:shadow-black/50 group-hover/poster:ring-(--accent) group-focus-visible/poster:ring-2 group-focus-visible/poster:ring-(--accent)"
 								>
 									{#if item.posterUrl}
 										<img
@@ -273,7 +273,7 @@
 											alt={item.title}
 											loading="lazy"
 											referrerpolicy="no-referrer"
-											class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+											class="h-full w-full object-cover transition duration-300 group-hover/poster:scale-105"
 										/>
 									{:else}
 										<div class="flex h-full items-center justify-center text-zinc-600">
@@ -289,7 +289,7 @@
 									{/if}
 								</div>
 								<p
-									class="mt-1.5 line-clamp-2 text-sm leading-tight font-medium transition-colors group-hover:text-(--accent)"
+									class="mt-1.5 line-clamp-2 text-sm leading-tight font-medium transition-colors group-hover/poster:text-(--accent)"
 								>
 									{item.title}
 								</p>

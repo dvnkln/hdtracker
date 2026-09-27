@@ -82,16 +82,22 @@
 			{#each CATEGORY_KEYS as key (key)}
 				{@const cat = CATEGORIES[key]}
 				{@const active = section === key}
+				<!-- Active area: icon + label in its colour, icon filled. Hover previews that on the icon. -->
 				<a
 					href="/{key}"
-					class="flex flex-col items-center gap-1 py-2 text-xs transition-colors hover:bg-zinc-900 {active
-						? ''
-						: 'hover:text-zinc-100'}"
-					style:color={active ? cat.accent : undefined}
-					class:text-zinc-400={!active}
+					class="group/nav flex flex-col items-center gap-1 py-2 text-xs transition-colors {active
+						? 'text-(--accent)'
+						: 'text-zinc-400 hover:text-zinc-200'}"
+					style:--accent={cat.accent}
 					aria-current={active ? 'page' : undefined}
 				>
-					<cat.icon size={22} strokeWidth={active ? 2.5 : 2} />
+					<cat.icon
+						size={22}
+						strokeWidth={active ? 2.5 : 2}
+						class="transition duration-200 {active
+							? 'fill-(--accent)/20'
+							: 'group-hover/nav:scale-110 group-hover/nav:fill-(--accent)/20 group-hover/nav:text-(--accent)'}"
+					/>
 					{m.categories[key]}
 				</a>
 			{/each}

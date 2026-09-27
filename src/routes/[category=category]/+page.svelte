@@ -59,7 +59,7 @@
 			class="min-w-0 flex-1"
 		/>
 		<button
-			class="flex items-center justify-center rounded-lg bg-(--accent) px-4 font-medium text-white transition hover:brightness-110 active:brightness-95"
+			class="flex items-center justify-center rounded-lg bg-(--accent) px-4 font-medium text-white transition hover:brightness-125 active:brightness-90"
 			aria-label={m.common.search}
 		>
 			{#if searching}
