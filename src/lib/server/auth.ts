@@ -114,13 +114,13 @@ export function deleteExpiredSessions() {
 	getDb().delete(sessions).where(lt(sessions.expiresAt, new Date())).run();
 }
 
-// `secure` only on https, so login also works on plain http in the LAN.
-export function setSessionCookie(cookies: Cookies, url: URL, token: string, expires: Date) {
+// `secure` only on https (see isHttps in origins.ts), so login also works on plain http in the LAN.
+export function setSessionCookie(cookies: Cookies, secure: boolean, token: string, expires: Date) {
 	cookies.set(SESSION_COOKIE, token, {
 		path: '/',
 		httpOnly: true,
 		sameSite: 'lax',
-		secure: url.protocol === 'https:',
+		secure,
 		expires
 	});
 }

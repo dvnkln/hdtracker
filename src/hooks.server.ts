@@ -9,11 +9,12 @@ import {
 	setSessionCookie,
 	validateSession
 } from '$lib/server/auth';
+import { allowedOrigins, isAllowedOrigin, isHttps } from '$lib/server/origins';
 
 // Runs once when the server starts, before the first request is handled.
 export const init: ServerInit = () => {
 	getSecret(); // fail fast if SECRET is missing
-	if (!process.env.ORIGIN && process.env.NODE_ENV === 'production') {
+	if (allowedOrigins().length === 0 && process.env.NODE_ENV === 'production') {
 		console.warn('ORIGIN is not set in .env – login and all forms will fail (HTTP 403).');
 	}
 	runMigrations();
@@ -24,14 +25,32 @@ export const init: ServerInit = () => {
 // Pages reachable without being logged in.
 const PUBLIC_PATHS = ['/health', '/login', '/setup'];
 
-function redirectTo(location: string) {
-	return new Response(null, { status: 303, headers: { location } });
+// Old German URLs (before the switch to English) -> new ones, so bookmarks keep working.
+const OLD_PATHS: Record<string, string> = { filme: 'movies', serien: 'series', spiele: 'games' };
+
+const SAFE_METHODS = ['GET', 'HEAD', 'OPTIONS'];
+
+function redirectTo(location: string, status = 303) {
+	return new Response(null, { status, headers: { location } });
 }
 
-// Runs for every request: loads the logged-in user and redirects to /setup or /login if needed.
+// Runs for every request: checks the origin of form posts, loads the logged-in user and
+// redirects to /setup or /login if needed.
 export const handle: Handle = async ({ event, resolve }) => {
-	const path = event.url.pathname;
+	const { url, request } = event;
+	const path = url.pathname;
 	if (path === '/health') return resolve(event);
+
+	const [, first, ...rest] = path.split('/');
+	if (OLD_PATHS[first]) {
+		return redirectTo(['', OLD_PATHS[first], ...rest].join('/') + url.search, 301);
+	}
+
+	if (!SAFE_METHODS.includes(request.method)) {
+		if (!isAllowedOrigin(request.headers.get('origin'), url)) {
+			return new Response('Cross-site POST form submissions are forbidden', { status: 403 });
+		}
+	}
 
 	event.locals.user = null;
 	const token = event.cookies.get(SESSION_COOKIE);
@@ -40,7 +59,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		if (session) {
 			event.locals.user = session.user;
 			if (session.renewedUntil) {
-				setSessionCookie(event.cookies, event.url, token, session.renewedUntil);
+				setSessionCookie(event.cookies, isHttps(request, url), token, session.renewedUntil);
 			}
 		} else {
 			clearSessionCookie(event.cookies);

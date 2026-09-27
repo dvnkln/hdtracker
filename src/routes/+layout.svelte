@@ -10,7 +10,7 @@
 
 	let { data, children } = $props();
 
-	// First part of the URL, e.g. "filme" for /filme?q=dune
+	// First part of the URL, e.g. "movies" for /movies?q=dune
 	let section = $derived(page.url.pathname.split('/')[1]);
 </script>
 

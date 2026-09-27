@@ -10,13 +10,13 @@ export function getDetails(category: Category, id: string): Promise<Details> {
 	const language = getSetting('language');
 	const region = getSetting('region');
 	switch (category) {
-		case 'filme':
+		case 'movies':
 			return getMovieInfo(id, language, region);
-		case 'serien':
+		case 'series':
 			return getTvInfo(id, language, region);
 		case 'anime':
 			return getAnimeInfo(id);
-		case 'spiele':
+		case 'games':
 			return getGameInfo(id);
 	}
 }

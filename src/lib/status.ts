@@ -1,5 +1,5 @@
 // Kept free of Svelte/icon imports so drizzle-kit can load it via the DB schema.
-export type Category = 'filme' | 'serien' | 'anime' | 'spiele';
+export type Category = 'movies' | 'series' | 'anime' | 'games';
 
 // Order = order of the sections on a category page.
 export const STATUSES = ['active', 'paused', 'planned', 'completed', 'dropped'] as const;
@@ -11,8 +11,8 @@ const DROPPED = `Abge${SHY}brochen`;
 
 // Label per category. A missing entry means the status is not used there.
 const LABELS: Record<Category, Partial<Record<Status, string>>> = {
-	filme: { planned: 'Geplant', completed: 'Gesehen', dropped: DROPPED },
-	serien: {
+	movies: { planned: 'Geplant', completed: 'Gesehen', dropped: DROPPED },
+	series: {
 		active: 'Schaue ich',
 		paused: 'Pausiert',
 		planned: 'Geplant',
@@ -26,7 +26,7 @@ const LABELS: Record<Category, Partial<Record<Status, string>>> = {
 		completed: 'Gesehen',
 		dropped: DROPPED
 	},
-	spiele: {
+	games: {
 		active: 'Spiele ich',
 		paused: 'Pausiert',
 		planned: 'Geplant',
@@ -51,6 +51,6 @@ export function isStatusFor(category: Category, value: string): value is Status 
 }
 
 // Categories with seasons/episodes (they get an episodes page).
-export function hasEpisodes(category: Category): category is 'serien' | 'anime' {
-	return category === 'serien' || category === 'anime';
+export function hasEpisodes(category: Category): category is 'series' | 'anime' {
+	return category === 'series' || category === 'anime';
 }

@@ -1,3 +1,4 @@
+import { isHttps } from '$lib/server/origins';
 import { fail, redirect } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import { getDb } from '$lib/server/db';
@@ -37,7 +38,7 @@ export const actions: Actions = {
 
 		clearLoginFailures(ip);
 		const { token, expiresAt } = createSession(user.id);
-		setSessionCookie(cookies, url, token, expiresAt);
+		setSessionCookie(cookies, isHttps(request, url), token, expiresAt);
 		redirect(303, '/');
 	}
 };

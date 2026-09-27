@@ -6,7 +6,7 @@
 	import { CalendarClock, Check, CheckCheck, ChevronRight } from '@lucide/svelte';
 
 	// Progress, seasons and episodes of a series/anime. Form actions live on the detail page.
-	type Props = { category: 'serien' | 'anime'; show: ShowDetails; watched: string[] };
+	type Props = { category: 'series' | 'anime'; show: ShowDetails; watched: string[] };
 	let { category, show, watched }: Props = $props();
 
 	const key = (season: number, episode: number) => `${season}:${episode}`;

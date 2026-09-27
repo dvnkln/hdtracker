@@ -1,3 +1,4 @@
+import { isHttps } from '$lib/server/origins';
 import { fail, redirect } from '@sveltejs/kit';
 import { getDb } from '$lib/server/db';
 import { users } from '$lib/server/db/schema';
@@ -43,7 +44,7 @@ export const actions: Actions = {
 			.get();
 
 		const { token, expiresAt } = createSession(user.id);
-		setSessionCookie(cookies, url, token, expiresAt);
+		setSessionCookie(cookies, isHttps(request, url), token, expiresAt);
 		redirect(303, '/');
 	}
 };

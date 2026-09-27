@@ -48,13 +48,13 @@
    ORIGIN=http://192.168.1.50:3000
    ```
 
-   | Variable                                | What to put in                                                                                                                                                 |
-   | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-   | `SECRET`                                | Random string, at least 32 characters: `openssl rand -hex 32`                                                                                                  |
-   | `TMDB_API_TOKEN`                        | [themoviedb.org](https://www.themoviedb.org/settings/api) → Settings → API → **API Read Access Token** (the long one)                                          |
-   | `IGDB_CLIENT_ID` / `IGDB_CLIENT_SECRET` | [dev.twitch.tv/console/apps](https://dev.twitch.tv/console/apps) → Register Your Application (Redirect URL `http://localhost`, Client Type _Confidential_)     |
-   | `TZ`                                    | Your [time zone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)                                                                                 |
-   | `ORIGIN`                                | **Exactly** the address you open the app with – otherwise login fails. E.g. `http://192.168.1.50:3000` or `https://tracker.example.com` behind a reverse proxy |
+   | Variable                                | What to put in                                                                                                                                                                                     |
+   | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+   | `SECRET`                                | Random string, at least 32 characters: `openssl rand -hex 32`                                                                                                                                      |
+   | `TMDB_API_TOKEN`                        | [themoviedb.org](https://www.themoviedb.org/settings/api) → Settings → API → **API Read Access Token** (the long one)                                                                              |
+   | `IGDB_CLIENT_ID` / `IGDB_CLIENT_SECRET` | [dev.twitch.tv/console/apps](https://dev.twitch.tv/console/apps) → Register Your Application (Redirect URL `http://localhost`, Client Type _Confidential_)                                         |
+   | `TZ`                                    | Your [time zone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)                                                                                                                     |
+   | `ORIGIN`                                | **Exactly** the address you open the app with – otherwise login fails. E.g. `http://192.168.1.50:3000` or `https://tracker.example.com` behind a reverse proxy. Several addresses: comma-separated |
 
    Anime (AniList) needs no key. Without TMDB or IGDB keys only those areas are unavailable.
 

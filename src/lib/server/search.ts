@@ -9,13 +9,13 @@ import { getSetting } from './settings';
 export function searchCategory(category: Category, query: string): Promise<SearchResult[]> {
 	const language = getSetting('language');
 	switch (category) {
-		case 'filme':
+		case 'movies':
 			return searchMovies(query, language);
-		case 'serien':
+		case 'series':
 			return searchTv(query, language);
 		case 'anime':
 			return searchAnime(query);
-		case 'spiele':
+		case 'games':
 			return searchGames(query);
 	}
 }

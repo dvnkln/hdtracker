@@ -13,6 +13,8 @@ export default defineConfig({
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
 			adapter: adapter(),
+			// Our own origin check in hooks.server.ts replaces this, because ORIGIN may list several addresses.
+			csrf: { trustedOrigins: ['*'] },
 			typescript: {
 				config: (config) => {
 					config.include.push('../drizzle.config.ts');

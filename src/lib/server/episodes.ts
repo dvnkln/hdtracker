@@ -12,8 +12,8 @@ export { findItem, hasEpisodes };
 
 export type EpisodeRef = { season: number; episode: number };
 
-export function getShowDetails(category: 'serien' | 'anime', id: string) {
-	return category === 'serien' ? getTvDetails(id, getSetting('language')) : getAnimeDetails(id);
+export function getShowDetails(category: 'series' | 'anime', id: string) {
+	return category === 'series' ? getTvDetails(id, getSetting('language')) : getAnimeDetails(id);
 }
 
 const key = (season: number, episode: number) => `${season}:${episode}`;
@@ -40,7 +40,7 @@ export function airedEpisodes(details: ShowDetails, season?: number): EpisodeRef
 
 // Marks episodes as watched or unwatched, then updates the status automatically.
 export function setEpisodes(
-	category: 'serien' | 'anime',
+	category: 'series' | 'anime',
 	details: ShowDetails,
 	targets: EpisodeRef[],
 	watched: boolean

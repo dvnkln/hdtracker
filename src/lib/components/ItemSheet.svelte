@@ -103,7 +103,7 @@
 					class="mt-4 flex items-center justify-center gap-2 rounded-xl border border-zinc-700 p-3 text-sm font-medium hover:bg-zinc-800"
 				>
 					<Info size={18} class="text-(--accent)" />
-					{category === 'serien' || category === 'anime' ? 'Details & Folgen' : 'Details'}
+					{category === 'series' || category === 'anime' ? 'Details & Folgen' : 'Details'}
 				</a>
 			{/if}
 

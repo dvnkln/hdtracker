@@ -8,10 +8,10 @@ export type LibraryItem = typeof libraryItems.$inferSelect;
 
 // Which API each area uses.
 export const SOURCE_FOR: Record<Category, SearchResult['source']> = {
-	filme: 'tmdb',
-	serien: 'tmdb',
+	movies: 'tmdb',
+	series: 'tmdb',
 	anime: 'anilist',
-	spiele: 'igdb'
+	games: 'igdb'
 };
 
 // All items of a category, sorted A–Z (German rules, so "Ä" sorts like "A").
