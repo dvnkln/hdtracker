@@ -67,7 +67,15 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
    - Anime (AniList): keine Staffeln/Folgentitel verfügbar → Raster mit Folgennummern. Jede Anime-Staffel ist ein eigener Eintrag.
    - Auto-Status: erste Folge abgehakt → „Schaue ich“; alle Folgen einer beendeten Serie gesehen → „Gesehen“. Später in Settings abschaltbar (Punkt 7).
 6. ✅ Detailseite mit Streaming-Anbietern DE (Flatrate/Leihen/Kaufen), Attribution TMDB + JustWatch. Plus „Ähnliche Titel“ (TMDB recommendations, AniList recommendations, IGDB similar_games).
-7. Settings-Seite (Region, Sprache, Auto-Status an/aus usw. in DB), plus „Bibliothek leeren“ (mit deutlicher Rückfrage). Extras: Passwort ändern, alle anderen Geräte abmelden. Anime-Titel: Englisch als Haupttitel, japanischer (Romaji-)Titel abgesetzt dazu.
+7. Einstellungen – in drei Etappen, nach jeder kurz berichten/testen lassen:
+   - **A ✅ Struktur:** englische URLs/Keys, mehrere ORIGINs, Oberfläche zweisprachig (i18n), Hover-Effekte, Standard Englisch.
+   - **B – Seite `/settings`** (Zahnrad oben rechts neben Abmelden), Werte in Tabelle `settings`:
+     - Darstellung: Sprache der Oberfläche (de/en), Sprache der Inhalte (TMDB), Region als Liste mit Ländernamen (Regionen von TMDB `/watch/providers/regions`, Namen via `Intl.DisplayNames`), Anime-Titel (Englisch als Haupttitel + Romaji darunter; Schalter für umgekehrt).
+     - Verhalten: Auto-Status an/aus (`episodes.ts` muss das respektieren).
+     - Konto: Passwort ändern (altes + 2× neues), alle anderen Geräte abmelden.
+     - Gefahrenzone: Bibliothek leeren (pro Kategorie oder alles), Bestätigung durch Eintippen von „LÖSCHEN“/„DELETE“.
+     - Nach Speichern Bestätigung „Gespeichert ✓“. Alle Texte in de.ts + en.ts.
+   - **C – Hintergrundaufgaben + Wartung:** Zeitplaner in der App (kein Cron), letzte Ausführung in DB, holt Verpasstes nach Neustart nach. Aufgaben: DB-Backup nach `/data/backups`, DB-Pflege (optimize/VACUUM), abgelaufene Sessions löschen, In-Memory-Cache aufräumen. In den Einstellungen feintunbar: Backups an/aus, Anzahl behalten, wie oft; pro Aufgabe wann/wie oft; „Jetzt ausführen“ (mit Hinweis auf API-Limits); Backups zum Herunterladen. Metadaten-Aktualisierung kommt erst mit Punkt 8.
 8. Dashboard (Startseite) statt Kategorie-Kacheln. Zeigt Einträge mit Status „Geplant“ und „Schaue/Spiele ich“ (inkl. neuer Folgen laufender Serien/Anime) in zwei Bereichen, jeweils mit Datum:
    - Kürzlich erschienen (letzte 4 Wochen)
    - Demnächst
