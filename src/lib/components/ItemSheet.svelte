@@ -20,6 +20,7 @@
 	import { STATUS_ICONS } from '$lib/statusIcons';
 	import { hasEpisodes, statusesFor, type Category } from '$lib/status';
 	import { m, statusLabel } from '$lib/i18n/index.svelte';
+	import { titles } from '$lib/titles.svelte';
 
 	type Props = {
 		category: Category;
@@ -67,6 +68,7 @@
 	class="m-0 mt-auto max-h-[85dvh] w-full max-w-none overflow-y-auto rounded-t-2xl border-t border-zinc-800 bg-zinc-900 p-0 text-zinc-100 backdrop:bg-black/70 sm:mx-auto sm:mb-auto sm:max-w-lg sm:rounded-2xl sm:border"
 >
 	{#if item}
+		{@const shown = titles(category, item)}
 		<div class="p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
 			<div class="flex gap-4">
 				{#if item.posterUrl}
@@ -78,9 +80,9 @@
 					/>
 				{/if}
 				<div class="min-w-0 flex-1">
-					<h2 class="text-lg leading-tight font-bold">{item.title}</h2>
-					{#if item.originalTitle}
-						<p class="text-sm text-zinc-400">{item.originalTitle}</p>
+					<h2 class="text-lg leading-tight font-bold">{shown.main}</h2>
+					{#if shown.sub}
+						<p class="text-sm text-zinc-400">{shown.sub}</p>
 					{/if}
 					<p class="text-sm text-zinc-500">{item.year ?? '–'}</p>
 				</div>

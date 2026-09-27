@@ -2,6 +2,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import type { Category, Status } from '$lib/status';
 import { getDb } from './db';
 import { libraryItems } from './db/schema';
+import { getSetting } from './settings';
 import type { SearchResult } from './providers/types';
 
 export type LibraryItem = typeof libraryItems.$inferSelect;
@@ -15,13 +16,18 @@ export const SOURCE_FOR: Record<Category, SearchResult['source']> = {
 };
 
 // All items of a category, sorted A–Z (German rules, so "Ä" sorts like "A").
+// Anime are sorted by the title shown on top (English or Romaji, see settings).
 export function listLibrary(category: Category) {
 	const items = getDb()
 		.select()
 		.from(libraryItems)
 		.where(eq(libraryItems.category, category))
 		.all();
-	return items.sort((a, b) => a.title.localeCompare(b.title, 'de', { sensitivity: 'base' }));
+	const romaji = category === 'anime' && getSetting('animeTitle') === 'romaji';
+	const sortTitle = (i: LibraryItem) => (romaji && i.originalTitle) || i.title;
+	return items.sort((a, b) =>
+		sortTitle(a).localeCompare(sortTitle(b), 'de', { sensitivity: 'base' })
+	);
 }
 
 // Status of the given search hits that are already in the library (externalId -> status).
@@ -65,6 +71,14 @@ export function removeItem(category: Category, externalId: string) {
 			)
 		)
 		.run();
+}
+
+// Deletes all items of one category (or of all categories), including watched episodes.
+// Returns how many items were deleted.
+export function clearLibrary(category: Category | 'all') {
+	const query = getDb().delete(libraryItems);
+	return (category === 'all' ? query : query.where(eq(libraryItems.category, category))).run()
+		.changes;
 }
 
 // The library entry for a title, if it is in the library.

@@ -69,7 +69,7 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
 6. ✅ Detailseite mit Streaming-Anbietern DE (Flatrate/Leihen/Kaufen), Attribution TMDB + JustWatch. Plus „Ähnliche Titel“ (TMDB recommendations, AniList recommendations, IGDB similar_games).
 7. Einstellungen – in drei Etappen, nach jeder kurz berichten/testen lassen:
    - **A ✅ Struktur:** englische URLs/Keys, mehrere ORIGINs, Oberfläche zweisprachig (i18n), Hover-Effekte, Standard Englisch.
-   - **B – Seite `/settings`** (Zahnrad oben rechts neben Abmelden), Werte in Tabelle `settings`:
+   - **B ✅ Seite `/settings`** (Zahnrad oben rechts neben Abmelden), Werte in Tabelle `settings`:
      - Darstellung: Sprache der Oberfläche (de/en), Sprache der Inhalte (TMDB), Region als Liste mit Ländernamen (Regionen von TMDB `/watch/providers/regions`, Namen via `Intl.DisplayNames`), Anime-Titel (Englisch als Haupttitel + Romaji darunter; Schalter für umgekehrt).
      - Verhalten: Auto-Status an/aus (`episodes.ts` muss das respektieren).
      - Konto: Passwort ändern (altes + 2× neues), alle anderen Geräte abmelden.

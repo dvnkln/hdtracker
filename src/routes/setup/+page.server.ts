@@ -4,10 +4,10 @@ import { getDb } from '$lib/server/db';
 import { users } from '$lib/server/db/schema';
 import { createSession, hasAnyUser, hashPassword, setSessionCookie } from '$lib/server/auth';
 import { serverMessages } from '$lib/server/i18n';
+import { MIN_PASSWORD_LENGTH as MIN_PASSWORD } from '$lib/limits';
 import type { Actions } from './$types';
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_.-]{3,32}$/;
-const MIN_PASSWORD = 10;
 
 export const actions: Actions = {
 	default: async ({ request, cookies, url }) => {

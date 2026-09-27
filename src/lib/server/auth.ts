@@ -1,7 +1,7 @@
 import { createHmac, randomBytes, scrypt, timingSafeEqual } from 'node:crypto';
 import { promisify } from 'node:util';
 import type { Cookies } from '@sveltejs/kit';
-import { count, eq, lt } from 'drizzle-orm';
+import { and, count, eq, lt, ne } from 'drizzle-orm';
 import { env } from '$env/dynamic/private';
 import { getDb } from './db';
 import { sessions, users } from './db/schema';
@@ -108,6 +108,15 @@ export function deleteSession(token: string) {
 		.delete(sessions)
 		.where(eq(sessions.id, sessionId(token)))
 		.run();
+}
+
+// Logs out all other browsers of this user; the one with `currentToken` stays logged in.
+// Returns how many were logged out.
+export function deleteOtherSessions(userId: number, currentToken: string) {
+	return getDb()
+		.delete(sessions)
+		.where(and(eq(sessions.userId, userId), ne(sessions.id, sessionId(currentToken))))
+		.run().changes;
 }
 
 export function deleteExpiredSessions() {

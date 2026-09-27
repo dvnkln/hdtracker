@@ -11,6 +11,7 @@ export const de = {
 		close: 'Schließen',
 		search: 'Suchen',
 		logout: 'Abmelden',
+		settings: 'Einstellungen',
 		home: 'Startseite',
 		more: 'Mehr anzeigen',
 		less: 'Weniger',
@@ -142,6 +143,56 @@ export const de = {
 		episode: (n: number) => `Folge ${n}`,
 		season: (n: number) => `Staffel ${n}`,
 		specials: 'Specials'
+	},
+
+	settings: {
+		title: 'Einstellungen',
+		save: 'Speichern',
+		saved: 'Gespeichert ✓',
+
+		display: 'Darstellung',
+		uiLanguage: 'Sprache der Oberfläche',
+		contentLanguage: 'Sprache der Inhalte',
+		contentLanguageHint:
+			'Titel und Beschreibungen von Filmen und Serien (TMDB). Titel, die schon in der Bibliothek sind, bleiben vorerst in ihrer bisherigen Sprache.',
+		region: 'Region',
+		regionHint: 'Für Streaming-Anbieter und Erscheinungsdaten.',
+		listsUnavailable: 'TMDB ist gerade nicht erreichbar – die Auswahllisten sind unvollständig.',
+		animeTitle: 'Anime-Titel',
+		animeTitleEnglish: 'Englischer Titel oben, Romaji darunter',
+		animeTitleRomaji: 'Romaji oben, englischer Titel darunter',
+
+		behavior: 'Verhalten',
+		autoStatus: 'Status automatisch anpassen',
+		autoStatusHint:
+			'Erste Folge abgehakt → „Schaue ich“. Alle Folgen einer beendeten Serie gesehen → „Gesehen“.',
+
+		account: 'Konto',
+		changePassword: 'Passwort ändern',
+		currentPassword: 'Aktuelles Passwort',
+		newPassword: (n: number) => `Neues Passwort (min. ${n} Zeichen)`,
+		repeatPassword: 'Neues Passwort wiederholen',
+		wrongPassword: 'Das aktuelle Passwort ist falsch.',
+		passwordChanged: 'Passwort geändert ✓ Alle anderen Geräte wurden abgemeldet.',
+		otherDevices: 'Andere Geräte',
+		otherDevicesHint: 'Meldet alle Browser und Geräte ab – außer diesem hier.',
+		logoutOthers: 'Alle anderen Geräte abmelden',
+		loggedOutOthers: (n: number) =>
+			n === 0
+				? 'Es war kein anderes Gerät angemeldet ✓'
+				: `${n} ${n === 1 ? 'Gerät' : 'Geräte'} abgemeldet ✓`,
+
+		danger: 'Gefahrenzone',
+		clearLibrary: 'Bibliothek leeren',
+		clearHint:
+			'Löscht alle Einträge samt gesehener Folgen. Das lässt sich nicht rückgängig machen.',
+		clearWhat: 'Was soll gelöscht werden?',
+		clearAll: 'Alle Bereiche',
+		confirmWord: 'LÖSCHEN',
+		confirmPrompt: (word: string) => `Zur Bestätigung „${word}“ eintippen`,
+		confirmWrong: (word: string) => `Bitte genau „${word}“ eintippen.`,
+		clearButton: 'Endgültig löschen',
+		cleared: (n: number) => `${n} ${n === 1 ? 'Eintrag' : 'Einträge'} gelöscht ✓`
 	},
 
 	units: {

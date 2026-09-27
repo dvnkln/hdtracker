@@ -323,3 +323,22 @@ export async function getTvDetails(id: string, language: string): Promise<ShowDe
 		};
 	});
 }
+
+// ---- Choices for the settings page ----
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+// Country codes TMDB has streaming offers for, e.g. ["DE", "US", ...].
+export function getWatchRegions(): Promise<string[]> {
+	return cached('tmdb:regions', DAY_MS, async () => {
+		const data = await tmdb<{ results: { iso_3166_1: string }[] }>('/watch/providers/regions', {});
+		return data.results.map((r) => r.iso_3166_1);
+	});
+}
+
+// Languages TMDB has translations for, e.g. ["de-DE", "en-US", ...].
+export function getContentLanguages(): Promise<string[]> {
+	return cached('tmdb:languages', DAY_MS, () =>
+		tmdb<string[]>('/configuration/primary_translations', {})
+	);
+}

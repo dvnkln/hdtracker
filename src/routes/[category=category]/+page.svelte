@@ -4,6 +4,7 @@
 	import { CATEGORIES } from '$lib/categories';
 	import { COLLAPSED_STATUSES, statusesFor } from '$lib/status';
 	import { m, statusLabel } from '$lib/i18n/index.svelte';
+	import { titles } from '$lib/titles.svelte';
 	import PosterCard from '$lib/components/PosterCard.svelte';
 	import ItemSheet, { type SheetItem } from '$lib/components/ItemSheet.svelte';
 	import { STATUS_ICONS } from '$lib/statusIcons';
@@ -90,7 +91,7 @@
 				{#each data.results as item (item.externalId)}
 					<li>
 						<PosterCard
-							title={item.title}
+							title={titles(data.category, item).main}
 							year={item.year}
 							posterUrl={item.posterUrl}
 							badge={item.status ? statusLabel(data.category, item.status) : null}
@@ -118,7 +119,7 @@
 					{#each section.items as item (item.id)}
 						<li>
 							<PosterCard
-								title={item.title}
+								title={titles(data.category, item).main}
 								year={item.year}
 								posterUrl={item.posterUrl}
 								onclick={() => (selected = item)}

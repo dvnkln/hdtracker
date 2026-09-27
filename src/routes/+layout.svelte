@@ -7,15 +7,21 @@
 	import { CATEGORIES, CATEGORY_KEYS } from '$lib/categories';
 	import Brand from '$lib/components/Brand.svelte';
 	import { m, setLocale } from '$lib/i18n/index.svelte';
-	import { LogOut } from '@lucide/svelte';
+	import { setAnimeTitle } from '$lib/titles.svelte';
+	import { LogOut, Settings } from '@lucide/svelte';
 
 	let { data, children } = $props();
 
-	// Switch all texts to the configured interface language: once right away (so the first
-	// render is already correct) and again whenever the setting changes.
+	// Apply the display settings (language, anime titles): once right away (so the first
+	// render is already correct) and again whenever they change.
 	// svelte-ignore state_referenced_locally
 	setLocale(data.locale);
-	$effect.pre(() => setLocale(data.locale));
+	// svelte-ignore state_referenced_locally
+	setAnimeTitle(data.animeTitle);
+	$effect.pre(() => {
+		setLocale(data.locale);
+		setAnimeTitle(data.animeTitle);
+	});
 
 	// First part of the URL, e.g. "movies" for /movies?q=dune
 	let section = $derived(page.url.pathname.split('/')[1]);
@@ -29,8 +35,20 @@
 			<a href="/" aria-label={m.common.home} class="transition-opacity hover:opacity-80"
 				><Brand /></a
 			>
-			<form method="POST" action="/logout" class="flex items-center gap-3">
-				<span class="text-sm text-zinc-400">{data.user.username}</span>
+			<form method="POST" action="/logout" class="flex items-center gap-1">
+				<span class="mr-2 text-sm text-zinc-400">{data.user.username}</span>
+				<a
+					href="/settings"
+					class="rounded-lg p-2 transition-colors hover:bg-zinc-800 hover:text-zinc-100 {section ===
+					'settings'
+						? 'text-zinc-100'
+						: 'text-zinc-400'}"
+					aria-label={m.common.settings}
+					title={m.common.settings}
+					aria-current={section === 'settings' ? 'page' : undefined}
+				>
+					<Settings size={18} />
+				</a>
 				<button
 					class="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
 					aria-label={m.common.logout}

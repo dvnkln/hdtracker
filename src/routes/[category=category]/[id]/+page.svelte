@@ -3,6 +3,7 @@
 	import { hasEpisodes } from '$lib/status';
 	import { formatDate, formatRating, formatRuntime, m, statusLabel } from '$lib/i18n/index.svelte';
 	import { STATUS_ICONS } from '$lib/statusIcons';
+	import { titles } from '$lib/titles.svelte';
 	import ItemSheet from '$lib/components/ItemSheet.svelte';
 	import Episodes from '$lib/components/Episodes.svelte';
 	import { ArrowLeft, ExternalLink, ImageOff, Plus, Star } from '@lucide/svelte';
@@ -11,6 +12,7 @@
 
 	let cat = $derived(CATEGORIES[data.category]);
 	let info = $derived(data.info);
+	let shown = $derived(titles(data.category, info.item));
 
 	// Header line, e.g. "2024 · 2 Std. 47 Min." or "2023 · TV-Serie · 28 Folgen".
 	let metaLine = $derived(
@@ -46,7 +48,7 @@
 	);
 </script>
 
-<svelte:head><title>{info.item.title} · hdtracker</title></svelte:head>
+<svelte:head><title>{shown.main} · hdtracker</title></svelte:head>
 
 <div style:--accent={cat.accent}>
 	<!-- Backdrop image, fading into the page background -->
@@ -91,9 +93,9 @@
 			</div>
 
 			<div class="flex min-w-0 flex-1 flex-col justify-end">
-				<h1 class="text-xl leading-tight font-bold drop-shadow sm:text-3xl">{info.item.title}</h1>
-				{#if info.item.originalTitle}
-					<p class="text-sm text-zinc-400">{info.item.originalTitle}</p>
+				<h1 class="text-xl leading-tight font-bold drop-shadow sm:text-3xl">{shown.main}</h1>
+				{#if shown.sub}
+					<p class="text-sm text-zinc-400">{shown.sub}</p>
 				{/if}
 				<p class="mt-1 text-sm text-zinc-400">
 					{metaLine}
@@ -262,6 +264,7 @@
 				<ul class="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pt-3 pb-4">
 					{#each info.similar as item (item.externalId)}
 						{@const status = data.similarStatus[item.externalId]}
+						{@const title = titles(data.category, item).main}
 						<li class="w-28 shrink-0 snap-start sm:w-32">
 							<a href="/{data.category}/{item.externalId}" class="group/poster block outline-none">
 								<div
@@ -270,7 +273,7 @@
 									{#if item.posterUrl}
 										<img
 											src={item.posterUrl}
-											alt={item.title}
+											alt={title}
 											loading="lazy"
 											referrerpolicy="no-referrer"
 											class="h-full w-full object-cover transition duration-300 group-hover/poster:scale-105"
@@ -291,7 +294,7 @@
 								<p
 									class="mt-1.5 line-clamp-2 text-sm leading-tight font-medium transition-colors group-hover/poster:text-(--accent)"
 								>
-									{item.title}
+									{title}
 								</p>
 								<p class="text-xs text-zinc-500">{item.year ?? '–'}</p>
 							</a>

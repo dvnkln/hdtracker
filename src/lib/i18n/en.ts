@@ -8,6 +8,7 @@ export const en: Messages = {
 		close: 'Close',
 		search: 'Search',
 		logout: 'Log out',
+		settings: 'Settings',
 		home: 'Home',
 		more: 'Show more',
 		less: 'Show less',
@@ -136,6 +137,55 @@ export const en: Messages = {
 		episode: (n) => `Episode ${n}`,
 		season: (n) => `Season ${n}`,
 		specials: 'Specials'
+	},
+
+	settings: {
+		title: 'Settings',
+		save: 'Save',
+		saved: 'Saved ✓',
+
+		display: 'Display',
+		uiLanguage: 'Interface language',
+		contentLanguage: 'Content language',
+		contentLanguageHint:
+			'Titles and descriptions of movies and series (TMDB). Titles already in your library keep their current language for now.',
+		region: 'Region',
+		regionHint: 'Used for streaming providers and release dates.',
+		listsUnavailable: 'TMDB is not reachable right now – the lists are incomplete.',
+		animeTitle: 'Anime titles',
+		animeTitleEnglish: 'English title on top, Romaji below',
+		animeTitleRomaji: 'Romaji on top, English title below',
+
+		behavior: 'Behavior',
+		autoStatus: 'Update status automatically',
+		autoStatusHint:
+			'First episode ticked → “Watching”. All episodes of a finished show watched → “Watched”.',
+
+		account: 'Account',
+		changePassword: 'Change password',
+		currentPassword: 'Current password',
+		newPassword: (n) => `New password (min. ${n} characters)`,
+		repeatPassword: 'Repeat new password',
+		wrongPassword: 'The current password is wrong.',
+		passwordChanged: 'Password changed ✓ All other devices have been logged out.',
+		otherDevices: 'Other devices',
+		otherDevicesHint: 'Logs out all browsers and devices – except this one.',
+		logoutOthers: 'Log out all other devices',
+		loggedOutOthers: (n) =>
+			n === 0
+				? 'No other device was logged in ✓'
+				: `${n} ${n === 1 ? 'device' : 'devices'} logged out ✓`,
+
+		danger: 'Danger zone',
+		clearLibrary: 'Clear library',
+		clearHint: 'Deletes all entries including watched episodes. This cannot be undone.',
+		clearWhat: 'What should be deleted?',
+		clearAll: 'All areas',
+		confirmWord: 'DELETE',
+		confirmPrompt: (word) => `Type “${word}” to confirm`,
+		confirmWrong: (word) => `Please type exactly “${word}”.`,
+		clearButton: 'Delete permanently',
+		cleared: (n) => `${n} ${n === 1 ? 'entry' : 'entries'} deleted ✓`
 	},
 
 	units: {

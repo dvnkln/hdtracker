@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Brand from '$lib/components/Brand.svelte';
 	import { m } from '$lib/i18n/index.svelte';
+	import { MIN_PASSWORD_LENGTH } from '$lib/limits';
 	import type { ActionData } from './$types';
 
 	let { form }: { form: ActionData } = $props();
@@ -24,8 +25,14 @@
 			/>
 		</label>
 		<label class="flex flex-col gap-1">
-			<span class="text-sm font-medium">{m.auth.passwordMin(10)}</span>
-			<input name="password" type="password" autocomplete="new-password" minlength="10" required />
+			<span class="text-sm font-medium">{m.auth.passwordMin(MIN_PASSWORD_LENGTH)}</span>
+			<input
+				name="password"
+				type="password"
+				autocomplete="new-password"
+				minlength={MIN_PASSWORD_LENGTH}
+				required
+			/>
 		</label>
 		<label class="flex flex-col gap-1">
 			<span class="text-sm font-medium">{m.auth.passwordRepeat}</span>

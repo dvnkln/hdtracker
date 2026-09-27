@@ -83,7 +83,11 @@ export function setEpisodes(
 			}
 		}
 
-		const next = autoStatus(item.status, details, watchedKeys(item.id), watched);
+		// Auto-status can be switched off in the settings.
+		const next =
+			getSetting('autoStatus') === 'on'
+				? autoStatus(item.status, details, watchedKeys(item.id), watched)
+				: item.status;
 		if (next !== item.status) {
 			tx.update(libraryItems)
 				.set({ status: next, statusChangedAt: new Date() })
