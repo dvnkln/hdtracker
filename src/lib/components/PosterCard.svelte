@@ -32,7 +32,7 @@
 				alt={title}
 				loading="lazy"
 				referrerpolicy="no-referrer"
-				class="h-full w-full object-cover transition-[filter] duration-100 group-hover/poster:brightness-75"
+				class="h-full w-full object-cover transition-[filter] duration-100 group-hover/poster:brightness-60"
 			/>
 		{:else}
 			<div class="flex h-full items-center justify-center text-zinc-600">

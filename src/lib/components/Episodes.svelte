@@ -57,9 +57,18 @@
 			: m.episodes.dateOpen;
 	}
 
-	let nextEpisode = $derived(
-		show.seasons.flatMap((s) => s.episodes).find((e) => !e.aired && e.airDate)
-	);
+	// Next upcoming episode (without specials), e.g. "S02E03" for series, "5" for anime.
+	let nextEpisode = $derived.by(() => {
+		for (const season of show.seasons.filter((s) => !s.special)) {
+			const e = season.episodes.find((e) => !e.aired && e.airDate);
+			if (e) {
+				const label =
+					category === 'series' ? m.home.episodeCode(season.number, e.number) : String(e.number);
+				return { label, airDate: e.airDate! };
+			}
+		}
+		return null;
+	});
 
 	// Single episode: toggle immediately in the UI, then let the server confirm.
 	const toggleEpisode: SubmitFunction = ({ formData }) => {
@@ -111,9 +120,9 @@
 			style:width="{overall.aired ? (overall.done / overall.aired) * 100 : 0}%"
 		></div>
 	</div>
-	{#if nextEpisode?.airDate}
+	{#if nextEpisode}
 		<p class="mt-2 text-xs text-zinc-400">
-			{m.episodes.nextEpisode(nextEpisode.number, formatDate(nextEpisode.airDate))}
+			{m.episodes.nextEpisode(nextEpisode.label, formatDate(nextEpisode.airDate))}
 		</p>
 	{/if}
 </section>

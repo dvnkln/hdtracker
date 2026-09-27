@@ -67,7 +67,7 @@
 		</div>
 	{/if}
 
-	<main class="relative mx-auto max-w-screen-lg p-4 {info.backdropUrl ? '-mt-44 sm:-mt-56' : ''}">
+	<main class="relative mx-auto max-w-screen-xl p-4 {info.backdropUrl ? '-mt-44 sm:-mt-56' : ''}">
 		<a
 			href="/{data.category}"
 			class="inline-flex items-center gap-1 rounded-full bg-zinc-950/70 px-2.5 py-1 text-sm text-(--accent) backdrop-blur transition-colors hover:bg-zinc-900"
@@ -157,7 +157,7 @@
 
 		{#if info.item.overview}
 			<p
-				class="mt-4 text-sm leading-relaxed text-zinc-300"
+				class="mt-4 max-w-3xl text-sm leading-relaxed text-zinc-300"
 				bind:this={overviewEl}
 				class:line-clamp-5={!showFullOverview}
 			>

@@ -1,20 +1,21 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { m } from '$lib/i18n/index.svelte';
-	import { Settings2, Wrench } from '@lucide/svelte';
+	import { FileUp, Settings2, Wrench } from '@lucide/svelte';
 
 	let { children } = $props();
 
 	// Tabs of the settings area; each one is its own page.
 	let tabs = $derived([
 		{ href: '/settings', label: m.settings.general, icon: Settings2 },
-		{ href: '/settings/maintenance', label: m.maintenance.title, icon: Wrench }
+		{ href: '/settings/maintenance', label: m.maintenance.title, icon: Wrench },
+		{ href: '/settings/import', label: m.importData.title, icon: FileUp }
 	]);
 </script>
 
 <div class="mx-auto max-w-screen-sm px-4 pt-4">
 	<h1 class="text-2xl font-bold">{m.settings.title}</h1>
-	<nav class="mt-4 grid grid-cols-2 border-b border-zinc-800">
+	<nav class="mt-4 grid grid-cols-3 border-b border-zinc-800">
 		{#each tabs as tab (tab.href)}
 			{@const active = page.url.pathname === tab.href}
 			<a

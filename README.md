@@ -1,25 +1,62 @@
 <p align="center">
-  <img src="src/lib/assets/favicon.svg" width="96" alt="hdtracker logo" />
+  <img src="src/lib/assets/favicon.svg" width="110" alt="hdtracker logo" />
 </p>
 
 <h1 align="center">hdtracker</h1>
 
 <p align="center">
-  Self-hosted tracker for <b>movies, series, anime and games</b> – made for watching together on the couch.<br />
-  Mobile-first, dark, one Docker container. User interface in German or English.
+  <a href="https://github.com/dvnkln/hdtracker/releases"><img src="https://img.shields.io/github/v/release/dvnkln/hdtracker?label=version&style=for-the-badge&color=ec4899" alt="Version" /></a>
+  <a href="https://github.com/dvnkln/hdtracker/pkgs/container/hdtracker"><img src="https://img.shields.io/github/actions/workflow/status/dvnkln/hdtracker/release.yml?label=docker%20image&style=for-the-badge&logo=docker&logoColor=white" alt="Docker image" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-3b82f6?style=for-the-badge" alt="License: AGPL-3.0" /></a>
 </p>
 
-## Features
+<p align="center">
+  Self-hosted tracker for <b>movies</b>, <b>series</b>, <b>anime</b> and <b>games</b> – made for watching together on the couch.<br />
+  Mobile-first, always dark, one Docker container. Interface in English or German.
+</p>
 
-- **Four separate areas** – movies, series, anime, games – each with search and a library grouped by status (watching, paused, planned, completed, dropped)
-- **Dashboard** – what was released recently and what is coming up: new episodes, new seasons, cinema and home releases, game releases – for everything you plan to watch or are watching/playing
-- **Episode tracking** – tick off single episodes, whole seasons or entire shows; upcoming episodes and announced seasons with dates
-- **Where to watch** – streaming, rent and buy offers for your region (via JustWatch), with direct links where possible
-- **Detail pages** – runtime, genres, rating, release dates and similar titles
-- **Private** – runs on your own server, single account, data stays in one SQLite file
-- **Maintenance built in** – release dates refresh nightly; optional scheduled database backups
+<p align="center">
+  <img src="docs/screenshots/devices.jpg" alt="hdtracker on a desktop screen and two phones" />
+</p>
 
-## Quick start
+## 📑 Contents
+
+- [Features](#-features)
+- [Screenshots](#-screenshots)
+- [Quick start](#-quick-start)
+- [Import from Yamtrack](#-import-from-yamtrack)
+- [Backups](#-backups)
+- [Data sources](#-data-sources)
+- [Development](#-development)
+- [License](#-license)
+
+## ✨ Features
+
+- 🎬 **Four separate areas** – movies, series, anime and games, each with its own search and a library grouped by status (watching, paused, planned, completed, dropped).
+- 📅 **Dashboard** – what was released recently and what is coming up: new episodes, new seasons, cinema and home releases, game releases.
+- 📺 **Episode tracking** – tick off single episodes, whole seasons or entire shows; see upcoming episodes and announced seasons with dates.
+- 🙈 **Spoiler protection** – images and descriptions of episodes you have not watched yet are blurred (can be switched off).
+- 🍿 **Where to watch** – streaming, rent and buy offers for your region (via JustWatch), with direct links where possible.
+- 🔎 **Detail pages** – runtime, genres, rating, release dates and similar titles.
+- 📥 **Import from Yamtrack** – take over your library including statuses, watched episodes and anime progress.
+- 🛠️ **Maintenance built in** – release dates refresh nightly; optional scheduled database backups you can download.
+- 📲 **Installable as an app** – add it to your home screen (Chrome, Edge, Safari) and it opens full screen with its own icon.
+- 🌍 **Two languages** – interface in English or German; content language and region are adjustable.
+- 🔒 **Private** – runs on your own server, single account, all data in one SQLite file.
+
+## 📱 Screenshots
+
+|                                Dashboard                                 |                                 Library                                  |                               Search                               |
+| :----------------------------------------------------------------------: | :----------------------------------------------------------------------: | :----------------------------------------------------------------: |
+| <img src="docs/screenshots/dashboard.jpg" alt="Dashboard" width="260" /> | <img src="docs/screenshots/anime.jpg" alt="Anime library" width="260" /> | <img src="docs/screenshots/search.jpg" alt="Search" width="260" /> |
+
+|                         Details & where to watch                         |                     Episodes (spoiler protection)                      |                                 Maintenance                                  |
+| :----------------------------------------------------------------------: | :--------------------------------------------------------------------: | :--------------------------------------------------------------------------: |
+| <img src="docs/screenshots/details.jpg" alt="Detail page" width="260" /> | <img src="docs/screenshots/episodes.jpg" alt="Episodes" width="260" /> | <img src="docs/screenshots/maintenance.jpg" alt="Maintenance" width="260" /> |
+
+<p align="center"><sub>Screenshots with a demo library. Posters and data from TMDB, AniList and IGDB.</sub></p>
+
+## 🐳 Quick start
 
 1. Create a folder with this `docker-compose.yml`:
 
@@ -66,10 +103,25 @@
    docker compose up -d
    ```
 
+**Install as an app:** open hdtracker on your phone and choose _Install app_ (Chrome/Edge) or _Share → Add to Home Screen_ (Safari). Browsers only install web apps from **HTTPS** addresses (on plain `http://` Safari still adds it to the home screen, Chrome only creates a bookmark).
+
+**HTTPS:** hdtracker itself speaks plain HTTP and currently expects a **reverse proxy** in front of it for HTTPS (e.g. Nginx Proxy Manager, Caddy or Traefik). Put the HTTPS address into `ORIGIN`.
+
 **Port:** change the left side of `3000:3000` (e.g. `8080:3000`) and adjust `ORIGIN` accordingly.
 **Update:** `docker compose pull && docker compose up -d`. Your data lives in the `hdtracker-data` volume.
 
-## Backups
+## 📥 Import from Yamtrack
+
+Coming from [Yamtrack](https://github.com/FuzzyGrim/Yamtrack)? Export your library there as CSV and upload it under **Settings → Import**.
+
+- Movies, series, anime and games are taken over with their status and dates.
+- Series keep every watched episode, anime their progress (MyAnimeList IDs are matched via AniList).
+- Titles already in your library are left unchanged, so importing twice is safe.
+- Entries created by hand in Yamtrack have no database ID and are listed as skipped.
+
+Posters, descriptions and release dates are loaded in the background afterwards.
+
+## 💾 Backups
 
 Under **Settings → Maintenance** hdtracker can back up its database on a schedule (off by default). The copies are stored in `/data/backups` inside the volume and can also be downloaded there.
 
@@ -88,11 +140,11 @@ docker run --rm -v <folder>_hdtracker-data:/data -v "$PWD":/in alpine sh -c '
 docker compose start
 ```
 
-## Data sources
+## 🙏 Data sources
 
 Movie and series data from [TMDB](https://www.themoviedb.org). This product uses the TMDB API but is not endorsed or certified by TMDB. Streaming availability by [JustWatch](https://www.justwatch.com). Game data from [IGDB](https://www.igdb.com), anime data from [AniList](https://anilist.co).
 
-## Development
+## 💻 Development
 
 ```bash
 npm install
@@ -102,6 +154,6 @@ npm run dev
 SvelteKit, TypeScript, Drizzle ORM with SQLite, Tailwind CSS. Build the Docker image from source with
 `docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build`.
 
-## License
+## 📜 License
 
-[MIT](LICENSE) – fork it, copy it, change it however you like. This is a personal project, provided as-is without support or guarantees; if it's useful to you too, even better.
+[GNU AGPL v3](LICENSE) – you may use, change and share hdtracker freely. If you distribute a modified version or offer it to others over a network, you have to publish your changes under the same license. This is a personal project, provided as-is without support or guarantees; if it's useful to you too, even better.

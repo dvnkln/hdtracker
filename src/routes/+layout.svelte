@@ -6,6 +6,7 @@
 	import { page } from '$app/state';
 	import { CATEGORIES, CATEGORY_KEYS } from '$lib/categories';
 	import Brand from '$lib/components/Brand.svelte';
+	import HeaderSearch from '$lib/components/HeaderSearch.svelte';
 	import { m, setLocale } from '$lib/i18n/index.svelte';
 	import { setAnimeTitle } from '$lib/titles.svelte';
 	import { LogOut, Settings } from '@lucide/svelte';
@@ -34,11 +35,13 @@
 	<header
 		class="sticky top-0 z-10 border-b border-zinc-800 bg-zinc-950/95 pt-[env(safe-area-inset-top)] backdrop-blur"
 	>
-		<div class="mx-auto flex max-w-screen-lg items-center justify-between px-4 py-3">
-			<a href="/" aria-label={m.common.home} class="transition-opacity hover:opacity-80"
+		<div class="app-width flex items-center gap-1 px-4 py-3">
+			<a href="/" aria-label={m.common.home} class="shrink-0 transition-opacity hover:opacity-80"
 				><Brand /></a
 			>
-			<form method="POST" action="/logout" class="flex items-center gap-1">
+			<HeaderSearch />
+			<!-- -mr-2: the icon itself (not its hover area) lines up with the content edge -->
+			<form method="POST" action="/logout" class="-mr-2 flex items-center gap-1">
 				<a
 					href="/settings"
 					class="rounded-lg p-2 transition-colors hover:bg-zinc-800 hover:text-zinc-100 {section ===
@@ -74,11 +77,11 @@
 			{#each CATEGORY_KEYS as key (key)}
 				{@const cat = CATEGORIES[key]}
 				{@const active = section === key}
-				<!-- Active area: icon + label in its colour, icon filled. Hover previews that on the icon. -->
+				<!-- Active area: icon in its colour and filled, label white. Hover previews that. -->
 				<a
 					href="/{key}"
 					class="group/nav flex flex-col items-center gap-1 py-2 text-xs transition-colors {active
-						? 'text-(--accent)'
+						? 'text-zinc-100'
 						: 'text-zinc-400 hover:text-zinc-200'}"
 					style:--accent={cat.accent}
 					aria-current={active ? 'page' : undefined}
@@ -87,7 +90,7 @@
 						size={22}
 						strokeWidth={active ? 2.5 : 2}
 						class="transition duration-200 {active
-							? 'fill-(--accent)/20'
+							? 'fill-(--accent)/20 text-(--accent)'
 							: 'group-hover/nav:scale-110 group-hover/nav:fill-(--accent)/20 group-hover/nav:text-(--accent)'}"
 					/>
 					{m.categories[key]}

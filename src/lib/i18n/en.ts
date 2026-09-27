@@ -141,7 +141,7 @@ export const en: Messages = {
 		allWatched: 'Watched all',
 		reset: 'Reset',
 		resetConfirm: 'Mark all episodes as unwatched?',
-		nextEpisode: (n, date) => `Next episode (${n}) on ${date}`,
+		nextEpisode: (episode, date) => `Next episode (${episode}) on ${date}`,
 		noneKnown: 'No episodes known yet.',
 		announced: 'Announced',
 		startsOn: (date) => `Starts ${date}`,
@@ -235,7 +235,6 @@ export const en: Messages = {
 				description: 'Removes outdated answers from TMDB, IGDB and AniList from memory.'
 			}
 		},
-		enabled: 'Active',
 		frequency: 'How often',
 		frequencies: { hourly: 'Hourly', daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly' },
 		time: 'Time',
@@ -263,6 +262,30 @@ export const en: Messages = {
 		deleteAllConfirm: 'Really delete all?',
 		refreshFailed: (failed, total) => `${failed} of ${total} entries could not be refreshed.`,
 		restoreHint: 'How to restore a backup is described in the README.'
+	},
+
+	importData: {
+		title: 'Import',
+		intro:
+			'Takes over your library from Yamtrack: movies, series with watched episodes, anime with progress and games – each with its status.',
+		file: 'CSV export from Yamtrack',
+		start: 'Import',
+		notes:
+			'Titles already in your library are skipped. Posters, descriptions and release dates are loaded in the background afterwards – with many titles this takes a few minutes.',
+		done: 'Import finished ✓',
+		imported: 'Imported',
+		episodes: (n) => `${n} watched ${n === 1 ? 'episode' : 'episodes'}`,
+		existing: (n) =>
+			`${n} ${n === 1 ? 'title was' : 'titles were'} already in the library and left unchanged`,
+		skipped: (n) => `Skipped (${n})`,
+		reasons: {
+			manual: 'added by hand in Yamtrack, no database entry',
+			unsupported: 'media type not supported',
+			notFound: 'not found'
+		},
+		noFile: 'Please choose a file.',
+		invalidFile: 'This is not a CSV export from Yamtrack.',
+		failed: 'Import failed:'
 	},
 
 	units: {

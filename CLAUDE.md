@@ -30,7 +30,10 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
 - Hover-Effekte (nur Maus) für alles Klickbare; Poster: Rahmen + Titel in Akzentfarbe, Bild leicht abgedunkelt, kein Zoom; kurze Übergänge (~100 ms), damit es direkt reagiert.
 - Standard für neue Installationen: Oberfläche Englisch, Inhalte `en-US`, Region `US` (umstellbar in den Einstellungen).
 - Navigation: Leiste unten (Handy), mit Icon + Label je Bereich.
+- Breite: Kopfzeile + Poster-Seiten nutzen große Bildschirme (Utility `app-width` in `layout.css`: max. 140rem, am PC immer ~6,5 % Rand je Seite ≈ ¾ Poster; Poster-Raster `auto-fill`, am Handy 3 Spalten). Abschnitte der Bibliothek ohne Trennlinie. Detailseite `max-w-screen-xl`; Dashboard, Einstellungen und Leiste unten bleiben schmal.
+- Suche in der Kopfzeile (bleibt beim Scrollen oben): am PC Suchfeld mit Icon des aktiven Bereichs (Klick öffnet Menü zum Umschalten; Taste `/` fokussiert), am Handy Lupe → Suchleiste gleitet von oben herein. Bereich = aktuelle Kategorie-Seite, sonst der zuletzt benutzte.
 - Akzentfarbe je Bereich (neutraler Hintergrund): Filme rot, Serien blau, Anime pink, Spiele grün. Definiert in `src/lib/categories.ts`.
+- Als App installierbar (PWA): `static/manifest.webmanifest`, Icons in `static/icons/` + `static/apple-touch-icon.png` (aus dem Logo erzeugt, dunkler Hintergrund mit Pink/Blau-Schimmer), Safari-Meta-Tags in `src/app.html`, `src/service-worker.ts` cacht nur App-Dateien (keine Seiten/Daten). Installation im Browser nur über HTTPS.
 - Logo: Couch von vorne mit zwei Personen (links Schneidersitz/pink, rechts angewinkeltes Knie/blau). `src/lib/components/Logo.svelte`, auch als Favicon.
 - Schriftzug „hdtracker“: Schrift Outfit (self-hosted via `@fontsource/outfit`, Tailwind-Klasse `font-brand`), „hd“ mit Verlauf pink→blau. `src/lib/components/Brand.svelte`.
 - Poster-Raster für Suche und Bibliothek, aber nicht zu minimalistisch (kein reines Watcharr-Raster): Bibliothek braucht sichtbare Unterteilung in Abschnitte.
@@ -83,9 +86,13 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
    Keine harte Trennung nach Kategorie, sondern Kategorie-Icon/Akzentfarbe pro Eintrag. Filme: Kinostart DE und Heimkino-Start DE (digital/Disc) als eigene Termine. Neue Staffel einer (teilweise) gesehenen Serie (z. B. S2 gesehen, S3 angekündigt/erschienen) landet automatisch im Dashboard. Braucht Erscheinungsdaten in der DB, die regelmäßig aktualisiert werden.
 
 9. Import von Yamtrack-Exporten (CSV), damit die bestehende Bibliothek nicht manuell übertragen werden muss. Soll ins erste Release (v0.1.0).
+   - Reiter „Import“ unter `/settings/import`. Filme/Serien (TMDB), Spiele (IGDB) direkt über die ID; Anime kommen als MyAnimeList-IDs und werden über AniList (`idMal_in`) zugeordnet.
+   - Serien: gesehene Folgen aus den `episode`-Zeilen, Anime: Folgen 1…`progress`. Titel, die schon in der Bibliothek sind, bleiben unverändert; doppelte Zeilen im Export werden ignoriert; `manual`-Einträge und andere Medientypen werden mit Grund übersprungen.
+   - Poster, Beschreibung und Termine werden danach im Hintergrund nachgeladen (gebremst wegen API-Limits).
 
 ## Später (nach MVP)
 
+- Eingebautes HTTPS ohne Reverse Proxy (z. B. eigenes Zertifikat per Umgebungsvariable). Bis dahin geht das Projekt von einem Proxy aus (README).
 - Pushover-Benachrichtigungen (z. B. neue Staffel/Folge, Release eines geplanten Titels).
 - Anime-Hybrid: AniList bleibt Quelle, zusätzlich Folgentitel/-beschreibungen von TMDB einblenden, wo eine Zuordnung AniList→TMDB bekannt ist (Community-Mapping-Listen). Watcharr nutzt übrigens nur TMDB für Anime.
 - Streaming-Übersicht: alle geplanten Titel nach verfügbaren Streaming-Anbietern gruppiert (z. B. „Netflix“ antippen → alles Geplante, was dort läuft). Anbieter ohne Treffer ausblenden. Offen: eigener Menüpunkt oder Teil des Dashboards.

@@ -150,6 +150,38 @@ export function getAnimeDetails(id: string): Promise<ShowDetails> {
 	});
 }
 
+// ---- Import: MyAnimeList IDs -> AniList ----
+
+const BY_MAL_QUERY = `
+query ($ids: [Int]) {
+  Page(perPage: 50) {
+    media(idMal_in: $ids, type: ANIME) {
+      id
+      idMal
+      title { romaji english }
+      startDate { year }
+      coverImage { large }
+      description(asHtml: false)
+    }
+  }
+}`;
+
+// Finds the AniList entries for MyAnimeList IDs (50 per request). Returns MAL ID -> anime.
+export async function getAnimeByMalIds(malIds: number[]) {
+	const found = new Map<number, SearchResult>();
+	for (let i = 0; i < malIds.length; i += 50) {
+		const data = await fetchJson<{
+			data: { Page: { media: (AniListMedia & { idMal: number })[] } };
+		}>('AniList', 'https://graphql.anilist.co', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+			body: JSON.stringify({ query: BY_MAL_QUERY, variables: { ids: malIds.slice(i, i + 50) } })
+		});
+		for (const m of data.data.Page.media) found.set(m.idMal, toSearchResult(m));
+	}
+	return found;
+}
+
 // ---- Release dates (dashboard) ----
 
 const RELEASES_QUERY = `

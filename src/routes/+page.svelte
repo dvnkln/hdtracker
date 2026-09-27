@@ -93,7 +93,7 @@
 	{:else}
 		{#each sections as section (section.key)}
 			<section class="mt-8 first:mt-2">
-				<h2 class="flex items-baseline gap-2 border-b border-zinc-800 pb-2">
+				<h2 class="flex items-baseline gap-2">
 					<section.icon size={20} class="self-center text-zinc-400" />
 					<span class="text-lg font-semibold">{section.title}</span>
 					{#if section.hint}<span class="text-xs text-zinc-500">{section.hint}</span>{/if}

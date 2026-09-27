@@ -152,7 +152,7 @@ export const de = {
 		allWatched: 'Alles gesehen',
 		reset: 'Zurücksetzen',
 		resetConfirm: 'Alle Folgen als ungesehen markieren?',
-		nextEpisode: (n: number, date: string) => `Nächste Folge (${n}) am ${date}`,
+		nextEpisode: (episode: string, date: string) => `Nächste Folge (${episode}) am ${date}`,
 		noneKnown: 'Noch keine Folgen bekannt.',
 		announced: 'Angekündigt',
 		startsOn: (date: string) => `Start am ${date}`,
@@ -248,7 +248,6 @@ export const de = {
 				description: 'Wirft veraltete Antworten von TMDB, IGDB und AniList aus dem Arbeitsspeicher.'
 			}
 		} as Record<string, { name: string; description: string }>,
-		enabled: 'Aktiv',
 		frequency: 'Wie oft',
 		frequencies: {
 			hourly: 'Stündlich',
@@ -282,6 +281,30 @@ export const de = {
 		refreshFailed: (failed: number, total: number) =>
 			`${failed} von ${total} Einträgen konnten nicht aktualisiert werden.`,
 		restoreHint: 'Wie man ein Backup zurückspielt, steht in der README.'
+	},
+
+	importData: {
+		title: 'Import',
+		intro:
+			'Übernimmt deine Bibliothek aus Yamtrack: Filme, Serien mit gesehenen Folgen, Anime mit Fortschritt und Spiele – jeweils mit Status.',
+		file: 'CSV-Export aus Yamtrack',
+		start: 'Importieren',
+		notes:
+			'Titel, die schon in deiner Bibliothek sind, werden übersprungen. Poster, Beschreibungen und Termine lädt die App danach im Hintergrund nach – bei vielen Titeln dauert das einige Minuten.',
+		done: 'Import abgeschlossen ✓',
+		imported: 'Übernommen',
+		episodes: (n: number) => `${n} gesehene ${n === 1 ? 'Folge' : 'Folgen'}`,
+		existing: (n: number) =>
+			`${n} ${n === 1 ? 'Titel war' : 'Titel waren'} schon in der Bibliothek und ${n === 1 ? 'blieb' : 'blieben'} unverändert`,
+		skipped: (n: number) => `Übersprungen (${n})`,
+		reasons: {
+			manual: 'in Yamtrack von Hand angelegt, ohne Datenbank-Eintrag',
+			unsupported: 'Medientyp wird nicht unterstützt',
+			notFound: 'nicht gefunden'
+		} as Record<string, string>,
+		noFile: 'Bitte eine Datei auswählen.',
+		invalidFile: 'Das ist keine CSV-Exportdatei aus Yamtrack.',
+		failed: 'Import fehlgeschlagen:'
 	},
 
 	units: {

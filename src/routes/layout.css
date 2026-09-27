@@ -3,6 +3,18 @@
 /* Font for the "hdtracker" wordmark (self-hosted via @fontsource). */
 @theme {
 	--font-brand: 'Outfit', system-ui, sans-serif;
+	--container-app: 140rem;
+}
+
+/* Width of the header and the poster pages: uses big screens, but on computers always keeps
+   a margin of about 6.5 % of the screen width on each side (~3/4 of a poster).
+   Text pages (dashboard, settings) stay narrower. */
+@utility app-width {
+	margin-inline: auto;
+	max-width: var(--container-app);
+	@media (width >= 64rem) {
+		max-width: min(87vw, var(--container-app));
+	}
 }
 
 /* The app is always dark. */
