@@ -5,6 +5,7 @@
 	import { STATUS_ICONS } from '$lib/statusIcons';
 	import { titles } from '$lib/titles.svelte';
 	import ItemSheet from '$lib/components/ItemSheet.svelte';
+	import PosterCard from '$lib/components/PosterCard.svelte';
 	import Episodes from '$lib/components/Episodes.svelte';
 	import { ArrowLeft, ExternalLink, ImageOff, Plus, Star } from '@lucide/svelte';
 
@@ -264,40 +265,14 @@
 				<ul class="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pt-3 pb-4">
 					{#each info.similar as item (item.externalId)}
 						{@const status = data.similarStatus[item.externalId]}
-						{@const title = titles(data.category, item).main}
 						<li class="w-28 shrink-0 snap-start sm:w-32">
-							<a href="/{data.category}/{item.externalId}" class="group/poster block outline-none">
-								<div
-									class="relative aspect-[2/3] overflow-hidden rounded-lg bg-zinc-900 ring-1 ring-zinc-800 transition duration-200 group-hover/poster:-translate-y-0.5 group-hover/poster:shadow-lg group-hover/poster:ring-2 group-hover/poster:shadow-black/50 group-hover/poster:ring-(--accent) group-focus-visible/poster:ring-2 group-focus-visible/poster:ring-(--accent)"
-								>
-									{#if item.posterUrl}
-										<img
-											src={item.posterUrl}
-											alt={title}
-											loading="lazy"
-											referrerpolicy="no-referrer"
-											class="h-full w-full object-cover transition duration-300 group-hover/poster:scale-105"
-										/>
-									{:else}
-										<div class="flex h-full items-center justify-center text-zinc-600">
-											<ImageOff size={24} />
-										</div>
-									{/if}
-									{#if status}
-										<span
-											class="absolute inset-x-1 bottom-1 truncate rounded bg-(--accent) px-1.5 py-0.5 text-center text-[11px] font-semibold text-white"
-										>
-											{statusLabel(data.category, status)}
-										</span>
-									{/if}
-								</div>
-								<p
-									class="mt-1.5 line-clamp-2 text-sm leading-tight font-medium transition-colors group-hover/poster:text-(--accent)"
-								>
-									{title}
-								</p>
-								<p class="text-xs text-zinc-500">{item.year ?? '–'}</p>
-							</a>
+							<PosterCard
+								href="/{data.category}/{item.externalId}"
+								title={titles(data.category, item).main}
+								year={item.year}
+								posterUrl={item.posterUrl}
+								badge={status ? statusLabel(data.category, status) : null}
+							/>
 						</li>
 					{/each}
 				</ul>

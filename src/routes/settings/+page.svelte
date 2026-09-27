@@ -1,12 +1,18 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import type { SubmitFunction } from '@sveltejs/kit';
 	import { CATEGORY_KEYS } from '$lib/categories';
 	import { LOCALES, m } from '$lib/i18n/index.svelte';
 	import { MIN_PASSWORD_LENGTH } from '$lib/limits';
+	import { FormFeedback } from '$lib/forms.svelte';
+	import { ui } from '$lib/ui';
+	import FeedbackText from '$lib/components/FeedbackText.svelte';
+	import SubmitButton, {
+		BUTTON_DANGER,
+		BUTTON_SECONDARY
+	} from '$lib/components/SubmitButton.svelte';
+	import Switch from '$lib/components/Switch.svelte';
 	import {
 		KeyRound,
-		LoaderCircle,
 		LogOut,
 		Monitor,
 		SlidersHorizontal,
@@ -16,35 +22,8 @@
 
 	let { data } = $props();
 
-	type Section = 'display' | 'behavior' | 'password' | 'logoutOthers' | 'clear';
-
-	// Result message below each form ("Gespeichert ✓" or an error), and which form is busy.
-	let feedback = $state<Partial<Record<Section, { ok: boolean; text: string }>>>({});
-	let busy = $state<Section | null>(null);
-
-	// Submit in the background and show the server's answer next to the button.
-	// Success messages disappear after a few seconds.
-	function submit(section: Section, reset = false): SubmitFunction {
-		return () => {
-			busy = section;
-			feedback[section] = undefined;
-			return async ({ result, update }) => {
-				await update({ reset });
-				busy = null;
-				if (result.type !== 'success' && result.type !== 'failure') return;
-				const answer = result.data as { message?: string; error?: string } | undefined;
-				const entry = answer?.error
-					? { ok: false, text: answer.error }
-					: { ok: true, text: answer?.message ?? '' };
-				feedback[section] = entry;
-				if (entry.ok) {
-					setTimeout(() => {
-						if (feedback[section] === entry) feedback[section] = undefined;
-					}, 5000);
-				}
-			};
-		};
-	}
+	// "Gespeichert ✓" or an error message next to each form's button.
+	const forms = new FormFeedback();
 
 	// Names in the current interface language, sorted A–Z. Unknown codes are shown as they are.
 	function named(codes: string[], type: 'region' | 'language') {
@@ -73,45 +52,12 @@
 	let confirmText = $state('');
 	let confirmOk = $derived(confirmText.trim().toUpperCase() === m.settings.confirmWord);
 
-	const card = 'mt-6 rounded-xl border border-zinc-800 bg-zinc-900/40 p-4';
-	const heading = 'flex items-center gap-2 text-lg font-semibold';
-	const label = 'flex flex-col gap-1';
-	const labelText = 'text-sm font-medium';
-	const hint = 'text-xs text-zinc-500';
-	const saveButton =
-		'inline-flex items-center gap-2 rounded-lg bg-zinc-100 px-4 py-2 font-medium text-zinc-900 transition-colors hover:bg-zinc-300 active:bg-zinc-400 disabled:opacity-50';
+	const { card, heading, label, labelText, hint, actions } = ui;
 </script>
 
 <svelte:head><title>{m.settings.title} · hdtracker</title></svelte:head>
 
-<!-- Submit button with loading spinner, and the result message next to it -->
-{#snippet actions(
-	section: Section,
-	text: string,
-	Icon?: typeof LogOut,
-	style = saveButton,
-	enabled = true
-)}
-	<div class="flex flex-wrap items-center gap-3">
-		<button class={style} disabled={busy === section || !enabled}>
-			{#if busy === section}
-				<LoaderCircle size={18} class="animate-spin" />
-			{:else if Icon}
-				<Icon size={18} />
-			{/if}
-			{text}
-		</button>
-		{#if feedback[section]}
-			<p role="status" class="text-sm {feedback[section].ok ? 'text-emerald-400' : 'text-red-400'}">
-				{feedback[section].text}
-			</p>
-		{/if}
-	</div>
-{/snippet}
-
-<main class="mx-auto max-w-screen-sm p-4">
-	<h1 class="text-2xl font-bold">{m.settings.title}</h1>
-
+<main class="mx-auto max-w-screen-sm px-4 pb-4">
 	<!-- Display -->
 	<section class={card}>
 		<h2 class={heading}><Monitor size={20} class="text-zinc-400" />{m.settings.display}</h2>
@@ -119,7 +65,7 @@
 		<form
 			method="POST"
 			action="?/display"
-			use:enhance={submit('display')}
+			use:enhance={forms.submit('display')}
 			class="mt-4 flex flex-col gap-4"
 		>
 			<label class={label}>
@@ -175,7 +121,10 @@
 				{/each}
 			</fieldset>
 
-			{@render actions('display', m.settings.save)}
+			<div class={actions}>
+				<SubmitButton text={m.settings.save} busy={forms.busy === 'display'} />
+				<FeedbackText feedback={forms.messages.display} />
+			</div>
 		</form>
 	</section>
 
@@ -185,25 +134,20 @@
 			<SlidersHorizontal size={20} class="text-zinc-400" />{m.settings.behavior}
 		</h2>
 
-		<form method="POST" action="?/behavior" use:enhance={submit('behavior')} class="mt-4">
-			<label class="flex cursor-pointer items-start justify-between gap-4">
-				<span class="flex flex-col gap-1">
+		<form method="POST" action="?/behavior" use:enhance={forms.submit('behavior')} class="mt-4">
+			<div class="flex items-start justify-between gap-4">
+				<label for="autoStatus" class="flex cursor-pointer flex-col gap-1">
 					<span class={labelText}>{m.settings.autoStatus}</span>
 					<span class={hint}>{m.settings.autoStatusHint}</span>
-				</span>
-				<!-- Switch: a checkbox styled as a sliding toggle -->
-				<input
-					type="checkbox"
-					name="autoStatus"
-					checked={data.values.autoStatus}
-					class="peer sr-only"
-				/>
-				<span
-					aria-hidden="true"
-					class="relative mt-0.5 h-6 w-11 shrink-0 rounded-full bg-zinc-700 transition-colors peer-checked:bg-emerald-500 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-zinc-300 after:absolute after:top-0.5 after:left-0.5 after:size-5 after:rounded-full after:bg-white after:transition-transform peer-checked:after:translate-x-5 hover:brightness-125"
-				></span>
-			</label>
-			<div class="mt-4">{@render actions('behavior', m.settings.save)}</div>
+				</label>
+				<Switch id="autoStatus" name="autoStatus" checked={data.values.autoStatus} />
+			</div>
+			<div class="mt-4">
+				<div class={actions}>
+					<SubmitButton text={m.settings.save} busy={forms.busy === 'behavior'} />
+					<FeedbackText feedback={forms.messages.behavior} />
+				</div>
+			</div>
 		</form>
 	</section>
 
@@ -214,7 +158,7 @@
 		<form
 			method="POST"
 			action="?/password"
-			use:enhance={submit('password', true)}
+			use:enhance={forms.submit('password', true)}
 			class="mt-4 flex flex-col gap-4"
 		>
 			<h3 class="font-medium text-zinc-300">{m.settings.changePassword}</h3>
@@ -251,24 +195,34 @@
 					required
 				/>
 			</label>
-			{@render actions('password', m.settings.changePassword, KeyRound)}
+			<div class={actions}>
+				<SubmitButton
+					text={m.settings.changePassword}
+					busy={forms.busy === 'password'}
+					icon={KeyRound}
+				/>
+				<FeedbackText feedback={forms.messages.password} />
+			</div>
 		</form>
 
 		<form
 			method="POST"
 			action="?/logoutOthers"
-			use:enhance={submit('logoutOthers')}
+			use:enhance={forms.submit('logoutOthers')}
 			class="mt-6 border-t border-zinc-800 pt-4"
 		>
 			<h3 class="font-medium text-zinc-300">{m.settings.otherDevices}</h3>
 			<p class="mt-1 {hint}">{m.settings.otherDevicesHint}</p>
 			<div class="mt-4">
-				{@render actions(
-					'logoutOthers',
-					m.settings.logoutOthers,
-					LogOut,
-					'inline-flex items-center gap-2 rounded-lg border border-zinc-700 px-4 py-2 font-medium transition-colors hover:bg-zinc-800 disabled:opacity-50'
-				)}
+				<div class={actions}>
+					<SubmitButton
+						text={m.settings.logoutOthers}
+						busy={forms.busy === 'logoutOthers'}
+						icon={LogOut}
+						style={BUTTON_SECONDARY}
+					/>
+					<FeedbackText feedback={forms.messages.logoutOthers} />
+				</div>
 			</div>
 		</form>
 	</section>
@@ -280,7 +234,7 @@
 		<form
 			method="POST"
 			action="?/clear"
-			use:enhance={submit('clear', true)}
+			use:enhance={forms.submit('clear', true)}
 			onreset={() => (confirmText = '')}
 			class="mt-4 flex flex-col gap-4"
 		>
@@ -308,13 +262,16 @@
 					placeholder={m.settings.confirmWord}
 				/>
 			</label>
-			{@render actions(
-				'clear',
-				m.settings.clearButton,
-				TriangleAlert,
-				'inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 font-medium text-white transition-colors enabled:hover:bg-red-500 enabled:active:bg-red-700 disabled:opacity-40',
-				confirmOk
-			)}
+			<div class={actions}>
+				<SubmitButton
+					text={m.settings.clearButton}
+					busy={forms.busy === 'clear'}
+					icon={TriangleAlert}
+					style={BUTTON_DANGER}
+					disabled={!confirmOk}
+				/>
+				<FeedbackText feedback={forms.messages.clear} />
+			</div>
 		</form>
 	</section>
 </main>

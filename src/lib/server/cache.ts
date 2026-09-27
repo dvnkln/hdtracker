@@ -11,3 +11,15 @@ export function cached<T>(key: string, ttlMs: number, load: () => Promise<T>): P
 	value.catch(() => entries.delete(key));
 	return value;
 }
+
+// Removes expired entries. Returns how many were removed.
+export function pruneCache() {
+	let removed = 0;
+	for (const [key, entry] of entries) {
+		if (entry.expires <= Date.now()) {
+			entries.delete(key);
+			removed++;
+		}
+	}
+	return removed;
+}

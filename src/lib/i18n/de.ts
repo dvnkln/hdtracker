@@ -146,6 +146,7 @@ export const de = {
 	},
 
 	settings: {
+		general: 'Allgemein',
 		title: 'Einstellungen',
 		save: 'Speichern',
 		saved: 'Gespeichert ✓',
@@ -193,6 +194,62 @@ export const de = {
 		confirmWrong: (word: string) => `Bitte genau „${word}“ eintippen.`,
 		clearButton: 'Endgültig löschen',
 		cleared: (n: number) => `${n} ${n === 1 ? 'Eintrag' : 'Einträge'} gelöscht ✓`
+	},
+
+	maintenance: {
+		title: 'Wartung',
+		intro: (timeZone: string) =>
+			`Diese Aufgaben laufen automatisch im Hintergrund. Uhrzeiten gelten in der Zeitzone des Servers (${timeZone}).`,
+		tasks: {
+			backup: {
+				name: 'Backup',
+				description: 'Speichert eine Kopie der Datenbank im Ordner /data/backups.'
+			},
+			optimize: {
+				name: 'Datenbank-Pflege',
+				description: 'Räumt die Datenbank auf und macht die Datei kompakter.'
+			},
+			sessions: {
+				name: 'Abgelaufene Anmeldungen löschen',
+				description: 'Entfernt Anmeldungen, die ohnehin nicht mehr gültig sind.'
+			},
+			cache: {
+				name: 'Zwischenspeicher aufräumen',
+				description: 'Wirft veraltete Antworten von TMDB, IGDB und AniList aus dem Arbeitsspeicher.'
+			}
+		} as Record<string, { name: string; description: string }>,
+		enabled: 'Aktiv',
+		frequency: 'Wie oft',
+		frequencies: {
+			hourly: 'Stündlich',
+			daily: 'Täglich',
+			weekly: 'Wöchentlich',
+			monthly: 'Monatlich'
+		} as Record<string, string>,
+		time: 'Uhrzeit',
+		weekday: 'Wochentag',
+		hourlyHint: 'Immer zur vollen Stunde.',
+		monthlyHint: 'Immer am 1. des Monats.',
+		lastRun: (date: string) => `Zuletzt: ${date}`,
+		neverRun: 'Noch nie ausgeführt',
+		nextRun: (date: string) => `Nächster Lauf: ${date}`,
+		off: 'Ausgeschaltet',
+		failed: 'Fehlgeschlagen:',
+		running: 'Läuft gerade …',
+		runNow: 'Jetzt ausführen',
+		done: 'Erledigt ✓',
+		apiHint:
+			'Diese Aufgabe stellt viele Anfragen an TMDB, IGDB bzw. AniList. Bitte nicht zu oft von Hand starten, sonst sperren die Dienste die App vorübergehend.',
+		keep: 'Wie viele Backups behalten',
+		volumeHint:
+			'Sicherst du stattdessen das ganze Docker-Volume? Dann kopiere es bei gestopptem Container – oder immer die drei Dateien hdtracker.db, hdtracker.db-wal und hdtracker.db-shm zusammen. Sonst kann die Kopie der Datenbank unvollständig sein.',
+		backups: 'Vorhandene Backups',
+		noBackups: 'Noch keine Backups vorhanden.',
+		download: 'Herunterladen',
+		delete: 'Löschen',
+		deleteAll: 'Alle löschen',
+		deleteAllConfirm: 'Wirklich alle löschen?',
+		restoreHint: 'Wie man ein Backup zurückspielt, steht in der README.'
 	},
 
 	units: {

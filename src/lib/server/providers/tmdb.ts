@@ -338,7 +338,8 @@ export function getWatchRegions(): Promise<string[]> {
 
 // Languages TMDB has translations for, e.g. ["de-DE", "en-US", ...].
 export function getContentLanguages(): Promise<string[]> {
-	return cached('tmdb:languages', DAY_MS, () =>
+	// async, so a missing token becomes a rejected promise instead of an exception
+	return cached('tmdb:languages', DAY_MS, async () =>
 		tmdb<string[]>('/configuration/primary_translations', {})
 	);
 }

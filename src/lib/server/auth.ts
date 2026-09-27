@@ -119,8 +119,9 @@ export function deleteOtherSessions(userId: number, currentToken: string) {
 		.run().changes;
 }
 
+// Returns how many were deleted.
 export function deleteExpiredSessions() {
-	getDb().delete(sessions).where(lt(sessions.expiresAt, new Date())).run();
+	return getDb().delete(sessions).where(lt(sessions.expiresAt, new Date())).run().changes;
 }
 
 // `secure` only on https (see isHttps in origins.ts), so login also works on plain http in the LAN.

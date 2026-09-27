@@ -3,7 +3,6 @@ import { runMigrations } from '$lib/server/db';
 import {
 	SESSION_COOKIE,
 	clearSessionCookie,
-	deleteExpiredSessions,
 	getSecret,
 	hasAnyUser,
 	setSessionCookie,
@@ -11,6 +10,7 @@ import {
 } from '$lib/server/auth';
 import { allowedOrigins, isAllowedOrigin, isHttps } from '$lib/server/origins';
 import { getSetting } from '$lib/server/settings';
+import { startScheduler } from '$lib/server/tasks/scheduler';
 
 // Runs once when the server starts, before the first request is handled.
 export const init: ServerInit = () => {
@@ -19,8 +19,8 @@ export const init: ServerInit = () => {
 		console.warn('ORIGIN is not set in .env – login and all forms will fail (HTTP 403).');
 	}
 	runMigrations();
-	deleteExpiredSessions();
 	console.log('Database migrations applied');
+	startScheduler(); // background tasks (backup, cleanup, ...)
 };
 
 // Pages reachable without being logged in.

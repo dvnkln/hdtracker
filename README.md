@@ -67,6 +67,25 @@
 **Port:** change the left side of `3000:3000` (e.g. `8080:3000`) and adjust `ORIGIN` accordingly.
 **Update:** `docker compose pull && docker compose up -d`. Your data lives in the `hdtracker-data` volume.
 
+## Backups
+
+Under **Settings → Maintenance** hdtracker can back up its database on a schedule (off by default). The copies are stored in `/data/backups` inside the volume and can also be downloaded there.
+
+**Backing up the whole volume instead?** Copy it while the container is stopped, or always copy `hdtracker.db`, `hdtracker.db-wal` and `hdtracker.db-shm` together. Otherwise the copy may be incomplete.
+
+**Restoring a backup:**
+
+```bash
+docker compose stop
+# Volume name: see `docker volume ls` (usually <folder>_hdtracker-data).
+# Backup from the volume: /data/backups/<file>. Downloaded backup in the current folder: /in/<file>
+docker run --rm -v <folder>_hdtracker-data:/data -v "$PWD":/in alpine sh -c '
+  cp /data/backups/hdtracker-2026-09-27_030000.db /data/hdtracker.db &&
+  rm -f /data/hdtracker.db-wal /data/hdtracker.db-shm &&
+  chown 1000:1000 /data/hdtracker.db'
+docker compose start
+```
+
 ## Data sources
 
 Movie and series data from [TMDB](https://www.themoviedb.org). This product uses the TMDB API but is not endorsed or certified by TMDB. Streaming availability by [JustWatch](https://www.justwatch.com). Game data from [IGDB](https://www.igdb.com), anime data from [AniList](https://anilist.co).

@@ -27,7 +27,7 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
 ## Design
 
 - Immer dunkel (kein Light-Mode).
-- Hover-Effekte (nur Maus) für alles Klickbare; Poster: leichter Zoom, Rahmen + Titel in Akzentfarbe.
+- Hover-Effekte (nur Maus) für alles Klickbare; Poster: Rahmen + Titel in Akzentfarbe, Bild leicht abgedunkelt, kein Zoom; kurze Übergänge (~100 ms), damit es direkt reagiert.
 - Standard für neue Installationen: Oberfläche Englisch, Inhalte `en-US`, Region `US` (umstellbar in den Einstellungen).
 - Navigation: Leiste unten (Handy), mit Icon + Label je Bereich.
 - Akzentfarbe je Bereich (neutraler Hintergrund): Filme rot, Serien blau, Anime pink, Spiele grün. Definiert in `src/lib/categories.ts`.
@@ -75,7 +75,7 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
      - Konto: Passwort ändern (altes + 2× neues), alle anderen Geräte abmelden.
      - Gefahrenzone: Bibliothek leeren (pro Kategorie oder alles), Bestätigung durch Eintippen von „LÖSCHEN“/„DELETE“.
      - Nach Speichern Bestätigung „Gespeichert ✓“. Alle Texte in de.ts + en.ts.
-   - **C – Hintergrundaufgaben + Wartung:** Zeitplaner in der App (kein Cron), letzte Ausführung in DB, holt Verpasstes nach Neustart nach. Aufgaben: DB-Backup nach `/data/backups`, DB-Pflege (optimize/VACUUM), abgelaufene Sessions löschen, In-Memory-Cache aufräumen. In den Einstellungen feintunbar: Backups an/aus, Anzahl behalten, wie oft; pro Aufgabe wann/wie oft; „Jetzt ausführen“ (mit Hinweis auf API-Limits); Backups zum Herunterladen. Metadaten-Aktualisierung kommt erst mit Punkt 8.
+   - **C ✅ Hintergrundaufgaben + Wartung** (Reiter „Wartung“ unter `/settings/maintenance`, Backups standardmäßig aus): Zeitplaner in der App (kein Cron), letzte Ausführung in DB, holt Verpasstes nach Neustart nach. Aufgaben: DB-Backup nach `/data/backups`, DB-Pflege (optimize/VACUUM), abgelaufene Sessions löschen, In-Memory-Cache aufräumen. In den Einstellungen feintunbar: Backups an/aus, Anzahl behalten, wie oft; pro Aufgabe wann/wie oft; „Jetzt ausführen“ (mit Hinweis auf API-Limits); Backups zum Herunterladen. Metadaten-Aktualisierung kommt erst mit Punkt 8.
 8. Dashboard (Startseite) statt Kategorie-Kacheln. Zeigt Einträge mit Status „Geplant“ und „Schaue/Spiele ich“ (inkl. neuer Folgen laufender Serien/Anime) in zwei Bereichen, jeweils mit Datum:
    - Kürzlich erschienen (letzte 4 Wochen)
    - Demnächst

@@ -6,15 +6,25 @@
 		year: number | null;
 		posterUrl: string | null;
 		badge?: string | null;
-		onclick: () => void;
+		// Either a link (href) or a button (onclick)
+		href?: string;
+		onclick?: () => void;
 	};
-	let { title, year, posterUrl, badge = null, onclick }: Props = $props();
+	let { title, year, posterUrl, badge = null, href, onclick }: Props = $props();
 </script>
 
-<!-- Hover (mouse only): poster zooms a little, frame lights up in the accent colour -->
-<button type="button" class="group/poster flex w-full flex-col text-left outline-none" {onclick}>
+<!-- Hover (mouse only): frame and title light up in the accent colour, the image darkens a
+     little. Short transitions, so it feels immediate. -->
+<svelte:element
+	this={href ? 'a' : 'button'}
+	{href}
+	type={href ? undefined : 'button'}
+	role={href ? 'link' : 'button'}
+	{onclick}
+	class="group/poster flex w-full flex-col text-left outline-none"
+>
 	<div
-		class="relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-zinc-900 ring-1 ring-zinc-800 transition duration-200 group-hover/poster:-translate-y-0.5 group-hover/poster:shadow-lg group-hover/poster:ring-2 group-hover/poster:shadow-black/50 group-hover/poster:ring-(--accent) group-focus-visible/poster:ring-2 group-focus-visible/poster:ring-(--accent)"
+		class="relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-zinc-900 ring-1 ring-zinc-800 transition-shadow duration-100 group-hover/poster:ring-2 group-hover/poster:ring-(--accent) group-focus-visible/poster:ring-2 group-focus-visible/poster:ring-(--accent)"
 	>
 		{#if posterUrl}
 			<img
@@ -22,7 +32,7 @@
 				alt={title}
 				loading="lazy"
 				referrerpolicy="no-referrer"
-				class="h-full w-full object-cover transition duration-300 group-hover/poster:scale-105"
+				class="h-full w-full object-cover transition-[filter] duration-100 group-hover/poster:brightness-75"
 			/>
 		{:else}
 			<div class="flex h-full items-center justify-center text-zinc-600">
@@ -38,9 +48,9 @@
 		{/if}
 	</div>
 	<p
-		class="mt-1.5 line-clamp-2 text-sm leading-tight font-medium transition-colors group-hover/poster:text-(--accent)"
+		class="mt-1.5 line-clamp-2 text-sm leading-tight font-medium transition-colors duration-100 group-hover/poster:text-(--accent)"
 	>
 		{title}
 	</p>
 	<p class="text-xs text-zinc-500">{year ?? '–'}</p>
-</button>
+</svelte:element>

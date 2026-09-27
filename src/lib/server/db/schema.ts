@@ -66,3 +66,18 @@ export const watchedEpisodes = sqliteTable(
 	},
 	(t) => [uniqueIndex('watched_episodes_unique').on(t.itemId, t.season, t.episode)]
 );
+
+// Background tasks (backup, cleanup, ...): schedule and result of the last run.
+// Rows are created with default values at startup (see server/tasks/scheduler.ts).
+export const tasks = sqliteTable('tasks', {
+	key: text('key').primaryKey(),
+	enabled: integer('enabled', { mode: 'boolean' }).notNull(),
+	frequency: text('frequency').$type<'hourly' | 'daily' | 'weekly' | 'monthly'>().notNull(),
+	time: text('time').notNull(), // "HH:MM", server time zone (TZ)
+	weekday: integer('weekday').notNull(), // 0 = Sunday, only used for "weekly"
+	// When the schedule was last changed: times before that do not count as missed.
+	changedAt: integer('changed_at', { mode: 'timestamp' }).notNull(),
+	lastRunAt: integer('last_run_at', { mode: 'timestamp' }),
+	lastDurationMs: integer('last_duration_ms'),
+	lastError: text('last_error')
+});

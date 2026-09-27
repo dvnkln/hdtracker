@@ -140,6 +140,7 @@ export const en: Messages = {
 	},
 
 	settings: {
+		general: 'General',
 		title: 'Settings',
 		save: 'Save',
 		saved: 'Saved ✓',
@@ -186,6 +187,57 @@ export const en: Messages = {
 		confirmWrong: (word) => `Please type exactly “${word}”.`,
 		clearButton: 'Delete permanently',
 		cleared: (n) => `${n} ${n === 1 ? 'entry' : 'entries'} deleted ✓`
+	},
+
+	maintenance: {
+		title: 'Maintenance',
+		intro: (timeZone) =>
+			`These tasks run automatically in the background. Times are in the server's time zone (${timeZone}).`,
+		tasks: {
+			backup: {
+				name: 'Backup',
+				description: 'Saves a copy of the database in the folder /data/backups.'
+			},
+			optimize: {
+				name: 'Database care',
+				description: 'Tidies up the database and makes the file more compact.'
+			},
+			sessions: {
+				name: 'Delete expired logins',
+				description: 'Removes logins that are no longer valid anyway.'
+			},
+			cache: {
+				name: 'Clean up cache',
+				description: 'Removes outdated answers from TMDB, IGDB and AniList from memory.'
+			}
+		},
+		enabled: 'Active',
+		frequency: 'How often',
+		frequencies: { hourly: 'Hourly', daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly' },
+		time: 'Time',
+		weekday: 'Weekday',
+		hourlyHint: 'At the start of every hour.',
+		monthlyHint: 'On the 1st of every month.',
+		lastRun: (date) => `Last run: ${date}`,
+		neverRun: 'Never run yet',
+		nextRun: (date) => `Next run: ${date}`,
+		off: 'Switched off',
+		failed: 'Failed:',
+		running: 'Running …',
+		runNow: 'Run now',
+		done: 'Done ✓',
+		apiHint:
+			'This task sends many requests to TMDB, IGDB or AniList. Please do not start it by hand too often, or the services may block the app for a while.',
+		keep: 'How many backups to keep',
+		volumeHint:
+			'Do you back up the whole Docker volume instead? Then copy it while the container is stopped – or always copy the three files hdtracker.db, hdtracker.db-wal and hdtracker.db-shm together. Otherwise the copy of the database may be incomplete.',
+		backups: 'Existing backups',
+		noBackups: 'No backups yet.',
+		download: 'Download',
+		delete: 'Delete',
+		deleteAll: 'Delete all',
+		deleteAllConfirm: 'Really delete all?',
+		restoreHint: 'How to restore a backup is described in the README.'
 	},
 
 	units: {

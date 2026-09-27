@@ -30,7 +30,10 @@
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
 {#if data.user}
-	<header class="border-b border-zinc-800">
+	<!-- Stays at the top while scrolling -->
+	<header
+		class="sticky top-0 z-10 border-b border-zinc-800 bg-zinc-950/95 pt-[env(safe-area-inset-top)] backdrop-blur"
+	>
 		<div class="mx-auto flex max-w-screen-lg items-center justify-between px-4 py-3">
 			<a href="/" aria-label={m.common.home} class="transition-opacity hover:opacity-80"
 				><Brand /></a
@@ -94,7 +97,7 @@
 	</div>
 
 	<nav
-		class="fixed inset-x-0 bottom-0 border-t border-zinc-800 bg-zinc-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
+		class="fixed inset-x-0 bottom-0 bg-zinc-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
 	>
 		<div class="mx-auto grid max-w-screen-lg grid-cols-4">
 			{#each CATEGORY_KEYS as key (key)}

@@ -36,6 +36,39 @@ export function formatDate(iso: string) {
 	}).format(new Date(`${iso.slice(0, 10)}T00:00:00`));
 }
 
+// ISO time -> "27.09.2026, 03:00" / "09/27/2026, 03:00 AM"
+export function formatDateTime(iso: string) {
+	return new Intl.DateTimeFormat(m.locale, {
+		day: '2-digit',
+		month: '2-digit',
+		year: 'numeric',
+		hour: '2-digit',
+		minute: '2-digit'
+	}).format(new Date(iso));
+}
+
+// 1536000 -> "1,5 MB" / "1.5 MB"
+export function formatFileSize(bytes: number) {
+	const [value, unit] =
+		bytes >= 1e6 ? [bytes / 1e6, 'megabyte'] : [Math.max(bytes / 1e3, 0.1), 'kilobyte'];
+	return new Intl.NumberFormat(m.locale, {
+		style: 'unit',
+		unit,
+		maximumFractionDigits: 1
+	}).format(value);
+}
+
+// 12 -> "12 ms", 1540 -> "1,5 s" / "1.5 s"
+export function formatDuration(ms: number) {
+	const [value, unit] = ms < 1000 ? [Math.max(ms, 1), 'millisecond'] : [ms / 1000, 'second'];
+	return new Intl.NumberFormat(m.locale, {
+		style: 'unit',
+		unit,
+		unitDisplay: 'short',
+		maximumFractionDigits: 1
+	}).format(value);
+}
+
 // "2026-10-03" -> "03.10." / "10/03"
 export function formatShortDate(iso: string) {
 	return new Intl.DateTimeFormat(m.locale, { day: '2-digit', month: '2-digit' }).format(

@@ -5,7 +5,8 @@ import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import * as schema from './schema';
 import { DATA_DIR, DB_PATH, MIGRATIONS_DIR } from '../config';
 
-let instance: BetterSQLite3Database<typeof schema> | undefined;
+// $client: the underlying better-sqlite3 connection (for backup, VACUUM, ...).
+let instance: (BetterSQLite3Database<typeof schema> & { $client: Database.Database }) | undefined;
 
 // Opens the database on first use (not at import time, so `vite build` never touches it).
 export function getDb() {
