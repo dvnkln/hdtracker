@@ -3,7 +3,7 @@ import { de, type Messages } from './de';
 import { en } from './en';
 
 export type Locale = 'de' | 'en';
-export const LOCALES: Locale[] = ['de', 'en'];
+export const LOCALES: Locale[] = ['en', 'de'];
 export const MESSAGES: Record<Locale, Messages> = { de, en };
 
 export function isLocale(value: string): value is Locale {
@@ -11,7 +11,7 @@ export function isLocale(value: string): value is Locale {
 }
 
 // The interface language is one global setting (stored in the DB), set by the root layout.
-const current = $state({ locale: 'de' as Locale });
+const current = $state({ locale: 'en' as Locale });
 
 export function setLocale(locale: Locale) {
 	current.locale = locale;

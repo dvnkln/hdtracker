@@ -26,13 +26,10 @@ export const init: ServerInit = () => {
 // Pages reachable without being logged in.
 const PUBLIC_PATHS = ['/health', '/login', '/setup'];
 
-// Old German URLs (before the switch to English) -> new ones, so bookmarks keep working.
-const OLD_PATHS: Record<string, string> = { filme: 'movies', serien: 'series', spiele: 'games' };
-
 const SAFE_METHODS = ['GET', 'HEAD', 'OPTIONS'];
 
-function redirectTo(location: string, status = 303) {
-	return new Response(null, { status, headers: { location } });
+function redirectTo(location: string) {
+	return new Response(null, { status: 303, headers: { location } });
 }
 
 // Runs for every request: checks the origin of form posts, loads the logged-in user and
@@ -41,11 +38,6 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const { url, request } = event;
 	const path = url.pathname;
 	if (path === '/health') return resolve(event);
-
-	const [, first, ...rest] = path.split('/');
-	if (OLD_PATHS[first]) {
-		return redirectTo(['', OLD_PATHS[first], ...rest].join('/') + url.search, 301);
-	}
 
 	if (!SAFE_METHODS.includes(request.method)) {
 		if (!isAllowedOrigin(request.headers.get('origin'), url)) {

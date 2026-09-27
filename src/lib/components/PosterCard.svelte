@@ -11,9 +11,10 @@
 	let { title, year, posterUrl, badge = null, onclick }: Props = $props();
 </script>
 
-<button type="button" class="flex w-full flex-col text-left" {onclick}>
+<!-- Hover (mouse only): poster zooms a little, frame lights up in the accent colour -->
+<button type="button" class="group flex w-full flex-col text-left outline-none" {onclick}>
 	<div
-		class="relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-zinc-900 ring-1 ring-zinc-800"
+		class="relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-zinc-900 ring-1 ring-zinc-800 transition duration-200 group-hover:-translate-y-0.5 group-hover:shadow-lg group-hover:ring-2 group-hover:shadow-black/50 group-hover:ring-(--accent) group-focus-visible:ring-2 group-focus-visible:ring-(--accent)"
 	>
 		{#if posterUrl}
 			<img
@@ -21,7 +22,7 @@
 				alt={title}
 				loading="lazy"
 				referrerpolicy="no-referrer"
-				class="h-full w-full object-cover"
+				class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
 			/>
 		{:else}
 			<div class="flex h-full items-center justify-center text-zinc-600">
@@ -36,6 +37,10 @@
 			</span>
 		{/if}
 	</div>
-	<p class="mt-1.5 line-clamp-2 text-sm leading-tight font-medium">{title}</p>
+	<p
+		class="mt-1.5 line-clamp-2 text-sm leading-tight font-medium transition-colors group-hover:text-(--accent)"
+	>
+		{title}
+	</p>
 	<p class="text-xs text-zinc-500">{year ?? '–'}</p>
 </button>

@@ -91,7 +91,7 @@
 				<button
 					class="flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium {allDone
 						? 'text-zinc-400 hover:bg-zinc-800'
-						: 'bg-(--accent) text-white'}"
+						: 'bg-(--accent) text-white hover:brightness-110'} transition"
 				>
 					{#if allDone}{m.episodes.reset}{:else}<CheckCheck size={16} />
 						{m.episodes.allWatched}{/if}
@@ -132,7 +132,7 @@
 				disabled={!ep.aired}
 				aria-pressed={watched}
 				class="flex aspect-square flex-col items-center justify-center rounded-lg text-sm font-semibold transition-colors {watched
-					? 'bg-(--accent) text-white'
+					? 'bg-(--accent) text-white hover:brightness-110'
 					: ep.aired
 						? 'bg-zinc-800 text-zinc-200 hover:bg-zinc-700'
 						: 'border border-dashed border-zinc-700 text-zinc-500'}"
@@ -171,7 +171,7 @@
 				open={untrack(() => season.number === firstOpen)}
 			>
 				<summary
-					class="flex cursor-pointer list-none items-center gap-3 p-4 select-none [&::-webkit-details-marker]:hidden"
+					class="flex cursor-pointer list-none items-center gap-3 rounded-xl p-4 transition-colors select-none hover:bg-zinc-800/50 [&::-webkit-details-marker]:hidden"
 				>
 					<ChevronRight
 						size={18}
@@ -216,7 +216,7 @@
 						<form method="POST" action="?/season" use:enhance={confirmReset} class="px-2 pt-3">
 							<input type="hidden" name="season" value={season.number} />
 							<input type="hidden" name="watched" value={complete ? '0' : '1'} />
-							<button class="text-sm font-medium text-(--accent)">
+							<button class="text-sm font-medium text-(--accent) hover:underline">
 								{complete ? m.episodes.seasonUnwatch : m.episodes.seasonWatched}
 							</button>
 						</form>

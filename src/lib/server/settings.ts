@@ -4,9 +4,9 @@ import { settings } from './db/schema';
 
 // Default values, used until the user changes them on the settings page.
 const DEFAULTS = {
-	uiLanguage: 'de', // interface language: 'de' | 'en'
-	language: 'de-DE', // content language for TMDB (titles, descriptions)
-	region: 'DE'
+	uiLanguage: 'en', // interface language: 'en' | 'de'
+	language: 'en-US', // content language for TMDB (titles, descriptions)
+	region: 'US' // streaming offers and release dates
 } as const;
 
 export type SettingKey = keyof typeof DEFAULTS;

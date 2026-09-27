@@ -5,5 +5,5 @@ import { getSetting } from './settings';
 // (form errors, API errors).
 export function serverMessages() {
 	const locale = getSetting('uiLanguage');
-	return MESSAGES[isLocale(locale) ? locale : 'de'];
+	return MESSAGES[isLocale(locale) ? locale : 'en'];
 }

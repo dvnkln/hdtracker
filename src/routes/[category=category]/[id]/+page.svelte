@@ -67,7 +67,7 @@
 	<main class="relative mx-auto max-w-screen-lg p-4 {info.backdropUrl ? '-mt-44 sm:-mt-56' : ''}">
 		<a
 			href="/{data.category}"
-			class="inline-flex items-center gap-1 rounded-full bg-zinc-950/70 px-2.5 py-1 text-sm text-(--accent) backdrop-blur"
+			class="inline-flex items-center gap-1 rounded-full bg-zinc-950/70 px-2.5 py-1 text-sm text-(--accent) backdrop-blur transition-colors hover:bg-zinc-900"
 		>
 			<ArrowLeft size={16} />
 			{m.categories[data.category]}
@@ -118,8 +118,8 @@
 						type="button"
 						onclick={() => (sheetOpen = true)}
 						class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium {data.status
-							? 'bg-(--accent) text-white'
-							: 'border border-zinc-600 bg-zinc-900/80 hover:bg-zinc-800'}"
+							? 'bg-(--accent) text-white hover:brightness-110'
+							: 'border border-zinc-600 bg-zinc-900/80 hover:bg-zinc-800'} transition"
 					>
 						{#if data.status}
 							{@const Icon = STATUS_ICONS[data.status]}
@@ -163,7 +163,7 @@
 			{#if overviewClamped || showFullOverview}
 				<button
 					type="button"
-					class="mt-1 text-sm text-(--accent)"
+					class="mt-1 text-sm text-(--accent) hover:underline"
 					onclick={() => (showFullOverview = !showFullOverview)}
 				>
 					{showFullOverview ? m.common.less : m.common.more}
@@ -198,7 +198,7 @@
 													alt={provider.name}
 													loading="lazy"
 													referrerpolicy="no-referrer"
-													class="size-11 rounded-lg ring-1 ring-zinc-800"
+													class="size-11 rounded-lg ring-1 ring-zinc-800 transition hover:scale-110 hover:ring-zinc-400"
 												/>
 											</a>
 										{/each}
@@ -212,8 +212,11 @@
 				{/if}
 				<p class="mt-2 text-xs text-zinc-500">
 					{m.detail.streamingDataBy}
-					<a href="https://www.justwatch.com" target="_blank" rel="noreferrer" class="underline"
-						>JustWatch</a
+					<a
+						href="https://www.justwatch.com"
+						target="_blank"
+						rel="noreferrer"
+						class="underline hover:text-zinc-300">JustWatch</a
 					>.
 				</p>
 			</section>
@@ -260,9 +263,9 @@
 					{#each info.similar as item (item.externalId)}
 						{@const status = data.similarStatus[item.externalId]}
 						<li class="w-28 shrink-0 snap-start sm:w-32">
-							<a href="/{data.category}/{item.externalId}" class="block">
+							<a href="/{data.category}/{item.externalId}" class="group block outline-none">
 								<div
-									class="relative aspect-[2/3] overflow-hidden rounded-lg bg-zinc-900 ring-1 ring-zinc-800"
+									class="relative aspect-[2/3] overflow-hidden rounded-lg bg-zinc-900 ring-1 ring-zinc-800 transition duration-200 group-hover:-translate-y-0.5 group-hover:shadow-lg group-hover:ring-2 group-hover:shadow-black/50 group-hover:ring-(--accent) group-focus-visible:ring-2 group-focus-visible:ring-(--accent)"
 								>
 									{#if item.posterUrl}
 										<img
@@ -270,7 +273,7 @@
 											alt={item.title}
 											loading="lazy"
 											referrerpolicy="no-referrer"
-											class="h-full w-full object-cover"
+											class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
 										/>
 									{:else}
 										<div class="flex h-full items-center justify-center text-zinc-600">
@@ -285,7 +288,11 @@
 										</span>
 									{/if}
 								</div>
-								<p class="mt-1.5 line-clamp-2 text-sm leading-tight font-medium">{item.title}</p>
+								<p
+									class="mt-1.5 line-clamp-2 text-sm leading-tight font-medium transition-colors group-hover:text-(--accent)"
+								>
+									{item.title}
+								</p>
 								<p class="text-xs text-zinc-500">{item.year ?? '–'}</p>
 							</a>
 						</li>

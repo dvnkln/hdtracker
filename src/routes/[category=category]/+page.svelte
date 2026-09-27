@@ -38,7 +38,10 @@
 
 <main class="mx-auto max-w-screen-lg p-4" style:--accent={cat.accent}>
 	<h1 class="text-2xl font-bold text-(--accent)">
-		<a href="/{data.category}" class="inline-flex items-center gap-2">
+		<a
+			href="/{data.category}"
+			class="inline-flex items-center gap-2 transition-opacity hover:opacity-80"
+		>
 			<cat.icon size={26} />
 			{label}
 		</a>
@@ -56,7 +59,7 @@
 			class="min-w-0 flex-1"
 		/>
 		<button
-			class="flex items-center justify-center rounded-lg bg-(--accent) px-4 font-medium text-white"
+			class="flex items-center justify-center rounded-lg bg-(--accent) px-4 font-medium text-white transition hover:brightness-110 active:brightness-95"
 			aria-label={m.common.search}
 		>
 			{#if searching}
@@ -73,7 +76,7 @@
 			<span class="text-zinc-400">
 				{#if !data.error}{m.library.results(data.results.length, data.q)}{/if}
 			</span>
-			<a href="/{data.category}" class="text-(--accent)">{m.library.toLibrary}</a>
+			<a href="/{data.category}" class="text-(--accent) hover:underline">{m.library.toLibrary}</a>
 		</div>
 
 		{#if data.error}
@@ -105,7 +108,7 @@
 			{@const Icon = STATUS_ICONS[section.status]}
 			<details class="group mt-6" open={!COLLAPSED_STATUSES.includes(section.status)}>
 				<summary
-					class="flex cursor-pointer list-none items-center gap-2 border-b border-zinc-800 pb-2 select-none [&::-webkit-details-marker]:hidden"
+					class="flex cursor-pointer list-none items-center gap-2 border-b border-zinc-800 pb-2 transition-colors select-none hover:border-zinc-600 [&::-webkit-details-marker]:hidden"
 				>
 					<ChevronRight size={18} class="text-zinc-500 transition-transform group-open:rotate-90" />
 					<Icon size={18} class="text-(--accent)" />

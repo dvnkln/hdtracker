@@ -26,7 +26,9 @@
 {#if data.user}
 	<header class="border-b border-zinc-800">
 		<div class="mx-auto flex max-w-screen-lg items-center justify-between px-4 py-3">
-			<a href="/" aria-label={m.common.home}><Brand /></a>
+			<a href="/" aria-label={m.common.home} class="transition-opacity hover:opacity-80"
+				><Brand /></a
+			>
 			<form method="POST" action="/logout" class="flex items-center gap-3">
 				<span class="text-sm text-zinc-400">{data.user.username}</span>
 				<button
@@ -47,15 +49,28 @@
 		<footer class="mx-auto max-w-screen-lg px-4 pt-10 text-xs text-zinc-500">
 			<p>
 				{m.footer.tmdbBefore}
-				<a href="https://www.themoviedb.org" class="underline" target="_blank" rel="noreferrer"
-					>TMDB</a
+				<a
+					href="https://www.themoviedb.org"
+					class="underline hover:text-zinc-300"
+					target="_blank"
+					rel="noreferrer">TMDB</a
 				>{m.footer.tmdbAfter}
 			</p>
 			<p class="mt-1">
 				{m.footer.gamesBy}
-				<a href="https://www.igdb.com" class="underline" target="_blank" rel="noreferrer">IGDB</a>,
+				<a
+					href="https://www.igdb.com"
+					class="underline hover:text-zinc-300"
+					target="_blank"
+					rel="noreferrer">IGDB</a
+				>,
 				{m.footer.animeBy}
-				<a href="https://anilist.co" class="underline" target="_blank" rel="noreferrer">AniList</a>.
+				<a
+					href="https://anilist.co"
+					class="underline hover:text-zinc-300"
+					target="_blank"
+					rel="noreferrer">AniList</a
+				>.
 			</p>
 		</footer>
 	</div>
@@ -69,7 +84,9 @@
 				{@const active = section === key}
 				<a
 					href="/{key}"
-					class="flex flex-col items-center gap-1 py-2 text-xs"
+					class="flex flex-col items-center gap-1 py-2 text-xs transition-colors hover:bg-zinc-900 {active
+						? ''
+						: 'hover:text-zinc-100'}"
 					style:color={active ? cat.accent : undefined}
 					class:text-zinc-400={!active}
 					aria-current={active ? 'page' : undefined}

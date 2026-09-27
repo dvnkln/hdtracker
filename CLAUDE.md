@@ -7,6 +7,7 @@ Self-hosted Media-Tracker, Single-User, Deployment per Docker Compose.
 - Antworten auf Deutsch; jede Änderung in 1–2 Sätzen ohne Fachjargon erklären.
 - In kleinen Schritten arbeiten, vor größeren Aufgaben zuerst einen Plan vorlegen.
 - Nach jedem MVP-Punkt stoppen und erklären, wie man testet.
+- **Vor dem ersten Release (v0.1.0):** keine Übergangs-Migrationen oder Umleitungen für verworfene Zwischenstände – die Test-Instanz darf man einfach neu aufsetzen (Volume löschen). Vor `v0.1.0` alle Migrationen zu einer einzigen Initial-Migration zusammenfassen.
 
 ## Stack
 
@@ -26,6 +27,8 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
 ## Design
 
 - Immer dunkel (kein Light-Mode).
+- Hover-Effekte (nur Maus) für alles Klickbare; Poster: leichter Zoom, Rahmen + Titel in Akzentfarbe.
+- Standard für neue Installationen: Oberfläche Englisch, Inhalte `en-US`, Region `US` (umstellbar in den Einstellungen).
 - Navigation: Leiste unten (Handy), mit Icon + Label je Bereich.
 - Akzentfarbe je Bereich (neutraler Hintergrund): Filme rot, Serien blau, Anime pink, Spiele grün. Definiert in `src/lib/categories.ts`.
 - Logo: Couch von vorne mit zwei Personen (links Schneidersitz/pink, rechts angewinkeltes Knie/blau). `src/lib/components/Logo.svelte`, auch als Favicon.
@@ -77,7 +80,6 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
 - Import von Yamtrack-Exporten (CSV), damit die bestehende Bibliothek nicht manuell übertragen werden muss.
 - Anime-Hybrid: AniList bleibt Quelle, zusätzlich Folgentitel/-beschreibungen von TMDB einblenden, wo eine Zuordnung AniList→TMDB bekannt ist (Community-Mapping-Listen). Watcharr nutzt übrigens nur TMDB für Anime.
 - Streaming-Übersicht: alle geplanten Titel nach verfügbaren Streaming-Anbietern gruppiert (z. B. „Netflix“ antippen → alles Geplante, was dort läuft). Anbieter ohne Treffer ausblenden. Offen: eigener Menüpunkt oder Teil des Dashboards.
-- Hover-Effekt am PC für Poster in der Bibliothek.
 
 ## Befehle
 

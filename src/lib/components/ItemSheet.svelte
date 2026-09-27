@@ -125,7 +125,7 @@
 						disabled={busy}
 						aria-pressed={current}
 						class="flex min-w-0 flex-1 flex-col items-center gap-1.5 rounded-xl px-1 py-3 transition-colors disabled:opacity-50 {current
-							? 'bg-(--accent) text-white shadow-(--accent)/25 shadow-lg'
+							? 'bg-(--accent) text-white shadow-(--accent)/25 shadow-lg hover:brightness-110'
 							: 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 active:bg-zinc-700'}"
 					>
 						<Icon size={22} strokeWidth={current ? 2.5 : 2} />
@@ -142,7 +142,7 @@
 					{#if confirmRemove}
 						<button
 							disabled={busy}
-							class="w-full rounded-lg bg-red-600 p-3 text-sm font-medium text-white disabled:opacity-50"
+							class="w-full rounded-lg bg-red-600 p-3 text-sm font-medium text-white transition-colors hover:bg-red-500 disabled:opacity-50"
 						>
 							{m.sheet.removeConfirm}
 						</button>
