@@ -18,7 +18,8 @@
 	import type { SubmitFunction } from '@sveltejs/kit';
 	import { Info, Trash2, X } from '@lucide/svelte';
 	import { STATUS_ICONS } from '$lib/statusIcons';
-	import { statusesFor, statusLabel, type Category } from '$lib/status';
+	import { hasEpisodes, statusesFor, type Category } from '$lib/status';
+	import { m, statusLabel } from '$lib/i18n/index.svelte';
 
 	type Props = {
 		category: Category;
@@ -86,7 +87,7 @@
 				<button
 					type="button"
 					class="self-start rounded-lg p-1 text-zinc-400 hover:bg-zinc-800"
-					aria-label="Schließen"
+					aria-label={m.common.close}
 					onclick={onclose}
 				>
 					<X size={22} />
@@ -103,7 +104,7 @@
 					class="mt-4 flex items-center justify-center gap-2 rounded-xl border border-zinc-700 p-3 text-sm font-medium hover:bg-zinc-800"
 				>
 					<Info size={18} class="text-(--accent)" />
-					{category === 'series' || category === 'anime' ? 'Details & Folgen' : 'Details'}
+					{hasEpisodes(category) ? m.sheet.detailsAndEpisodes : m.sheet.details}
 				</a>
 			{/if}
 
@@ -143,7 +144,7 @@
 							disabled={busy}
 							class="w-full rounded-lg bg-red-600 p-3 text-sm font-medium text-white disabled:opacity-50"
 						>
-							Wirklich aus der Bibliothek entfernen?
+							{m.sheet.removeConfirm}
 						</button>
 					{:else}
 						<button
@@ -151,7 +152,8 @@
 							class="flex w-full items-center justify-center gap-1.5 rounded-lg p-3 text-sm text-red-400 hover:bg-zinc-800"
 							onclick={() => (confirmRemove = true)}
 						>
-							<Trash2 size={16} /> Aus Bibliothek entfernen
+							<Trash2 size={16} />
+							{m.sheet.remove}
 						</button>
 					{/if}
 				</form>

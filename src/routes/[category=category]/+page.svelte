@@ -2,7 +2,8 @@
 	import { goto } from '$app/navigation';
 	import { navigating } from '$app/state';
 	import { CATEGORIES } from '$lib/categories';
-	import { COLLAPSED_STATUSES, statusesFor, statusLabel } from '$lib/status';
+	import { COLLAPSED_STATUSES, statusesFor } from '$lib/status';
+	import { m, statusLabel } from '$lib/i18n/index.svelte';
 	import PosterCard from '$lib/components/PosterCard.svelte';
 	import ItemSheet, { type SheetItem } from '$lib/components/ItemSheet.svelte';
 	import { STATUS_ICONS } from '$lib/statusIcons';
@@ -11,6 +12,7 @@
 	let { data } = $props();
 
 	let cat = $derived(CATEGORIES[data.category]);
+	let label = $derived(m.categories[data.category]);
 	// True while a new search is loading
 	let searching = $derived(navigating.to?.url.pathname === `/${data.category}`);
 
@@ -32,13 +34,13 @@
 	const gridClass = 'grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6';
 </script>
 
-<svelte:head><title>{cat.label} · hdtracker</title></svelte:head>
+<svelte:head><title>{label} · hdtracker</title></svelte:head>
 
 <main class="mx-auto max-w-screen-lg p-4" style:--accent={cat.accent}>
 	<h1 class="text-2xl font-bold text-(--accent)">
 		<a href="/{data.category}" class="inline-flex items-center gap-2">
 			<cat.icon size={26} />
-			{cat.label}
+			{label}
 		</a>
 	</h1>
 
@@ -47,7 +49,7 @@
 			type="search"
 			name="q"
 			value={data.q}
-			placeholder="{cat.label} suchen…"
+			placeholder={m.library.searchPlaceholder(label)}
 			autocomplete="off"
 			enterkeyhint="search"
 			oninput={onSearchInput}
@@ -55,7 +57,7 @@
 		/>
 		<button
 			class="flex items-center justify-center rounded-lg bg-(--accent) px-4 font-medium text-white"
-			aria-label="Suchen"
+			aria-label={m.common.search}
 		>
 			{#if searching}
 				<LoaderCircle size={20} class="animate-spin" />
@@ -69,9 +71,9 @@
 		<!-- Search results -->
 		<div class="mt-4 flex items-center justify-between text-sm">
 			<span class="text-zinc-400">
-				{#if !data.error}{data.results.length} Treffer für „{data.q}“{/if}
+				{#if !data.error}{m.library.results(data.results.length, data.q)}{/if}
 			</span>
-			<a href="/{data.category}" class="text-(--accent)">Zur Bibliothek</a>
+			<a href="/{data.category}" class="text-(--accent)">{m.library.toLibrary}</a>
 		</div>
 
 		{#if data.error}
@@ -79,7 +81,7 @@
 				{data.error}
 			</p>
 		{:else if data.results.length === 0}
-			<p class="mt-6 text-zinc-400">Keine Treffer.</p>
+			<p class="mt-6 text-zinc-400">{m.library.noResults}</p>
 		{:else}
 			<ul class="mt-2 {gridClass}">
 				{#each data.results as item (item.externalId)}
@@ -96,10 +98,7 @@
 			</ul>
 		{/if}
 	{:else if sections.length === 0}
-		<p class="mt-6 text-zinc-500">
-			Deine Bibliothek ist noch leer. Suche oben nach einem Titel und tippe ihn an, um ihn
-			hinzuzufügen.
-		</p>
+		<p class="mt-6 text-zinc-500">{m.library.empty}</p>
 	{:else}
 		<!-- Library, one collapsible section per status -->
 		{#each sections as section (section.status)}

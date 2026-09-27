@@ -12,6 +12,7 @@ import {
 import { airedEpisodes, getShowDetails, hasEpisodes, setEpisodes } from '$lib/server/episodes';
 import { ProviderError, type SearchResult } from '$lib/server/providers/types';
 import { searchCategory } from '$lib/server/search';
+import { serverMessages } from '$lib/server/i18n';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, url }) => {
@@ -34,7 +35,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
 		results = hits.map((h) => ({ ...h, status: statuses.get(h.externalId) ?? null }));
 	} catch (err) {
 		console.error(`Search in ${category} failed`, err);
-		error = err instanceof ProviderError ? err.message : 'Suche fehlgeschlagen.';
+		error = err instanceof ProviderError ? err.message : serverMessages().library.searchFailed;
 	}
 	return { category, q, library: [] as LibraryItem[], results, error };
 };
@@ -45,14 +46,15 @@ export const actions: Actions = {
 		const category = params.category as Category;
 		const data = await request.formData();
 		const status = String(data.get('status') ?? '');
-		if (!isStatusFor(category, status)) return fail(400, { error: 'Ungültiger Status' });
+		if (!isStatusFor(category, status))
+			return fail(400, { error: serverMessages().common.invalidStatus });
 
 		let item: SearchResult;
 		try {
 			item = parseItem(category, String(data.get('item') ?? ''));
 		} catch (err) {
 			console.error('Invalid item data', err);
-			return fail(400, { error: 'Ungültige Daten' });
+			return fail(400, { error: serverMessages().common.invalidData });
 		}
 		saveItem(category, item, status);
 
@@ -72,7 +74,7 @@ export const actions: Actions = {
 		const category = params.category as Category;
 		const data = await request.formData();
 		const externalId = String(data.get('externalId') ?? '');
-		if (!externalId) return fail(400, { error: 'Ungültige Daten' });
+		if (!externalId) return fail(400, { error: serverMessages().common.invalidData });
 		removeItem(category, externalId);
 		return { success: true };
 	}

@@ -6,7 +6,7 @@
 
 <p align="center">
   Self-hosted tracker for <b>movies, series, anime and games</b> – made for watching together on the couch.<br />
-  Mobile-first, dark, one Docker container. User interface in German.
+  Mobile-first, dark, one Docker container. User interface in German or English.
 </p>
 
 ## Features

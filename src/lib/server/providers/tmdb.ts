@@ -1,14 +1,14 @@
 import { env } from '$env/dynamic/private';
 import { cached } from '../cache';
 import { getStreamingLinks, type StreamingLinks } from './wikidata';
+import { serverMessages } from '../i18n';
 import {
 	fetchJson,
-	formatRuntime,
-	germanDate,
 	missingKey,
 	today,
 	yearOf,
 	type Details,
+	type Fact,
 	type SearchResult,
 	type ShowDetails
 } from './types';
@@ -174,6 +174,7 @@ function common(data: TmdbCommon) {
 		backdropUrl: data.backdrop_path ? BACKDROP + data.backdrop_path : null,
 		genres: data.genres.map((g) => g.name),
 		rating: data.vote_count > 0 ? Math.round(data.vote_average * 10) / 10 : null,
+		format: null,
 		links: []
 	};
 }
@@ -192,18 +193,21 @@ export function getMovieInfo(id: string, language: string, region: string): Prom
 				.filter((d) => types.includes(d.type))
 				.map((d) => d.release_date.slice(0, 10))
 				.sort()[0];
-		const cinema = germanDate(earliest([2, 3]));
-		const home = germanDate(earliest([4, 5]));
+		const cinema = earliest([2, 3]);
+		const home = earliest([4, 5]);
+		const facts: Fact[] = [];
+		if (cinema) facts.push({ key: 'cinema', value: cinema, isDate: true });
+		if (home) facts.push({ key: 'home', value: home, isDate: true });
 
 		return {
 			...common(m),
 			item: movieToResult(m),
 			externalUrl: `https://www.themoviedb.org/movie/${m.id}`,
-			meta: [formatRuntime(m.runtime)].filter((x): x is string => !!x),
-			facts: [
-				...(cinema ? [{ label: 'Kinostart', value: cinema }] : []),
-				...(home ? [{ label: 'Heimkino (digital/Disc)', value: home }] : [])
-			],
+			runtime: m.runtime || null,
+			seasonCount: null,
+			episodeCount: null,
+			episodeRuntime: null,
+			facts,
 			watch: await watchFor(m['watch/providers'], region, m.title, m.external_ids.wikidata_id),
 			similar: m.recommendations.results.slice(0, 12).map(movieToResult)
 		};
@@ -216,21 +220,21 @@ export function getTvInfo(id: string, language: string, region: string): Promise
 			language,
 			append_to_response: 'watch/providers,recommendations,external_ids'
 		});
-		const seasons = s.number_of_seasons;
+		const facts: Fact[] = [];
+		if (s.networks.length) {
+			facts.push({ key: 'network', value: s.networks.map((n) => n.name).join(', ') });
+		}
+		facts.push({ key: 'episodes', value: String(s.number_of_episodes) });
+
 		return {
 			...common(s),
 			item: tvToResult(s),
 			externalUrl: `https://www.themoviedb.org/tv/${s.id}`,
-			meta: [
-				`${seasons} ${seasons === 1 ? 'Staffel' : 'Staffeln'}`,
-				s.episode_run_time[0] ? `ca. ${s.episode_run_time[0]} Min. pro Folge` : null
-			].filter((x): x is string => !!x),
-			facts: [
-				...(s.networks.length
-					? [{ label: 'Sender', value: s.networks.map((n) => n.name).join(', ') }]
-					: []),
-				{ label: 'Folgen', value: String(s.number_of_episodes) }
-			],
+			runtime: null,
+			seasonCount: s.number_of_seasons,
+			episodeCount: null,
+			episodeRuntime: s.episode_run_time[0] ?? null,
+			facts,
 			watch: await watchFor(s['watch/providers'], region, s.name, s.external_ids.wikidata_id),
 			similar: s.recommendations.results.slice(0, 12).map(tvToResult)
 		};
@@ -300,7 +304,10 @@ export async function getTvDetails(id: string, language: string): Promise<ShowDe
 			// Regular seasons first, specials at the bottom.
 			seasons: [...regular, ...specials].map((s) => ({
 				number: s.season_number,
-				name: s.season_number === 0 ? 'Specials' : s.name || `Staffel ${s.season_number}`,
+				name:
+					s.season_number === 0
+						? serverMessages().episodes.specials
+						: s.name || serverMessages().episodes.season(s.season_number),
 				special: s.season_number === 0,
 				airDate: s.air_date || null,
 				episodes: s.episodes.map((e) => ({

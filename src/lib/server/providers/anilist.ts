@@ -1,8 +1,10 @@
 import { cached } from '../cache';
+import { serverMessages } from '../i18n';
 import {
 	ProviderError,
 	fetchJson,
 	type Details,
+	type Fact,
 	type SearchResult,
 	type ShowDetails
 } from './types';
@@ -102,7 +104,7 @@ export function getAnimeDetails(id: string): Promise<ShowDetails> {
 			}
 		);
 		const m = data.data.Media;
-		if (!m) throw new ProviderError('Anime nicht gefunden.', 404);
+		if (!m) throw new ProviderError(serverMessages().errors.animeNotFound, 404);
 
 		// Episodes already aired: everything before the next scheduled one.
 		const next = m.nextAiringEpisode;
@@ -128,7 +130,7 @@ export function getAnimeDetails(id: string): Promise<ShowDetails> {
 			seasons: [
 				{
 					number: 1,
-					name: 'Folgen',
+					name: serverMessages().detail.episodes,
 					special: false,
 					airDate: null,
 					episodes: Array.from({ length: total }, (_, i) => ({
@@ -194,16 +196,6 @@ type AniListInfo = AniListMedia & {
 	recommendations: { nodes: { mediaRecommendation: (AniListMedia & { type: string }) | null }[] };
 };
 
-const FORMATS: Record<string, string> = {
-	TV: 'TV-Serie',
-	TV_SHORT: 'TV-Serie (kurz)',
-	MOVIE: 'Film',
-	SPECIAL: 'Special',
-	OVA: 'OVA',
-	ONA: 'ONA',
-	MUSIC: 'Musikvideo'
-};
-
 export function getAnimeInfo(id: string): Promise<Details> {
 	return cached(`anilist-info:${id}`, CACHE_MS, async () => {
 		const data = await fetchJson<{ data: { Media: AniListInfo | null } }>(
@@ -216,14 +208,15 @@ export function getAnimeInfo(id: string): Promise<Details> {
 			}
 		);
 		const m = data.data.Media;
-		if (!m) throw new ProviderError('Anime nicht gefunden.', 404);
+		if (!m) throw new ProviderError(serverMessages().errors.animeNotFound, 404);
 
 		const { year, month, day } = m.startDate;
-		const start =
-			year && month && day
-				? `${String(day).padStart(2, '0')}.${String(month).padStart(2, '0')}.${year}`
-				: null;
+		const pad = (n: number) => String(n).padStart(2, '0');
+		const start = year && month && day ? `${year}-${pad(month)}-${pad(day)}` : null;
 		const studio = m.studios.nodes.map((s) => s.name).join(', ');
+		const facts: Fact[] = [];
+		if (start) facts.push({ key: 'firstAired', value: start, isDate: true });
+		if (studio) facts.push({ key: 'studio', value: studio });
 
 		return {
 			item: toSearchResult(m),
@@ -232,15 +225,12 @@ export function getAnimeInfo(id: string): Promise<Details> {
 			backdropUrl: m.bannerImage,
 			genres: m.genres,
 			rating: m.averageScore ? m.averageScore / 10 : null,
-			meta: [
-				m.format ? (FORMATS[m.format] ?? m.format) : null,
-				m.episodes ? `${m.episodes} Folgen` : null,
-				m.duration ? `ca. ${m.duration} Min. pro Folge` : null
-			].filter((x): x is string => !!x),
-			facts: [
-				...(start ? [{ label: 'Erstausstrahlung', value: start }] : []),
-				...(studio ? [{ label: 'Studio', value: studio }] : [])
-			],
+			runtime: null,
+			seasonCount: null,
+			episodeCount: m.episodes,
+			episodeRuntime: m.duration,
+			format: m.format,
+			facts,
 			watch: null,
 			links: m.externalLinks
 				.filter((l) => l.type === 'STREAMING')

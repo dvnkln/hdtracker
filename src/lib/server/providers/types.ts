@@ -1,3 +1,6 @@
+import type { Messages } from '$lib/i18n/de';
+import { serverMessages } from '../i18n';
+
 // Common shape of a search hit, no matter which API it came from.
 export type SearchResult = {
 	source: 'tmdb' | 'igdb' | 'anilist';
@@ -20,7 +23,7 @@ export class ProviderError extends Error {
 }
 
 export function missingKey(name: string) {
-	return new ProviderError(`${name} fehlt in der .env – siehe .env.example.`);
+	return new ProviderError(serverMessages().errors.missingKey(name));
 }
 
 const TIMEOUT_MS = 10_000;
@@ -32,14 +35,14 @@ export async function fetchJson<T>(source: string, url: string | URL, init: Requ
 		res = await fetch(url, { ...init, signal: AbortSignal.timeout(TIMEOUT_MS) });
 	} catch (err) {
 		console.error(`${source} request failed`, err);
-		throw new ProviderError(`${source} ist gerade nicht erreichbar.`);
+		throw new ProviderError(serverMessages().errors.unreachable(source));
 	}
 	if (res.status === 401 || res.status === 403) {
-		throw new ProviderError(`${source}: Zugangsdaten ungültig – bitte .env prüfen.`, res.status);
+		throw new ProviderError(serverMessages().errors.badCredentials(source), res.status);
 	}
 	if (!res.ok) {
 		console.error(`${source} responded with HTTP ${res.status}`, await res.text());
-		throw new ProviderError(`${source} antwortet mit Fehler ${res.status}.`, res.status);
+		throw new ProviderError(serverMessages().errors.httpError(source, res.status), res.status);
 	}
 	return (await res.json()) as T;
 }
@@ -91,24 +94,19 @@ export type Details = {
 	backdropUrl: string | null;
 	genres: string[];
 	rating: number | null; // 0–10
-	meta: string[]; // short facts for the header line, e.g. "2 Std. 35 Min.", "5 Staffeln"
-	facts: { label: string; value: string }[];
+	// Short facts for the header line; the page words them in the interface language.
+	runtime: number | null; // minutes (movies)
+	seasonCount: number | null;
+	episodeCount: number | null;
+	episodeRuntime: number | null; // minutes per episode
+	format: string | null; // AniList format, e.g. "TV"
+	facts: Fact[];
 	// Streaming offers in the configured region (TMDB / JustWatch). null = not available for this source.
 	watch: { link: string | null; flatrate: Provider[]; rent: Provider[]; buy: Provider[] } | null;
 	links: { name: string; url: string }[]; // e.g. anime streaming sites (not region-checked)
 	similar: SearchResult[];
 };
 
-// "2026-10-03" -> "03.10.2026"
-export function germanDate(date: string | null | undefined) {
-	if (!date) return null;
-	const [y, m, d] = date.slice(0, 10).split('-');
-	return d && m && y ? `${d}.${m}.${y}` : null;
-}
-
-export function formatRuntime(minutes: number | null | undefined) {
-	if (!minutes) return null;
-	const h = Math.floor(minutes / 60);
-	const m = minutes % 60;
-	return h ? `${h} Std.${m ? ` ${m} Min.` : ''}` : `${m} Min.`;
-}
+export type FactKey = keyof Messages['detail']['facts'];
+// A labelled fact, e.g. { key: 'cinema', value: '2024-02-29', isDate: true }.
+export type Fact = { key: FactKey; value: string; isDate?: boolean };

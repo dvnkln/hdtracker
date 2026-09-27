@@ -4,7 +4,8 @@ import { settings } from './db/schema';
 
 // Default values, used until the user changes them on the settings page.
 const DEFAULTS = {
-	language: 'de-DE',
+	uiLanguage: 'de', // interface language: 'de' | 'en'
+	language: 'de-DE', // content language for TMDB (titles, descriptions)
 	region: 'DE'
 } as const;
 

@@ -11,6 +11,7 @@ import {
 import { getDetails } from '$lib/server/details';
 import { libraryStatusFor } from '$lib/server/library';
 import { ProviderError } from '$lib/server/providers/types';
+import { serverMessages } from '$lib/server/i18n';
 import type { Actions, PageServerLoad } from './$types';
 
 const ID_PATTERN = /^\d{1,12}$/;
@@ -18,14 +19,16 @@ const ID_PATTERN = /^\d{1,12}$/;
 // Turns API errors into a readable error page.
 function failLoading(err: unknown): never {
 	console.error('Loading details failed', err);
-	if (err instanceof ProviderError && err.status === 404) error(404, 'Nicht gefunden');
-	error(502, err instanceof ProviderError ? err.message : 'Laden fehlgeschlagen.');
+	const t = serverMessages().common;
+	if (err instanceof ProviderError && err.status === 404) error(404, t.notFound);
+	error(502, err instanceof ProviderError ? err.message : t.loadFailed);
 }
 
 // Episode list of a series/anime (used by the episode form actions).
 async function loadDetails(params: { category: string; id: string }) {
 	const category = params.category as Category;
-	if (!hasEpisodes(category) || !ID_PATTERN.test(params.id)) error(404, 'Nicht gefunden');
+	if (!hasEpisodes(category) || !ID_PATTERN.test(params.id))
+		error(404, serverMessages().common.notFound);
 	try {
 		return { category, details: await getShowDetails(category, params.id) };
 	} catch (err) {
@@ -35,7 +38,7 @@ async function loadDetails(params: { category: string; id: string }) {
 
 export const load: PageServerLoad = async ({ params }) => {
 	const category = params.category as Category;
-	if (!ID_PATTERN.test(params.id)) error(404, 'Nicht gefunden');
+	if (!ID_PATTERN.test(params.id)) error(404, serverMessages().common.notFound);
 
 	try {
 		// Details and (for series/anime) the episode list are loaded in parallel.

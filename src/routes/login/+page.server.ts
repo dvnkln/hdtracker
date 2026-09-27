@@ -12,6 +12,7 @@ import {
 	verifyDummy,
 	verifyPassword
 } from '$lib/server/auth';
+import { serverMessages } from '$lib/server/i18n';
 import type { Actions } from './$types';
 
 export const actions: Actions = {
@@ -23,7 +24,7 @@ export const actions: Actions = {
 
 		const locked = loginLockedFor(ip);
 		if (locked > 0) {
-			return fail(429, { username, error: `Zu viele Fehlversuche. Bitte ${locked} s warten.` });
+			return fail(429, { username, error: serverMessages().auth.tooManyAttempts(locked) });
 		}
 
 		const user = getDb().select().from(users).where(eq(users.username, username)).get();
@@ -33,7 +34,7 @@ export const actions: Actions = {
 
 		if (!user || !ok) {
 			recordLoginFailure(ip);
-			return fail(400, { username, error: 'Benutzername oder Passwort falsch' });
+			return fail(400, { username, error: serverMessages().auth.wrongCredentials });
 		}
 
 		clearLoginFailures(ip);

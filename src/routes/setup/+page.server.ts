@@ -3,6 +3,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import { getDb } from '$lib/server/db';
 import { users } from '$lib/server/db/schema';
 import { createSession, hasAnyUser, hashPassword, setSessionCookie } from '$lib/server/auth';
+import { serverMessages } from '$lib/server/i18n';
 import type { Actions } from './$types';
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_.-]{3,32}$/;
@@ -18,20 +19,15 @@ export const actions: Actions = {
 		const password = String(data.get('password') ?? '');
 		const confirm = String(data.get('confirm') ?? '');
 
+		const t = serverMessages().auth;
 		if (!USERNAME_PATTERN.test(username)) {
-			return fail(400, {
-				username,
-				error: 'Benutzername: 3–32 Zeichen, nur Buchstaben, Zahlen, _ . -'
-			});
+			return fail(400, { username, error: t.usernameRule });
 		}
 		if (password.length < MIN_PASSWORD) {
-			return fail(400, {
-				username,
-				error: `Passwort muss mindestens ${MIN_PASSWORD} Zeichen lang sein`
-			});
+			return fail(400, { username, error: t.passwordTooShort(MIN_PASSWORD) });
 		}
 		if (password !== confirm) {
-			return fail(400, { username, error: 'Passwörter stimmen nicht überein' });
+			return fail(400, { username, error: t.passwordsDiffer });
 		}
 
 		const passwordHash = await hashPassword(password);

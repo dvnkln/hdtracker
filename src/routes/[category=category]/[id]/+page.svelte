@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { CATEGORIES } from '$lib/categories';
-	import { hasEpisodes, statusLabel } from '$lib/status';
+	import { hasEpisodes } from '$lib/status';
+	import { formatDate, formatRating, formatRuntime, m, statusLabel } from '$lib/i18n/index.svelte';
 	import { STATUS_ICONS } from '$lib/statusIcons';
 	import ItemSheet from '$lib/components/ItemSheet.svelte';
 	import Episodes from '$lib/components/Episodes.svelte';
@@ -10,6 +11,20 @@
 
 	let cat = $derived(CATEGORIES[data.category]);
 	let info = $derived(data.info);
+
+	// Header line, e.g. "2024 · 2 Std. 47 Min." or "2023 · TV-Serie · 28 Folgen".
+	let metaLine = $derived(
+		[
+			info.item.year,
+			info.format && (m.detail.formats[info.format] ?? info.format),
+			info.runtime && formatRuntime(info.runtime),
+			info.seasonCount && m.detail.seasons(info.seasonCount),
+			info.episodeCount && m.detail.episodeCount(info.episodeCount),
+			info.episodeRuntime && m.detail.perEpisode(info.episodeRuntime)
+		]
+			.filter(Boolean)
+			.join(' · ')
+	);
 
 	let sheetOpen = $state(false);
 	let showFullOverview = $state(false);
@@ -25,11 +40,7 @@
 	});
 
 	// Streaming rows in display order.
-	const WATCH_ROWS = [
-		['flatrate', 'Im Abo'],
-		['rent', 'Leihen'],
-		['buy', 'Kaufen']
-	] as const;
+	const WATCH_ROWS = ['flatrate', 'rent', 'buy'] as const;
 	let hasOffers = $derived(
 		!!info.watch && info.watch.flatrate.length + info.watch.rent.length + info.watch.buy.length > 0
 	);
@@ -59,7 +70,7 @@
 			class="inline-flex items-center gap-1 rounded-full bg-zinc-950/70 px-2.5 py-1 text-sm text-(--accent) backdrop-blur"
 		>
 			<ArrowLeft size={16} />
-			{cat.label}
+			{m.categories[data.category]}
 		</a>
 
 		<!-- Header -->
@@ -85,14 +96,11 @@
 					<p class="text-sm text-zinc-400">{info.item.originalTitle}</p>
 				{/if}
 				<p class="mt-1 text-sm text-zinc-400">
-					{[info.item.year, ...info.meta].filter(Boolean).join(' · ')}
+					{metaLine}
 					{#if info.rating}
 						<span class="ml-1 inline-flex items-center gap-0.5 text-amber-400">
 							<Star size={13} fill="currentColor" />
-							{info.rating.toLocaleString('de-DE', {
-								minimumFractionDigits: 1,
-								maximumFractionDigits: 1
-							})}
+							{formatRating(info.rating)}
 						</span>
 					{/if}
 				</p>
@@ -118,7 +126,8 @@
 							<Icon size={16} />
 							{statusLabel(data.category, data.status)}
 						{:else}
-							<Plus size={16} /> Zur Bibliothek
+							<Plus size={16} />
+							{m.detail.addToLibrary}
 						{/if}
 					</button>
 					<a
@@ -157,16 +166,16 @@
 					class="mt-1 text-sm text-(--accent)"
 					onclick={() => (showFullOverview = !showFullOverview)}
 				>
-					{showFullOverview ? 'Weniger' : 'Mehr anzeigen'}
+					{showFullOverview ? m.common.less : m.common.more}
 				</button>
 			{/if}
 		{/if}
 
 		{#if info.facts.length}
 			<dl class="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
-				{#each info.facts as fact (fact.label)}
-					<dt class="text-zinc-500">{fact.label}</dt>
-					<dd class="text-zinc-200">{fact.value}</dd>
+				{#each info.facts as fact (fact.key)}
+					<dt class="text-zinc-500">{m.detail.facts[fact.key]}</dt>
+					<dd class="text-zinc-200">{fact.isDate ? formatDate(fact.value) : fact.value}</dd>
 				{/each}
 			</dl>
 		{/if}
@@ -174,13 +183,13 @@
 		<!-- Streaming offers (movies/series, via TMDB + JustWatch) -->
 		{#if info.watch}
 			<section class="mt-6">
-				<h2 class="text-lg font-semibold">Wo läuft's?</h2>
+				<h2 class="text-lg font-semibold">{m.detail.whereToWatch}</h2>
 				{#if hasOffers}
 					<div class="mt-2 flex flex-col gap-3">
-						{#each WATCH_ROWS as [kind, label] (kind)}
+						{#each WATCH_ROWS as kind (kind)}
 							{#if info.watch[kind].length}
 								<div>
-									<p class="mb-1.5 text-xs text-zinc-500 uppercase">{label}</p>
+									<p class="mb-1.5 text-xs text-zinc-500 uppercase">{m.detail[kind]}</p>
 									<div class="flex flex-wrap gap-2">
 										{#each info.watch[kind] as provider (provider.name)}
 											<a href={provider.url} target="_blank" rel="noreferrer" title={provider.name}>
@@ -199,10 +208,10 @@
 						{/each}
 					</div>
 				{:else}
-					<p class="mt-1 text-sm text-zinc-500">Aktuell bei keinem Anbieter verfügbar.</p>
+					<p class="mt-1 text-sm text-zinc-500">{m.detail.noOffers}</p>
 				{/if}
 				<p class="mt-2 text-xs text-zinc-500">
-					Streaming-Daten von
+					{m.detail.streamingDataBy}
 					<a href="https://www.justwatch.com" target="_blank" rel="noreferrer" class="underline"
 						>JustWatch</a
 					>.
@@ -213,7 +222,7 @@
 		<!-- Anime: official streaming links from AniList -->
 		{#if info.links.length}
 			<section class="mt-6">
-				<h2 class="text-lg font-semibold">Streaming</h2>
+				<h2 class="text-lg font-semibold">{m.detail.streaming}</h2>
 				<div class="mt-2 flex flex-wrap gap-2">
 					{#each info.links as link (link.url)}
 						<a
@@ -228,7 +237,7 @@
 					{/each}
 				</div>
 				<p class="mt-2 text-xs text-zinc-500">
-					Offizielle Links laut AniList – Verfügbarkeit in deiner Region nicht garantiert.
+					{m.detail.animeLinksNote}
 				</p>
 			</section>
 		{/if}
@@ -236,7 +245,7 @@
 		<!-- Series/anime: progress, seasons, episodes -->
 		{#if data.show && hasEpisodes(data.category)}
 			<section class="mt-6">
-				<h2 class="text-lg font-semibold">Folgen</h2>
+				<h2 class="text-lg font-semibold">{m.detail.episodes}</h2>
 				{#key info.item.externalId}
 					<Episodes category={data.category} show={data.show} watched={data.watched} />
 				{/key}
@@ -246,7 +255,7 @@
 		<!-- Similar titles, as a horizontally scrollable row -->
 		{#if info.similar.length}
 			<section class="mt-8">
-				<h2 class="text-lg font-semibold">Ähnliche Titel</h2>
+				<h2 class="text-lg font-semibold">{m.detail.similar}</h2>
 				<ul class="-mx-4 mt-2 flex snap-x gap-3 overflow-x-auto px-4 pb-2">
 					{#each info.similar as item (item.externalId)}
 						{@const status = data.similarStatus[item.externalId]}

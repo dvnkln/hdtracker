@@ -1,4 +1,9 @@
+import { isLocale } from '$lib/i18n/index.svelte';
+import { getSetting } from '$lib/server/settings';
 import type { LayoutServerLoad } from './$types';
 
-// Makes the logged-in user available to all pages (as `data.user`).
-export const load: LayoutServerLoad = ({ locals }) => ({ user: locals.user });
+// Makes the logged-in user and the interface language available to all pages.
+export const load: LayoutServerLoad = ({ locals }) => {
+	const locale = getSetting('uiLanguage');
+	return { user: locals.user, locale: isLocale(locale) ? locale : 'de' };
+};

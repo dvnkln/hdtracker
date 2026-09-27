@@ -1,4 +1,4 @@
-import type { Handle, ServerInit } from '@sveltejs/kit';
+import type { Handle, RequestEvent, ServerInit } from '@sveltejs/kit';
 import { runMigrations } from '$lib/server/db';
 import {
 	SESSION_COOKIE,
@@ -10,6 +10,7 @@ import {
 	validateSession
 } from '$lib/server/auth';
 import { allowedOrigins, isAllowedOrigin, isHttps } from '$lib/server/origins';
+import { getSetting } from '$lib/server/settings';
 
 // Runs once when the server starts, before the first request is handled.
 export const init: ServerInit = () => {
@@ -68,12 +69,18 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	// No admin yet: everything leads to the first-run wizard.
 	if (!hasAnyUser()) {
-		return path === '/setup' ? resolve(event) : redirectTo('/setup');
+		return path === '/setup' ? resolveWithLang(event, resolve) : redirectTo('/setup');
 	}
 	if (path === '/setup') return redirectTo('/');
 
 	if (!event.locals.user && !PUBLIC_PATHS.includes(path)) return redirectTo('/login');
 	if (event.locals.user && path === '/login') return redirectTo('/');
 
-	return resolve(event);
+	return resolveWithLang(event, resolve);
 };
+
+// Fills in <html lang="%lang%"> (app.html) with the interface language.
+function resolveWithLang(event: RequestEvent, resolve: Parameters<Handle>[0]['resolve']) {
+	const lang = getSetting('uiLanguage');
+	return resolve(event, { transformPageChunk: ({ html }) => html.replace('%lang%', lang) });
+}

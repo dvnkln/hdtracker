@@ -15,6 +15,9 @@ SvelteKit (adapter-node, Svelte 5 Runes), TypeScript, Drizzle ORM, better-sqlite
 - `better-sqlite3` bleibt auf v12 (v13 hat keine Prebuilt-Binaries mehr → bräuchte Compiler).
 - Server-Code liegt unter `src/lib/server/` (nie im Browser-Bundle).
 - DB wird lazy über `getDb()` geöffnet; Migrationen laufen automatisch beim Start (`src/hooks.server.ts`).
+- Code, URLs und DB-Werte auf Englisch (`/movies`, `/series`, `/anime`, `/games`; Kategorie-Keys ebenso).
+- Oberfläche zweisprachig (Deutsch/Englisch): **alle** sichtbaren Texte in `src/lib/i18n/de.ts` + `en.ts` (gleiche Struktur, TypeScript prüft das). Im Browser `m.xyz` aus `$lib/i18n/index.svelte`, auf dem Server `serverMessages()`. Server liefert Werte (Minuten, ISO-Datum), formatiert wird in der Oberfläche.
+- Start über `start.js`: `ORIGIN` darf mehrere Adressen (kommagetrennt) enthalten; eigene Origin-Prüfung in `hooks.server.ts` ersetzt SvelteKits CSRF-Check.
 
 ## Kategorien
 

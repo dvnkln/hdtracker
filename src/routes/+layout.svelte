@@ -6,9 +6,16 @@
 	import { page } from '$app/state';
 	import { CATEGORIES, CATEGORY_KEYS } from '$lib/categories';
 	import Brand from '$lib/components/Brand.svelte';
+	import { m, setLocale } from '$lib/i18n/index.svelte';
 	import { LogOut } from '@lucide/svelte';
 
 	let { data, children } = $props();
+
+	// Switch all texts to the configured interface language: once right away (so the first
+	// render is already correct) and again whenever the setting changes.
+	// svelte-ignore state_referenced_locally
+	setLocale(data.locale);
+	$effect.pre(() => setLocale(data.locale));
 
 	// First part of the URL, e.g. "movies" for /movies?q=dune
 	let section = $derived(page.url.pathname.split('/')[1]);
@@ -19,13 +26,13 @@
 {#if data.user}
 	<header class="border-b border-zinc-800">
 		<div class="mx-auto flex max-w-screen-lg items-center justify-between px-4 py-3">
-			<a href="/" aria-label="Startseite"><Brand /></a>
+			<a href="/" aria-label={m.common.home}><Brand /></a>
 			<form method="POST" action="/logout" class="flex items-center gap-3">
 				<span class="text-sm text-zinc-400">{data.user.username}</span>
 				<button
 					class="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
-					aria-label="Abmelden"
-					title="Abmelden"
+					aria-label={m.common.logout}
+					title={m.common.logout}
 				>
 					<LogOut size={18} />
 				</button>
@@ -39,16 +46,15 @@
 
 		<footer class="mx-auto max-w-screen-lg px-4 pt-10 text-xs text-zinc-500">
 			<p>
-				Film- und Seriendaten von
+				{m.footer.tmdbBefore}
 				<a href="https://www.themoviedb.org" class="underline" target="_blank" rel="noreferrer"
 					>TMDB</a
-				>. Dieses Produkt nutzt die TMDB-API, wird aber nicht von TMDB unterstützt oder
-				zertifiziert.
+				>{m.footer.tmdbAfter}
 			</p>
 			<p class="mt-1">
-				Spieldaten von
+				{m.footer.gamesBy}
 				<a href="https://www.igdb.com" class="underline" target="_blank" rel="noreferrer">IGDB</a>,
-				Animedaten von
+				{m.footer.animeBy}
 				<a href="https://anilist.co" class="underline" target="_blank" rel="noreferrer">AniList</a>.
 			</p>
 		</footer>
@@ -69,7 +75,7 @@
 					aria-current={active ? 'page' : undefined}
 				>
 					<cat.icon size={22} strokeWidth={active ? 2.5 : 2} />
-					{cat.label}
+					{m.categories[key]}
 				</a>
 			{/each}
 		</div>

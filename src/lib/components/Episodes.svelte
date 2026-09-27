@@ -4,6 +4,7 @@
 	import type { SubmitFunction } from '@sveltejs/kit';
 	import type { ShowDetails } from '$lib/server/providers/types';
 	import { CalendarClock, Check, CheckCheck, ChevronRight } from '@lucide/svelte';
+	import { formatDate, formatShortDate, m } from '$lib/i18n/index.svelte';
 
 	// Progress, seasons and episodes of a series/anime. Form actions live on the detail page.
 	type Props = { category: 'series' | 'anime'; show: ShowDetails; watched: string[] };
@@ -41,20 +42,13 @@
 		show.seasons.find((s) => !s.special && progress(s).done < progress(s).aired)?.number ?? null
 	);
 
-	const dateFormat = new Intl.DateTimeFormat('de-DE', {
-		day: '2-digit',
-		month: '2-digit',
-		year: 'numeric'
-	});
-	const formatDate = (date: string) => dateFormat.format(new Date(`${date}T00:00:00`));
-	// "2026-10-03" -> "03.10."
-	const formatShortDate = (date: string) => `${date.slice(8, 10)}.${date.slice(5, 7)}.`;
-
 	// Start of an announced season: its own date, else the first episode's date.
 	const todayIso = new Date().toLocaleDateString('sv-SE');
 	function upcomingDate(season: Season) {
 		const start = season.airDate ?? season.episodes.find((e) => e.airDate)?.airDate ?? null;
-		return start && start >= todayIso ? `Start am ${formatDate(start)}` : 'Termin noch offen';
+		return start && start >= todayIso
+			? m.episodes.startsOn(formatDate(start))
+			: m.episodes.dateOpen;
 	}
 
 	let nextEpisode = $derived(
@@ -73,7 +67,7 @@
 
 	// Resetting everything needs a confirmation.
 	const confirmReset: SubmitFunction = ({ formData, cancel }) => {
-		if (formData.get('watched') === '0' && !confirm('Alle Folgen als ungesehen markieren?')) {
+		if (formData.get('watched') === '0' && !confirm(m.episodes.resetConfirm)) {
 			cancel();
 		}
 		return async ({ update }) => update({ reset: false });
@@ -85,9 +79,9 @@
 	<div class="flex items-center justify-between gap-3">
 		<div class="text-sm">
 			<span class="font-semibold">{overall.done} / {overall.aired}</span>
-			<span class="text-zinc-400">Folgen gesehen</span>
+			<span class="text-zinc-400">{m.episodes.watched}</span>
 			{#if overall.total > overall.aired}
-				<span class="text-zinc-500">({overall.total - overall.aired} noch nicht erschienen)</span>
+				<span class="text-zinc-500">{m.episodes.notYetAired(overall.total - overall.aired)}</span>
 			{/if}
 		</div>
 		{#if overall.aired > 0}
@@ -99,7 +93,8 @@
 						? 'text-zinc-400 hover:bg-zinc-800'
 						: 'bg-(--accent) text-white'}"
 				>
-					{#if allDone}Zurücksetzen{:else}<CheckCheck size={16} /> Alles gesehen{/if}
+					{#if allDone}{m.episodes.reset}{:else}<CheckCheck size={16} />
+						{m.episodes.allWatched}{/if}
 				</button>
 			</form>
 		{/if}
@@ -112,13 +107,13 @@
 	</div>
 	{#if nextEpisode?.airDate}
 		<p class="mt-2 text-xs text-zinc-400">
-			Nächste Folge ({nextEpisode.number}) am {formatDate(nextEpisode.airDate)}
+			{m.episodes.nextEpisode(nextEpisode.number, formatDate(nextEpisode.airDate))}
 		</p>
 	{/if}
 </section>
 
 {#if show.seasons.every((s) => s.episodes.length === 0)}
-	<p class="mt-6 text-zinc-500">Noch keine Folgen bekannt.</p>
+	<p class="mt-6 text-zinc-500">{m.episodes.noneKnown}</p>
 {:else if category === 'anime'}
 	<!-- Anime: grid of episode numbers -->
 	{@const season = show.seasons[0]}
@@ -164,7 +159,7 @@
 				<CalendarClock size={18} class="shrink-0 text-zinc-500" />
 				<h2 class="min-w-0 flex-1 truncate font-semibold text-zinc-300">{season.name}</h2>
 				<span class="shrink-0 text-right text-sm leading-tight">
-					<span class="block font-medium text-(--accent)">Angekündigt</span>
+					<span class="block font-medium text-(--accent)">{m.episodes.announced}</span>
 					<span class="block text-xs text-zinc-500">{upcomingDate(season)}</span>
 				</span>
 			</div>
@@ -192,7 +187,7 @@
 							</h2>
 							{#if upcoming}
 								<span class="shrink-0 text-right text-sm leading-tight">
-									<span class="block font-medium text-(--accent)">Angekündigt</span>
+									<span class="block font-medium text-(--accent)">{m.episodes.announced}</span>
 									<span class="block text-xs text-zinc-500">{upcomingDate(season)}</span>
 								</span>
 							{:else}
@@ -215,14 +210,14 @@
 
 				<div class="border-t border-zinc-800 px-2 pb-2">
 					{#if season.special}
-						<p class="px-2 pt-3 text-xs text-zinc-500">Specials zählen nicht zum Fortschritt.</p>
+						<p class="px-2 pt-3 text-xs text-zinc-500">{m.episodes.specialsNote}</p>
 					{/if}
 					{#if p.aired > 0}
 						<form method="POST" action="?/season" use:enhance={confirmReset} class="px-2 pt-3">
 							<input type="hidden" name="season" value={season.number} />
 							<input type="hidden" name="watched" value={complete ? '0' : '1'} />
 							<button class="text-sm font-medium text-(--accent)">
-								{complete ? 'Staffel als ungesehen markieren' : 'Ganze Staffel gesehen'}
+								{complete ? m.episodes.seasonUnwatch : m.episodes.seasonWatched}
 							</button>
 						</form>
 					{/if}
@@ -266,13 +261,13 @@
 										<span class="min-w-0 flex-1">
 											<span class="line-clamp-2 text-sm leading-snug font-medium">
 												<span class="text-zinc-500">{ep.number}.</span>
-												{ep.title ?? `Folge ${ep.number}`}
+												{ep.title ?? m.episodes.episode(ep.number)}
 											</span>
 											<span class="mt-0.5 block text-xs text-zinc-500">
 												{[
 													// Date only matters for upcoming episodes.
-													!ep.aired && ep.airDate && `erscheint am ${formatDate(ep.airDate)}`,
-													ep.runtime && `${ep.runtime} Min.`
+													!ep.aired && ep.airDate && m.episodes.airsOn(formatDate(ep.airDate)),
+													ep.runtime && m.units.minutes(ep.runtime)
 												]
 													.filter(Boolean)
 													.join(' · ')}

@@ -1,11 +1,12 @@
 import { env } from '$env/dynamic/private';
 import { cached } from '../cache';
+import { serverMessages } from '../i18n';
 import {
 	ProviderError,
 	fetchJson,
-	germanDate,
 	missingKey,
 	type Details,
+	type Fact,
 	type SearchResult
 } from './types';
 
@@ -37,7 +38,7 @@ async function getToken() {
 	} catch (err) {
 		// Twitch answers 400 for a wrong client ID/secret.
 		if (err instanceof ProviderError && err.status === 400) {
-			throw new ProviderError('IGDB: Client-ID oder Secret ungültig – bitte .env prüfen.');
+			throw new ProviderError(serverMessages().errors.igdbBadClient);
 		}
 		throw err;
 	}
@@ -114,15 +115,21 @@ export function getGameInfo(id: string): Promise<Details> {
 			'games',
 			`fields name,url,first_release_date,cover.image_id,summary,genres.name,platforms.name,total_rating,artworks.image_id,screenshots.image_id,involved_companies.developer,involved_companies.company.name,similar_games.name,similar_games.cover.image_id,similar_games.first_release_date,similar_games.summary; where id = ${Number(id)};`
 		);
-		if (!g) throw new ProviderError('Spiel nicht gefunden.', 404);
+		if (!g) throw new ProviderError(serverMessages().errors.gameNotFound, 404);
 
 		const backdrop = g.artworks?.[0] ?? g.screenshots?.[0];
 		const developers = (g.involved_companies ?? [])
 			.filter((c) => c.developer)
 			.map((c) => c.company.name);
-		const released = g.first_release_date
-			? germanDate(new Date(g.first_release_date * 1000).toLocaleDateString('sv-SE'))
-			: null;
+		const facts: Fact[] = [];
+		if (g.first_release_date) {
+			const released = new Date(g.first_release_date * 1000).toLocaleDateString('sv-SE');
+			facts.push({ key: 'released', value: released, isDate: true });
+		}
+		if (g.platforms?.length) {
+			facts.push({ key: 'platforms', value: g.platforms.map((p) => p.name).join(', ') });
+		}
+		if (developers.length) facts.push({ key: 'developer', value: developers.join(', ') });
 
 		return {
 			item: gameToResult(g),
@@ -131,14 +138,12 @@ export function getGameInfo(id: string): Promise<Details> {
 			backdropUrl: backdrop ? `${BACKDROP}${backdrop.image_id}.jpg` : null,
 			genres: (g.genres ?? []).map((x) => x.name),
 			rating: g.total_rating ? Math.round(g.total_rating) / 10 : null,
-			meta: [],
-			facts: [
-				...(released ? [{ label: 'Erschienen', value: released }] : []),
-				...(g.platforms?.length
-					? [{ label: 'Plattformen', value: g.platforms.map((p) => p.name).join(', ') }]
-					: []),
-				...(developers.length ? [{ label: 'Entwickler', value: developers.join(', ') }] : [])
-			],
+			runtime: null,
+			seasonCount: null,
+			episodeCount: null,
+			episodeRuntime: null,
+			format: null,
+			facts,
 			watch: null,
 			links: [],
 			similar: (g.similar_games ?? []).map(gameToResult)
