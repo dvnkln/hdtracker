@@ -7,7 +7,7 @@ Self-hosted Media-Tracker, Single-User, Deployment per Docker Compose.
 - Antworten auf Deutsch; jede Änderung in 1–2 Sätzen ohne Fachjargon erklären.
 - In kleinen Schritten arbeiten, vor größeren Aufgaben zuerst einen Plan vorlegen.
 - Nach jedem MVP-Punkt stoppen und erklären, wie man testet.
-- **Vor dem ersten Release (v0.1.0):** keine Übergangs-Migrationen oder Umleitungen für verworfene Zwischenstände – die Test-Instanz darf man einfach neu aufsetzen (Volume löschen). Vor `v0.1.0` alle Migrationen zu einer einzigen Initial-Migration zusammenfassen.
+- **Seit v0.1.0 veröffentlicht:** Datenbank-Änderungen nur noch über neue Migrationen (`npm run db:generate`), die bestehende Daten erhalten – nie alte Migrationen ändern oder löschen, kein „Volume neu anlegen“ mehr. Alle bis v0.1.0 sind in `drizzle/0000_init.sql` zusammengefasst.
 
 ## Stack
 
@@ -70,7 +70,7 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
    - Anime (AniList): keine Staffeln/Folgentitel verfügbar → Raster mit Folgennummern. Jede Anime-Staffel ist ein eigener Eintrag.
    - Auto-Status: erste Folge abgehakt → „Schaue ich“; alle Folgen einer beendeten Serie gesehen → „Gesehen“. Später in Settings abschaltbar (Punkt 7).
 6. ✅ Detailseite mit Streaming-Anbietern DE (Flatrate/Leihen/Kaufen), Attribution TMDB + JustWatch. Plus „Ähnliche Titel“ (TMDB recommendations, AniList recommendations, IGDB similar_games).
-7. Einstellungen – in drei Etappen, nach jeder kurz berichten/testen lassen:
+7. ✅ Einstellungen – in drei Etappen, nach jeder kurz berichten/testen lassen:
    - **A ✅ Struktur:** englische URLs/Keys, mehrere ORIGINs, Oberfläche zweisprachig (i18n), Hover-Effekte, Standard Englisch.
    - **B ✅ Seite `/settings`** (Zahnrad oben rechts neben Abmelden), Werte in Tabelle `settings`:
      - Darstellung: Sprache der Oberfläche (de/en), Sprache der Inhalte (TMDB), Region als Liste mit Ländernamen (Regionen von TMDB `/watch/providers/regions`, Namen via `Intl.DisplayNames`), Anime-Titel (Englisch als Haupttitel + Romaji darunter; Schalter für umgekehrt), Spoiler-Schutz (Standard an: Bilder + Beschreibungen ungesehener Folgen unscharf).
@@ -79,13 +79,13 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
      - Gefahrenzone: Bibliothek leeren (pro Kategorie oder alles), Bestätigung durch Eintippen von „LÖSCHEN“/„DELETE“.
      - Nach Speichern Bestätigung „Gespeichert ✓“. Alle Texte in de.ts + en.ts.
    - **C ✅ Hintergrundaufgaben + Wartung** (Reiter „Wartung“ unter `/settings/maintenance`, Backups standardmäßig aus): Zeitplaner in der App (kein Cron), letzte Ausführung in DB, holt Verpasstes nach Neustart nach. Aufgaben: DB-Backup nach `/data/backups`, DB-Pflege (optimize/VACUUM), abgelaufene Sessions löschen, In-Memory-Cache aufräumen. In den Einstellungen feintunbar: Backups an/aus, Anzahl behalten, wie oft; pro Aufgabe wann/wie oft; „Jetzt ausführen“ (mit Hinweis auf API-Limits); Backups zum Herunterladen. Metadaten-Aktualisierung kommt erst mit Punkt 8.
-8. Dashboard (Startseite) statt Kategorie-Kacheln. Zeigt Einträge mit Status „Geplant“ und „Schaue/Spiele ich“ (inkl. neuer Folgen laufender Serien/Anime) in zwei Bereichen, jeweils mit Datum:
+8. ✅ Dashboard (Startseite) statt Kategorie-Kacheln. Zeigt Einträge mit Status „Geplant“ und „Schaue/Spiele ich“ (inkl. neuer Folgen laufender Serien/Anime) in zwei Bereichen, jeweils mit Datum:
    - Kürzlich erschienen (letzte 4 Wochen)
    - Demnächst
 
    Keine harte Trennung nach Kategorie, sondern Kategorie-Icon/Akzentfarbe pro Eintrag. Filme: Kinostart DE und Heimkino-Start DE (digital/Disc) als eigene Termine. Neue Staffel einer (teilweise) gesehenen Serie (z. B. S2 gesehen, S3 angekündigt/erschienen) landet automatisch im Dashboard. Braucht Erscheinungsdaten in der DB, die regelmäßig aktualisiert werden.
 
-9. Import von Yamtrack-Exporten (CSV), damit die bestehende Bibliothek nicht manuell übertragen werden muss. Soll ins erste Release (v0.1.0).
+9. ✅ Import von Yamtrack-Exporten (CSV), damit die bestehende Bibliothek nicht manuell übertragen werden muss.
    - Reiter „Import“ unter `/settings/import`. Filme/Serien (TMDB), Spiele (IGDB) direkt über die ID; Anime kommen als MyAnimeList-IDs und werden über AniList (`idMal_in`) zugeordnet.
    - Serien: gesehene Folgen aus den `episode`-Zeilen, Anime: Folgen 1…`progress`. Titel, die schon in der Bibliothek sind, bleiben unverändert; doppelte Zeilen im Export werden ignoriert; `manual`-Einträge und andere Medientypen werden mit Grund übersprungen.
    - Poster, Beschreibung und Termine werden danach im Hintergrund nachgeladen (gebremst wegen API-Limits).
