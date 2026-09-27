@@ -1,8 +1,6 @@
 services:
   hdtracker:
     image: ghcr.io/dvnkln/hdtracker:latest
-    # Remove the next line to only use the published image instead of building locally
-    build: .
     container_name: hdtracker
     restart: unless-stopped
     ports:

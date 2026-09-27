@@ -1,8 +1,8 @@
 @import 'tailwindcss';
 
-/* Rounded font for the "hdtracker" wordmark (self-hosted via @fontsource). */
+/* Font for the "hdtracker" wordmark (self-hosted via @fontsource). */
 @theme {
-	--font-brand: 'Fredoka', ui-rounded, system-ui, sans-serif;
+	--font-brand: 'Outfit', system-ui, sans-serif;
 }
 
 /* The app is always dark. */

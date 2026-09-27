@@ -1,6 +1,6 @@
 <script lang="ts">
-	import '@fontsource/fredoka/600.css';
-	import '@fontsource/fredoka/700.css';
+	import '@fontsource/outfit/600.css';
+	import '@fontsource/outfit/800.css';
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { page } from '$app/state';

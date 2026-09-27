@@ -4,7 +4,7 @@ Self-hosted Media-Tracker, Single-User, Deployment per Docker Compose.
 
 ## Zusammenarbeit
 
-- Der Nutzer kann nur wenig JavaScript: jede Änderung in 1–2 Sätzen erklären (auf Deutsch).
+- Antworten auf Deutsch; jede Änderung in 1–2 Sätzen ohne Fachjargon erklären.
 - In kleinen Schritten arbeiten, vor größeren Aufgaben zuerst einen Plan vorlegen.
 - Nach jedem MVP-Punkt stoppen und erklären, wie man testet.
 
@@ -25,8 +25,8 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
 - Immer dunkel (kein Light-Mode).
 - Navigation: Leiste unten (Handy), mit Icon + Label je Bereich.
 - Akzentfarbe je Bereich (neutraler Hintergrund): Filme rot, Serien blau, Anime pink, Spiele grün. Definiert in `src/lib/categories.ts`.
-- Logo: Couch von vorne mit zwei Personen (links Schneidersitz/pink, rechts angewinkeltes Knie/blau) – Idee der Frau des Nutzers, die App ist für die beiden gedacht. `src/lib/components/Logo.svelte`, auch als Favicon.
-- Schriftzug „hdtracker“: Schrift Fredoka (self-hosted via `@fontsource/fredoka`, Tailwind-Klasse `font-brand`), „hd“ mit Verlauf pink→blau. `src/lib/components/Brand.svelte`.
+- Logo: Couch von vorne mit zwei Personen (links Schneidersitz/pink, rechts angewinkeltes Knie/blau). `src/lib/components/Logo.svelte`, auch als Favicon.
+- Schriftzug „hdtracker“: Schrift Outfit (self-hosted via `@fontsource/outfit`, Tailwind-Klasse `font-brand`), „hd“ mit Verlauf pink→blau. `src/lib/components/Brand.svelte`.
 - Poster-Raster für Suche und Bibliothek, aber nicht zu minimalistisch (kein reines Watcharr-Raster): Bibliothek braucht sichtbare Unterteilung in Abschnitte.
 
 ## Datenquellen
@@ -61,7 +61,7 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
    - Anime (AniList): keine Staffeln/Folgentitel verfügbar → Raster mit Folgennummern. Jede Anime-Staffel ist ein eigener Eintrag.
    - Auto-Status: erste Folge abgehakt → „Schaue ich“; alle Folgen einer beendeten Serie gesehen → „Gesehen“. Später in Settings abschaltbar (Punkt 7).
 6. ✅ Detailseite mit Streaming-Anbietern DE (Flatrate/Leihen/Kaufen), Attribution TMDB + JustWatch. Plus „Ähnliche Titel“ (TMDB recommendations, AniList recommendations, IGDB similar_games).
-7. Settings-Seite (Region, Sprache, Auto-Status an/aus usw. in DB), plus „Bibliothek leeren“ (mit deutlicher Rückfrage)
+7. Settings-Seite (Region, Sprache, Auto-Status an/aus usw. in DB), plus „Bibliothek leeren“ (mit deutlicher Rückfrage). Extras: Passwort ändern, alle anderen Geräte abmelden. Anime-Titel: Englisch als Haupttitel, japanischer (Romaji-)Titel abgesetzt dazu.
 8. Dashboard (Startseite) statt Kategorie-Kacheln. Zeigt Einträge mit Status „Geplant“ und „Schaue/Spiele ich“ (inkl. neuer Folgen laufender Serien/Anime) in zwei Bereichen, jeweils mit Datum:
    - Kürzlich erschienen (letzte 4 Wochen)
    - Demnächst
@@ -73,7 +73,8 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
 - Pushover-Benachrichtigungen (z. B. neue Staffel/Folge, Release eines geplanten Titels).
 - Import von Yamtrack-Exporten (CSV), damit die bestehende Bibliothek nicht manuell übertragen werden muss.
 - Anime-Hybrid: AniList bleibt Quelle, zusätzlich Folgentitel/-beschreibungen von TMDB einblenden, wo eine Zuordnung AniList→TMDB bekannt ist (Community-Mapping-Listen). Watcharr nutzt übrigens nur TMDB für Anime.
-- README für GitHub aufhübschen: kurz und verständlich für Dritte mit etwas Docker-Erfahrung. Was ist das (1–2 Sätze, Screenshot), `docker-compose.yml` als Codeblock, darunter erklärt, was man anpassen muss (.env-Werte, ORIGIN, Port). Keine lange README.
+- Streaming-Übersicht: alle geplanten Titel nach verfügbaren Streaming-Anbietern gruppiert (z. B. „Netflix“ antippen → alles Geplante, was dort läuft). Anbieter ohne Treffer ausblenden. Offen: eigener Menüpunkt oder Teil des Dashboards.
+- Hover-Effekt am PC für Poster in der Bibliothek.
 
 ## Befehle
 
@@ -81,4 +82,6 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
 - `npm run check` – Typprüfung
 - `npm run build` / `npm start` – Production-Build starten
 - `npm run db:generate` – nach Schema-Änderung neue Migration in `drizzle/` erzeugen (mit committen!)
-- `docker compose up --build` – Container lokal bauen und starten
+- `docker compose up -d` – veröffentlichtes Image von GHCR starten (wie auf einem Server)
+- `docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build` – Image lokal aus dem Quellcode bauen und starten
+- Release: Tag `vX.Y.Z` pushen → GitHub Action baut Multi-Arch-Image nach GHCR

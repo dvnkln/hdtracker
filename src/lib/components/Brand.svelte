@@ -10,7 +10,8 @@
 	<span
 		class="font-brand leading-none font-semibold tracking-tight {large ? 'text-4xl' : 'text-xl'}"
 	>
-		<span class="bg-linear-to-r from-[#ec4899] to-[#3b82f6] bg-clip-text font-bold text-transparent"
+		<span
+			class="bg-linear-to-r from-[#ec4899] to-[#3b82f6] bg-clip-text font-extrabold text-transparent"
 			>hd</span
 		>tracker
 	</span>
