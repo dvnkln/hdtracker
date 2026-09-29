@@ -114,7 +114,7 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
 - `CHANGELOG.md` (Englisch, Emoji-Stil): Jede für Nutzer sichtbare Änderung sofort unter `## Upcoming release` eintragen, in `### ✨ New` / `### 🔧 Improved` / `### 🐛 Fixed` / `### 🗑️ Removed`. Aus Nutzersicht formulieren („Search is now in the header“), nicht technisch. Rein interne Änderungen (CI, Aufräumen, Tests) nur, wenn sie Nutzer betreffen.
 - Versionen bis 1.0: neue Funktionen → `0.X.0`, nur Fehlerbehebungen → `0.X.Y`.
 - Release: Changelog-Text vorher dem User zeigen. Dann `## Upcoming release` → `## X.Y.Z – JJJJ-MM-TT` (leere Unterabschnitte weg, Wichtigstes zuerst, ein kurzer Einleitungssatz, am Ende `### ⬆️ Updating` mit dem, was Nutzer beim Update tun müssen), darüber neuen leeren `## Upcoming release`; Version in `package.json` (`npm version X.Y.Z --no-git-tag-version`); Commit, Tag `vX.Y.Z`, Push.
-- Die GitHub Action baut das Image und legt danach das GitHub-Release automatisch an – mit genau dem Abschnitt der Version aus `CHANGELOG.md` (ohne Abschnitt schlägt sie fehl).
+- Die GitHub Action baut das Image und stellt danach den Release-Text in ihre Zusammenfassung: Abschnitt der Version aus `CHANGELOG.md` + Image-Zeile + „Full Changelog“-Link zum vorigen Tag (ohne Abschnitt schlägt sie fehl). **Das GitHub-Release legt der User selbst an**, damit er als Autor erscheint – bewusst ohne Personal Access Token (Sicherheit). Nach dem Tag-Push den fertigen Text im Chat mitgeben.
 
 ## Befehle
 
@@ -124,4 +124,4 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
 - `npm run db:generate` – nach Schema-Änderung neue Migration in `drizzle/` erzeugen (mit committen!)
 - `docker compose up -d` – veröffentlichtes Image von GHCR starten (wie auf einem Server)
 - `docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build` – Image lokal aus dem Quellcode bauen und starten
-- Release: siehe „Changelog & Releases“; Tag `vX.Y.Z` pushen → GitHub Action baut Multi-Arch-Image nach GHCR und legt das GitHub-Release an
+- Release: siehe „Changelog & Releases“; Tag `vX.Y.Z` pushen → GitHub Action baut Multi-Arch-Image nach GHCR; die Release-Seite legt der User mit dem vorbereiteten Text an

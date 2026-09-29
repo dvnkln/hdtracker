@@ -44,19 +44,21 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # After the image is published: create the GitHub release with the matching section of
-  # CHANGELOG.md as release notes. Fails if the changelog has no section for this version.
-  release:
+  # After the image is published: prepare the release notes from the matching section of
+  # CHANGELOG.md (fails if there is none). The release itself is created by hand on GitHub,
+  # so it shows the owner as author (no personal access token needed) – the text to paste is
+  # in this run's summary.
+  release-notes:
     needs: docker
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
+      # Full history with tags, to find the previous release for the compare link
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
-      - name: Create GitHub release from CHANGELOG.md
+      - name: Release notes from CHANGELOG.md
         env:
-          GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
         run: |
           VERSION="${TAG#v}"
@@ -69,4 +71,17 @@ jobs:
             exit 1
           fi
           printf '\n---\n\n🐳 Docker image: `ghcr.io/%s:%s`\n' "$GITHUB_REPOSITORY" "$VERSION" >> notes.md
-          gh release create "$TAG" --title "$TAG" --notes-file notes.md --verify-tag
+          # Link to all changes since the previous release (v1.2.3 tags, newest first)
+          PREV=$(git tag --list 'v*' --sort=-v:refname | grep -vx "$TAG" | head -n 1)
+          if [ -n "$PREV" ]; then
+            printf '\n**Full Changelog**: https://github.com/%s/compare/%s...%s\n' "$GITHUB_REPOSITORY" "$PREV" "$TAG" >> notes.md
+          fi
+          {
+            echo "## Release notes for $TAG"
+            echo
+            echo "Create the release by hand: Releases → Draft a new release → tag \`$TAG\`, title \`$TAG\`, paste:"
+            echo
+            echo '````markdown'
+            cat notes.md
+            echo '````'
+          } >> "$GITHUB_STEP_SUMMARY"
