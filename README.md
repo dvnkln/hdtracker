@@ -1,8 +1,10 @@
+<!-- Logo with wordmark; GitHub picks the variant matching its light or dark theme -->
 <p align="center">
-  <img src="src/lib/assets/favicon.svg" width="110" alt="hdtracker logo" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/wordmark-dark.png" />
+    <img src="docs/brand/wordmark-light.png" width="380" alt="hdtracker" />
+  </picture>
 </p>
-
-<h1 align="center">hdtracker</h1>
 
 <p align="center">
   <a href="https://github.com/dvnkln/hdtracker/releases"><img src="https://img.shields.io/github/v/release/dvnkln/hdtracker?label=version&style=for-the-badge&color=ec4899" alt="Version" /></a>
