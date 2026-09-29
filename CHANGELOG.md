@@ -7,6 +7,10 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 <!-- Collect changes here as they are made; on release this becomes "## X.Y.Z – date".
      Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed, ### 🗑️ Removed -->
 
+### 🐛 Fixed
+
+- Game search now finds titles made only of very common words, such as the _We Were Here_ series, and shows exact name matches first
+
 ## 0.1.0 – 2026-09-27
 
 First release.

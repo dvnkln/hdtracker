@@ -73,13 +73,37 @@ async function igdb<T>(endpoint: string, body: string, retry = true): Promise<T>
 	}
 }
 
+const SEARCH_FIELDS = 'fields name,first_release_date,cover.image_id,summary,total_rating_count;';
+const SEARCH_LIMIT = 30;
+
+// IGDB's full-text search ignores very common words, so a title made only of them
+// ("We Were Here") finds nothing. Therefore a second query looks for names containing
+// the text. Order: exact name, names starting with the text, full-text hits, other names.
 export async function searchGames(query: string): Promise<SearchResult[]> {
-	const safe = query.replace(/["\\]/g, ' ');
-	const games = await igdb<IgdbGame[]>(
-		'games',
-		`search "${safe}"; fields name,first_release_date,cover.image_id,summary; where version_parent = null; limit 30;`
-	);
-	return games.map(gameToResult);
+	const safe = query.replace(/["\\]/g, ' ').trim();
+	const [byText, byName] = await Promise.all([
+		igdb<IgdbGame[]>(
+			'games',
+			`search "${safe}"; ${SEARCH_FIELDS} where version_parent = null; limit ${SEARCH_LIMIT};`
+		),
+		igdb<(IgdbGame & { total_rating_count?: number })[]>(
+			'games',
+			`${SEARCH_FIELDS} where name ~ *"${safe}"* & version_parent = null; sort total_rating_count desc; limit 20;`
+		)
+	]);
+
+	const wanted = safe.toLowerCase();
+	const rank = (name: string) => {
+		const n = name.toLowerCase();
+		return n === wanted ? 0 : n.startsWith(wanted) ? 1 : 2;
+	};
+	const top = byName.filter((g) => rank(g.name) < 2).sort((a, b) => rank(a.name) - rank(b.name));
+	const rest = byName.filter((g) => rank(g.name) === 2);
+	const seen = new Set<number>();
+	return [...top, ...byText, ...rest]
+		.filter((g) => !seen.has(g.id) && seen.add(g.id))
+		.slice(0, SEARCH_LIMIT)
+		.map(gameToResult);
 }
 
 function gameToResult(g: IgdbGame): SearchResult {
