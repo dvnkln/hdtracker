@@ -90,6 +90,7 @@
 								title={titles(data.category, item).main}
 								year={item.year}
 								posterUrl={item.posterUrl}
+								loading={item.metadataUpdatedAt === null}
 								onclick={() => (selected = item)}
 							/>
 						</li>

@@ -3,7 +3,7 @@
 	import { m } from '$lib/i18n/index.svelte';
 	import { titles } from '$lib/titles.svelte';
 	import type { DashboardEntry } from '$lib/server/dashboard';
-	import { CalendarClock, History, ImageOff } from '@lucide/svelte';
+	import { CalendarClock, ChevronRight, History, ImageOff } from '@lucide/svelte';
 
 	let { data } = $props();
 
@@ -87,6 +87,52 @@
 
 <svelte:head><title>hdtracker</title></svelte:head>
 
+<!-- One row per entry: poster, title, area icon and what happens -->
+{#snippet entryList(entries: DashboardEntry[])}
+	<ul class="mt-1">
+		{#each entries as entry (`${entry.category}:${entry.externalId}:${entry.kind}`)}
+			{@const cat = CATEGORIES[entry.category]}
+			<li>
+				<!-- Hover: row lights up, title and poster frame in the area's colour -->
+				<a
+					href="/{entry.category}/{entry.externalId}"
+					style:--accent={cat.accent}
+					class="group/row -mx-2 flex items-center gap-3 rounded-lg p-2 transition-colors duration-100 hover:bg-zinc-900"
+				>
+					<div
+						class="aspect-[2/3] w-11 shrink-0 overflow-hidden rounded bg-zinc-900 ring-1 ring-zinc-800 transition-shadow duration-100 group-hover/row:ring-(--accent)"
+					>
+						{#if entry.posterUrl}
+							<img
+								src={entry.posterUrl}
+								alt=""
+								loading="lazy"
+								referrerpolicy="no-referrer"
+								class="h-full w-full object-cover"
+							/>
+						{:else}
+							<div class="flex h-full items-center justify-center text-zinc-600">
+								<ImageOff size={16} />
+							</div>
+						{/if}
+					</div>
+					<div class="min-w-0 flex-1">
+						<p
+							class="truncate font-medium transition-colors duration-100 group-hover/row:text-(--accent)"
+						>
+							{titles(entry.category, entry).main}
+						</p>
+						<p class="flex items-center gap-1.5 text-sm text-zinc-400">
+							<cat.icon size={14} class="shrink-0 text-(--accent)" />
+							<span class="truncate">{eventLabel(entry)}</span>
+						</p>
+					</div>
+				</a>
+			</li>
+		{/each}
+	</ul>
+{/snippet}
+
 <main class="mx-auto max-w-screen-sm p-4">
 	{#if data.libraryEmpty}
 		<p class="mt-2 text-zinc-400">{m.home.emptyLibrary}</p>
@@ -104,56 +150,27 @@
 				{/if}
 
 				{#each byDay(section.entries) as group (group.date)}
-					<h3 class="mt-4 flex justify-between text-sm font-medium">
-						{#if group.date}
+					{#if group.date}
+						<h3 class="mt-4 flex justify-between text-sm font-medium">
 							<span class="text-zinc-300">{dayLabel(group.date)}</span>
 							<span class="text-zinc-500">{relativeDay(group.date)}</span>
-						{:else}
-							<span class="text-zinc-300">{m.home.dateOpen}</span>
-						{/if}
-					</h3>
-					<ul class="mt-1">
-						{#each group.entries as entry (`${entry.category}:${entry.externalId}:${entry.kind}`)}
-							{@const cat = CATEGORIES[entry.category]}
-							<li>
-								<!-- Hover: row lights up, title and poster frame in the area's colour -->
-								<a
-									href="/{entry.category}/{entry.externalId}"
-									style:--accent={cat.accent}
-									class="group/row -mx-2 flex items-center gap-3 rounded-lg p-2 transition-colors duration-100 hover:bg-zinc-900"
-								>
-									<div
-										class="aspect-[2/3] w-11 shrink-0 overflow-hidden rounded bg-zinc-900 ring-1 ring-zinc-800 transition-shadow duration-100 group-hover/row:ring-(--accent)"
-									>
-										{#if entry.posterUrl}
-											<img
-												src={entry.posterUrl}
-												alt=""
-												loading="lazy"
-												referrerpolicy="no-referrer"
-												class="h-full w-full object-cover"
-											/>
-										{:else}
-											<div class="flex h-full items-center justify-center text-zinc-600">
-												<ImageOff size={16} />
-											</div>
-										{/if}
-									</div>
-									<div class="min-w-0 flex-1">
-										<p
-											class="truncate font-medium transition-colors duration-100 group-hover/row:text-(--accent)"
-										>
-											{titles(entry.category, entry).main}
-										</p>
-										<p class="flex items-center gap-1.5 text-sm text-zinc-400">
-											<cat.icon size={14} class="shrink-0 text-(--accent)" />
-											<span class="truncate">{eventLabel(entry)}</span>
-										</p>
-									</div>
-								</a>
-							</li>
-						{/each}
-					</ul>
+						</h3>
+						{@render entryList(group.entries)}
+					{:else}
+						<!-- Announced without a date: least urgent, so collapsed by default -->
+						<details class="group mt-4">
+							<summary
+								class="group/summary flex cursor-pointer list-none items-center gap-1 text-sm font-medium select-none [&::-webkit-details-marker]:hidden"
+							>
+								<ChevronRight
+									size={16}
+									class="text-zinc-500 transition group-open:rotate-90 group-hover/summary:text-zinc-200"
+								/>
+								<span class="text-zinc-300">{m.home.dateOpen}</span>
+							</summary>
+							{@render entryList(group.entries)}
+						</details>
+					{/if}
 				{/each}
 			</section>
 		{/each}

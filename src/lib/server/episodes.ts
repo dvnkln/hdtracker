@@ -6,7 +6,7 @@ import { findItem, saveItem } from './library';
 import { getAnimeDetails } from './providers/anilist';
 import { getTvDetails } from './providers/tmdb';
 import type { ShowDetails } from './providers/types';
-import { refreshInBackground } from './releases';
+import { refreshPending } from './releases';
 import { getSetting } from './settings';
 
 export { findItem, hasEpisodes };
@@ -98,7 +98,7 @@ export function setEpisodes(
 				.run();
 		}
 	});
-	if (added) refreshInBackground(category, details.item.externalId);
+	if (added) refreshPending(); // load release dates for the dashboard
 }
 
 // Status rules (see CLAUDE.md, point 5):

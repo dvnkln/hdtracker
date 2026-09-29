@@ -1,15 +1,26 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 	import { CATEGORIES, CATEGORY_KEYS } from '$lib/categories';
 	import { m } from '$lib/i18n/index.svelte';
 	import { ui } from '$lib/ui';
 	import SubmitButton from '$lib/components/SubmitButton.svelte';
-	import { CircleCheck, Upload } from '@lucide/svelte';
+	import { CircleCheck, LoaderCircle, Upload } from '@lucide/svelte';
 
-	let { form } = $props();
+	let { data, form } = $props();
 
 	const { card, label, labelText, hint, actions } = ui;
 	let busy = $state(false);
+
+	// While titles still wait for their details (e.g. after an import): ask every few seconds
+	// how many are left. Depends only on the server, so it also shows after leaving the page.
+	let sawLoading = $state(false);
+	$effect(() => {
+		if (data.pending === 0) return;
+		sawLoading = true;
+		const timer = setInterval(() => invalidateAll(), 3000);
+		return () => clearInterval(timer);
+	});
 </script>
 
 <svelte:head><title>{m.importData.title} · hdtracker</title></svelte:head>
@@ -51,6 +62,23 @@
 			</div>
 		</form>
 	</section>
+
+	<!-- Posters, descriptions and dates load in the background after an import -->
+	{#if data.pending > 0}
+		<section class={card}>
+			<p class="flex items-center gap-2 text-sm text-zinc-300">
+				<LoaderCircle size={16} class="shrink-0 animate-spin" />
+				{m.importData.loading(data.pending, Math.ceil(data.seconds / 60))}
+			</p>
+			<p class="mt-1 {hint}">{m.importData.loadingHint}</p>
+		</section>
+	{:else if sawLoading || form?.report}
+		<section class={card}>
+			<p class="flex items-center gap-2 text-sm text-emerald-400">
+				<CircleCheck size={16} class="shrink-0" />{m.importData.loaded}
+			</p>
+		</section>
+	{/if}
 
 	{#if form?.report}
 		{@const report = form.report}

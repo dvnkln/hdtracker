@@ -18,7 +18,7 @@
 	// Header line, e.g. "2024 · 2 Std. 47 Min." or "2023 · TV-Serie · 28 Folgen".
 	let metaLine = $derived(
 		[
-			info.item.year,
+			info.item.year ?? m.common.tba,
 			info.format && (m.detail.formats[info.format] ?? info.format),
 			info.runtime && formatRuntime(info.runtime),
 			info.seasonCount && m.detail.seasons(info.seasonCount),

@@ -10,6 +10,8 @@
 		posterUrl: string | null;
 		overview: string | null;
 		status: Status | null;
+		// Library items: null while details are still loading (search results don't have it)
+		metadataUpdatedAt?: Date | null;
 	};
 </script>
 
@@ -84,7 +86,12 @@
 					{#if shown.sub}
 						<p class="text-sm text-zinc-400">{shown.sub}</p>
 					{/if}
-					<p class="text-sm text-zinc-500">{item.year ?? '–'}</p>
+					<p class="text-sm text-zinc-500">
+						{#if item.year}{item.year}{:else if item.metadataUpdatedAt === null}<span
+								title={m.common.loadingDetails}
+								class="animate-pulse">…</span
+							>{:else}<span title={m.common.tbaHint}>{m.common.tba}</span>{/if}
+					</p>
 				</div>
 				<button
 					type="button"

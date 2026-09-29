@@ -45,7 +45,10 @@ export const libraryItems = sqliteTable(
 			.$defaultFn(() => new Date()),
 		statusChangedAt: integer('status_changed_at', { mode: 'timestamp' })
 			.notNull()
-			.$defaultFn(() => new Date())
+			.$defaultFn(() => new Date()),
+		// When title, poster and release dates were last loaded from the API. Empty = still to
+		// be loaded (e.g. right after an import); the refresh queue picks these up.
+		metadataUpdatedAt: integer('metadata_updated_at', { mode: 'timestamp' })
 	},
 	(t) => [uniqueIndex('library_items_unique').on(t.category, t.source, t.externalId)]
 );

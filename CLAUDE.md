@@ -99,9 +99,9 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
 
 ## Changelog & Releases
 
-- `CHANGELOG.md` (Englisch, Emoji-Stil): Jede für Nutzer sichtbare Änderung sofort unter `## Next release` eintragen, in `### ✨ New` / `### 🔧 Improved` / `### 🐛 Fixed` / `### 🗑️ Removed`. Aus Nutzersicht formulieren („Search is now in the header“), nicht technisch. Rein interne Änderungen (CI, Aufräumen, Tests) nur, wenn sie Nutzer betreffen.
+- `CHANGELOG.md` (Englisch, Emoji-Stil): Jede für Nutzer sichtbare Änderung sofort unter `## Upcoming release` eintragen, in `### ✨ New` / `### 🔧 Improved` / `### 🐛 Fixed` / `### 🗑️ Removed`. Aus Nutzersicht formulieren („Search is now in the header“), nicht technisch. Rein interne Änderungen (CI, Aufräumen, Tests) nur, wenn sie Nutzer betreffen.
 - Versionen bis 1.0: neue Funktionen → `0.X.0`, nur Fehlerbehebungen → `0.X.Y`.
-- Release: Changelog-Text vorher dem User zeigen. Dann `## Next release` → `## X.Y.Z – JJJJ-MM-TT` (leere Unterabschnitte weg, optional ein persönlicher Einleitungssatz), darüber neuen leeren `## Next release`; Version in `package.json` (`npm version X.Y.Z --no-git-tag-version`); Commit, Tag `vX.Y.Z`, Push.
+- Release: Changelog-Text vorher dem User zeigen. Dann `## Upcoming release` → `## X.Y.Z – JJJJ-MM-TT` (leere Unterabschnitte weg, optional ein persönlicher Einleitungssatz), darüber neuen leeren `## Upcoming release`; Version in `package.json` (`npm version X.Y.Z --no-git-tag-version`); Commit, Tag `vX.Y.Z`, Push.
 - Die GitHub Action baut das Image und legt danach das GitHub-Release automatisch an – mit genau dem Abschnitt der Version aus `CHANGELOG.md` (ohne Abschnitt schlägt sie fehl).
 
 ## Befehle

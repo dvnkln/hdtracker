@@ -1,7 +1,11 @@
 import { fail } from '@sveltejs/kit';
 import { serverMessages } from '$lib/server/i18n';
 import { ImportError, importYamtrack } from '$lib/server/import/yamtrack';
-import type { Actions } from './$types';
+import { pendingStatus } from '$lib/server/releases';
+import type { Actions, PageServerLoad } from './$types';
+
+// How many titles still wait for their details (shown after an import).
+export const load: PageServerLoad = () => pendingStatus();
 
 export const actions: Actions = {
 	yamtrack: async ({ request }) => {

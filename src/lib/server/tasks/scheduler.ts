@@ -3,7 +3,7 @@ import { deleteExpiredSessions } from '../auth';
 import { pruneCache } from '../cache';
 import { getDb } from '../db';
 import { tasks } from '../db/schema';
-import { refreshAll } from '../releases';
+import { refreshAll, refreshPending } from '../releases';
 import { createBackup } from './backups';
 
 export type TaskRow = typeof tasks.$inferSelect;
@@ -196,5 +196,7 @@ export function startScheduler() {
 	loadRows();
 	const safeTick = () => tick().catch((err) => console.error('Scheduler failed', err));
 	setTimeout(safeTick, 30_000).unref();
+	// Details still missing (e.g. an import interrupted by a restart): continue loading them.
+	setTimeout(refreshPending, 5_000).unref();
 	setInterval(safeTick, 60_000).unref();
 }

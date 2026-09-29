@@ -11,6 +11,9 @@ export const en: Messages = {
 		settings: 'Settings',
 		showPassword: 'Show password',
 		hidePassword: 'Hide password',
+		tba: 'TBA',
+		tbaHint: 'Release date not announced yet',
+		loadingDetails: 'Loading details',
 		home: 'Home',
 		more: 'Show more',
 		less: 'Show less',
@@ -283,6 +286,11 @@ export const en: Messages = {
 			unsupported: 'media type not supported',
 			notFound: 'not found'
 		},
+		loading: (n, minutes) =>
+			`Loading details: ${n} ${n === 1 ? 'title' : 'titles'} left${minutes > 1 ? `, about ${minutes} min` : ''} …`,
+		loadingHint:
+			'You can keep using hdtracker meanwhile. Titles without details show “…”; the areas show the new state when you reopen them.',
+		loaded: 'All details loaded',
 		noFile: 'Please choose a file.',
 		invalidFile: 'This is not a CSV export from Yamtrack.',
 		failed: 'Import failed:'

@@ -14,6 +14,9 @@ export const de = {
 		settings: 'Einstellungen',
 		showPassword: 'Passwort anzeigen',
 		hidePassword: 'Passwort verbergen',
+		tba: 'TBA',
+		tbaHint: 'Erscheinungsdatum noch nicht angekündigt',
+		loadingDetails: 'Details werden geladen',
 		home: 'Startseite',
 		more: 'Mehr anzeigen',
 		less: 'Weniger',
@@ -302,6 +305,11 @@ export const de = {
 			unsupported: 'Medientyp wird nicht unterstützt',
 			notFound: 'nicht gefunden'
 		} as Record<string, string>,
+		loading: (n: number, minutes: number) =>
+			`Details werden geladen: noch ${n} Titel${minutes > 1 ? `, ca. ${minutes} Min.` : ''} …`,
+		loadingHint:
+			'Du kannst hdtracker währenddessen normal benutzen. Titel ohne Details zeigen „…“; die Bereiche zeigen den neuen Stand, sobald du sie neu öffnest.',
+		loaded: 'Alle Details geladen',
 		noFile: 'Bitte eine Datei auswählen.',
 		invalidFile: 'Das ist keine CSV-Exportdatei aus Yamtrack.',
 		failed: 'Import fehlgeschlagen:'

@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
 import type { Messages } from '$lib/i18n/de';
 import type { ReleaseKind } from '../db/schema';
 import { serverMessages } from '../i18n';
@@ -29,14 +30,57 @@ export function missingKey(name: string) {
 
 const TIMEOUT_MS = 10_000;
 
+// ---- Rate limits for background work ----
+
+// Requests made inside runInBackground() (loading details after an import, nightly refresh)
+// are spaced out per service, so a large library never runs into the APIs' rate limits.
+// Requests for the user (search, detail pages) are not slowed down.
+const background = new AsyncLocalStorage<true>();
+
+export function runInBackground<T>(work: () => Promise<T>) {
+	return background.run(true, work);
+}
+
+// Minimum pause between two background requests per service. AniList allows ~30 requests
+// per minute; 3 s leaves room for the user's own anime pages in the meantime.
+const PAUSE_MS: Record<string, number> = { TMDB: 100, IGDB: 300, AniList: 3000 };
+const lastRequest: Record<string, number> = {};
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function throttle(source: string) {
+	const pause = PAUSE_MS[source] ?? 0;
+	const wait = (lastRequest[source] ?? 0) + pause - Date.now();
+	lastRequest[source] = Date.now() + Math.max(wait, 0);
+	if (wait > 0) await sleep(wait);
+}
+
+// Background requests that hit "too many requests" (HTTP 429) wait and try again:
+// as long as the service asks (Retry-After), otherwise 10 s, 20 s, 40 s.
+const RETRIES = 3;
+
+function retryDelay(res: Response, attempt: number) {
+	const seconds = Number(res.headers.get('retry-after'));
+	return Number.isFinite(seconds) && seconds > 0
+		? Math.min(seconds, 120) * 1000
+		: 10_000 * 2 ** attempt;
+}
+
 // fetch with timeout; network problems become a readable ProviderError.
 export async function fetchJson<T>(source: string, url: string | URL, init: RequestInit = {}) {
-	let res: Response;
-	try {
-		res = await fetch(url, { ...init, signal: AbortSignal.timeout(TIMEOUT_MS) });
-	} catch (err) {
-		console.error(`${source} request failed`, err);
-		throw new ProviderError(serverMessages().errors.unreachable(source));
+	const inBackground = background.getStore() === true;
+	let res!: Response;
+	for (let attempt = 0; ; attempt++) {
+		if (inBackground) await throttle(source);
+		try {
+			res = await fetch(url, { ...init, signal: AbortSignal.timeout(TIMEOUT_MS) });
+		} catch (err) {
+			console.error(`${source} request failed`, err);
+			throw new ProviderError(serverMessages().errors.unreachable(source));
+		}
+		if (res.status !== 429 || !inBackground || attempt >= RETRIES) break;
+		const delay = retryDelay(res, attempt);
+		console.warn(`${source}: too many requests, waiting ${Math.round(delay / 1000)} s`);
+		await sleep(delay);
 	}
 	if (res.status === 401 || res.status === 403) {
 		throw new ProviderError(serverMessages().errors.badCredentials(source), res.status);

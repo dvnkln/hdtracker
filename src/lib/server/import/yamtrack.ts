@@ -1,11 +1,10 @@
 import { isStatusFor, type Category, type Status } from '$lib/status';
 import { getDb } from '../db';
 import { libraryItems, watchedEpisodes } from '../db/schema';
-import { airedEpisodes, getShowDetails } from '../episodes';
-import { findItem, SOURCE_FOR, type LibraryItem } from '../library';
+import { findItem, SOURCE_FOR } from '../library';
 import { getAnimeByMalIds } from '../providers/anilist';
 import type { SearchResult } from '../providers/types';
-import { refreshItem } from '../releases';
+import { refreshPending } from '../releases';
 
 // ---- CSV ----
 
@@ -82,7 +81,7 @@ function parseDate(value: string | undefined) {
 export class ImportError extends Error {}
 
 // Takes over a Yamtrack CSV export. Titles already in the library are left alone.
-// Posters, descriptions and release dates are loaded afterwards in the background.
+// Posters, descriptions and release dates are loaded afterwards by the refresh queue.
 export async function importYamtrack(text: string): Promise<ImportReport> {
 	const [header, ...lines] = parseCsv(text.replace(/^﻿/, ''));
 	if (!header || !REQUIRED_COLUMNS.every((c) => header.includes(c))) {
@@ -112,7 +111,6 @@ export async function importYamtrack(text: string): Promise<ImportReport> {
 		episodeRows.set(r.media_id, [...(episodeRows.get(r.media_id) ?? []), r]);
 	}
 
-	const added: { item: LibraryItem; allEpisodes: boolean }[] = [];
 	const seen = new Set<string>(); // Yamtrack exports sometimes contain a title twice
 	const db = getDb();
 
@@ -199,39 +197,12 @@ export async function importYamtrack(text: string): Promise<ImportReport> {
 					.onConflictDoNothing()
 					.run();
 			}
+			// (A finished series without single episodes gets all aired episodes ticked when its
+			// details are loaded, see refreshPending.)
 			report.episodes += episodes.length;
-
-			// A finished series without single episodes in the export: tick all aired ones later.
-			const allEpisodes = category === 'series' && status === 'completed' && !episodes.length;
-			added.push({ item: inserted, allEpisodes });
 		}
 	});
 
-	completeInBackground(added);
+	refreshPending(); // posters, descriptions and dates are loaded in the background
 	return report;
-}
-
-// Loads posters, descriptions and release dates of the imported titles, one after another
-// (rate limits), and ticks all aired episodes of finished series where needed.
-function completeInBackground(added: { item: LibraryItem; allEpisodes: boolean }[]) {
-	(async () => {
-		for (const { item, allEpisodes } of added) {
-			try {
-				await refreshItem(item);
-				if (allEpisodes) {
-					const details = await getShowDetails('series', item.externalId);
-					for (const e of airedEpisodes(details)) {
-						getDb()
-							.insert(watchedEpisodes)
-							.values({ itemId: item.id, season: e.season, episode: e.episode })
-							.onConflictDoNothing()
-							.run();
-					}
-				}
-			} catch (err) {
-				console.error(`Import: loading ${item.category}/${item.externalId} failed`, err);
-			}
-		}
-		console.log(`Import: details of ${added.length} titles loaded`);
-	})();
 }

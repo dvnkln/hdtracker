@@ -12,7 +12,7 @@ import {
 import { airedEpisodes, getShowDetails, hasEpisodes, setEpisodes } from '$lib/server/episodes';
 import { ProviderError, type SearchResult } from '$lib/server/providers/types';
 import { searchCategory } from '$lib/server/search';
-import { refreshInBackground } from '$lib/server/releases';
+import { refreshPending } from '$lib/server/releases';
 import { serverMessages } from '$lib/server/i18n';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -58,7 +58,7 @@ export const actions: Actions = {
 			return fail(400, { error: serverMessages().common.invalidData });
 		}
 		saveItem(category, item, status);
-		refreshInBackground(category, item.externalId); // release dates for the dashboard
+		refreshPending(); // new titles: load release dates for the dashboard
 
 		// "Gesehen" for a series/anime also ticks all aired episodes.
 		if (status === 'completed' && hasEpisodes(category)) {

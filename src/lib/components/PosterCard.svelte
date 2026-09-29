@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/i18n/index.svelte';
 	import { ImageOff } from '@lucide/svelte';
 
 	type Props = {
@@ -6,11 +7,13 @@
 		year: number | null;
 		posterUrl: string | null;
 		badge?: string | null;
+		// Details (year, ...) not loaded yet, e.g. right after an import
+		loading?: boolean;
 		// Either a link (href) or a button (onclick)
 		href?: string;
 		onclick?: () => void;
 	};
-	let { title, year, posterUrl, badge = null, href, onclick }: Props = $props();
+	let { title, year, posterUrl, badge = null, loading = false, href, onclick }: Props = $props();
 </script>
 
 <!-- Hover (mouse only): frame and title light up in the accent colour, the image darkens a
@@ -52,5 +55,10 @@
 	>
 		{title}
 	</p>
-	<p class="text-xs text-zinc-500">{year ?? '–'}</p>
+	<!-- No year: still loading ("…") or not announced yet ("TBA"), explained on hover -->
+	<p class="text-xs text-zinc-500">
+		{#if year}{year}{:else if loading}<span title={m.common.loadingDetails} class="animate-pulse"
+				>…</span
+			>{:else}<span title={m.common.tbaHint}>{m.common.tba}</span>{/if}
+	</p>
 </svelte:element>
