@@ -28,6 +28,7 @@
 - [Backups](#-backups)
 - [Data sources](#-data-sources)
 - [Development](#-development)
+- [Built with AI](#-built-with-ai)
 - [License](#-license)
 - [Changelog](CHANGELOG.md)
 
@@ -154,6 +155,14 @@ npm run dev
 
 SvelteKit, TypeScript, Drizzle ORM with SQLite, Tailwind CSS. Build the Docker image from source with
 `docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build`.
+
+## 🤖 Built with AI
+
+hdtracker is heavily AI-assisted, and I want to be upfront about that. Most of the code was written by [Claude Code](https://claude.com/claude-code), Anthropic's AI coding assistant.
+
+My part is the product side: what hdtracker should do, how it should look and feel, and how it should behave – from the layout and hover effects to things like loading data from the different services in parallel. I describe ideas and decisions, review and test every change in a running instance, and decide what goes into a release. The AI turns that into code, tests it and documents it.
+
+If you find a bug or something that looks odd in the code, please open an [issue](https://github.com/dvnkln/hdtracker/issues) – that helps.
 
 ## 📜 License
 
