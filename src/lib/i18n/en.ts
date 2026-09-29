@@ -161,6 +161,21 @@ export const en: Messages = {
 	settings: {
 		general: 'General',
 		title: 'Settings',
+		groupPersonal: 'Personal',
+		groupAdmin: 'Administration',
+		generalHint: 'Language, display, areas',
+		accountHint: 'Username, password, devices',
+		data: 'Data',
+		dataHint: 'Import, clear library',
+		server: 'Server',
+		serverHint: 'Content language, region',
+		maintenanceHint: 'Background tasks, backups',
+		aboutHint: 'Version, links, data sources',
+		content: 'Content',
+		changeUsername: 'Change username',
+		newUsername: 'New username',
+		usernameChanged: 'Username changed ✓',
+		usernameTaken: 'This username is already taken.',
 		save: 'Save',
 		saved: 'Saved ✓',
 
@@ -179,6 +194,12 @@ export const en: Messages = {
 		hideSpoilers: 'Spoiler protection',
 		hideSpoilersHint: 'Images and descriptions of episodes you have not watched yet are blurred.',
 
+		areas: 'Areas',
+		areasHint: 'Hidden areas disappear from navigation, search and the dashboard.',
+		areaHiddenData: (n) =>
+			`${n} ${n === 1 ? 'entry is' : 'entries are'} kept, but no longer updated, and there are no notifications for ${n === 1 ? 'it' : 'them'}. Delete in the danger zone if needed.`,
+		areasMin: 'At least one area has to stay visible.',
+
 		behavior: 'Behavior',
 		autoStatus: 'Update status automatically',
 		autoStatusHint:
@@ -187,6 +208,7 @@ export const en: Messages = {
 		account: 'Account',
 		changePassword: 'Change password',
 		currentPassword: 'Current password',
+		currentPasswordConfirm: 'Current password to confirm',
 		newPassword: (n) => `New password (min. ${n} characters)`,
 		repeatPassword: 'Repeat new password',
 		wrongPassword: 'The current password is wrong.',
@@ -291,6 +313,11 @@ export const en: Messages = {
 		loadingHint:
 			'You can keep using hdtracker meanwhile. Titles without details show “…”; the areas show the new state when you reopen them.',
 		loaded: 'All details loaded',
+		hiddenFound: (list) => `The file contains ${list} – these areas are hidden.`,
+		hiddenSkip: 'Skip',
+		hiddenImport: 'Import anyway',
+		hiddenEnable: 'Show and import',
+		hiddenSkipped: (n, area) => `${n} × ${area} skipped (area hidden)`,
 		noFile: 'Please choose a file.',
 		invalidFile: 'This is not a CSV export from Yamtrack.',
 		failed: 'Import failed:'
@@ -301,11 +328,22 @@ export const en: Messages = {
 		hoursMinutes: (h, min) => (min ? `${h} h ${min} min` : `${h} h`)
 	},
 
-	footer: {
-		tmdbBefore: 'Movie and series data from',
-		tmdbAfter: '. This product uses the TMDB API but is not endorsed or certified by TMDB.',
-		gamesBy: 'Game data from',
-		animeBy: 'anime data from'
+	about: {
+		title: 'About',
+		tagline:
+			'Self-hosted tracker for movies, series, anime and games – made for watching together on the couch.',
+		version: (v) => `Version: v${v}`,
+		source: 'Source code on GitHub',
+		versionHint: 'What’s new in this version?',
+		links: 'Links',
+		issues: 'Report a bug or suggest an idea',
+		license: 'License: GNU AGPL v3',
+		dataSources: 'Data sources',
+		tmdb: 'Movie and series data. This product uses the TMDB API but is not endorsed or certified by TMDB.',
+		justwatch: 'Streaming offers (via TMDB)',
+		igdb: 'Game data',
+		anilist: 'Anime data',
+		ai: 'Built with the help of AI (Claude Code).'
 	},
 
 	errors: {

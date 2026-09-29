@@ -1,4 +1,4 @@
-import { and, count, eq, isNull, ne, notInArray } from 'drizzle-orm';
+import { and, count, eq, inArray, isNull, ne, notInArray } from 'drizzle-orm';
 import type { Category } from '$lib/status';
 import { getDb } from './db';
 import { libraryItems, releases, watchedEpisodes } from './db/schema';
@@ -14,7 +14,7 @@ import {
 	type ReleaseEvent,
 	type ReleaseInfo
 } from './providers/types';
-import { getSetting } from './settings';
+import { enabledCategories, getSetting } from './settings';
 
 // Episodes are kept from this many days ago on (the dashboard shows the last 4 weeks).
 const KEEP_DAYS = 60;
@@ -66,7 +66,8 @@ function fetchReleases(category: Category, externalId: string): Promise<ReleaseI
 export async function refreshItem(item: LibraryItem) {
 	const { item: fresh, events } = await fetchReleases(item.category, item.externalId);
 	getDb().transaction((tx) => {
-		tx.update(libraryItems)
+		const updated = tx
+			.update(libraryItems)
 			.set({
 				title: fresh.title,
 				originalTitle: fresh.originalTitle,
@@ -77,6 +78,8 @@ export async function refreshItem(item: LibraryItem) {
 			})
 			.where(eq(libraryItems.id, item.id))
 			.run();
+		// Removed from the library meanwhile (e.g. library cleared while loading): nothing to save.
+		if (updated.changes === 0) return;
 		tx.delete(releases).where(eq(releases.itemId, item.id)).run();
 		if (events.length) {
 			tx.insert(releases)
@@ -115,6 +118,8 @@ async function tickAllEpisodesIfImported(item: LibraryItem) {
 		.get();
 	if (watched) return;
 	const details = await getShowDetails('series', item.externalId);
+	// Removed from the library while loading: nothing to tick.
+	if (!db.select().from(libraryItems).where(eq(libraryItems.id, item.id)).get()) return;
 	for (const e of airedEpisodes(details)) {
 		db.insert(watchedEpisodes)
 			.values({ itemId: item.id, season: e.season, episode: e.episode })
@@ -144,6 +149,7 @@ export function refreshPending() {
 					.where(
 						and(
 							eq(libraryItems.source, source),
+							inArray(libraryItems.category, enabledCategories()),
 							isNull(libraryItems.metadataUpdatedAt),
 							failed.length ? notInArray(libraryItems.id, failed) : undefined
 						)
@@ -170,7 +176,12 @@ export function pendingStatus() {
 	const rows = getDb()
 		.select({ source: libraryItems.source, n: count() })
 		.from(libraryItems)
-		.where(isNull(libraryItems.metadataUpdatedAt))
+		.where(
+			and(
+				isNull(libraryItems.metadataUpdatedAt),
+				inArray(libraryItems.category, enabledCategories())
+			)
+		)
 		.groupBy(libraryItems.source)
 		.all();
 	const perItem: Record<LibraryItem['source'], number> = { tmdb: 0.3, igdb: 0.4, anilist: 3.2 };
@@ -181,10 +192,16 @@ export function pendingStatus() {
 	};
 }
 
-// Background task "metadata": refreshes all items except dropped ones; one after another per
-// service, the services in parallel.
+// Background task "metadata": refreshes all items except dropped ones and hidden areas; one
+// after another per service, the services in parallel.
 export async function refreshAll() {
-	const items = getDb().select().from(libraryItems).where(ne(libraryItems.status, 'dropped')).all();
+	const items = getDb()
+		.select()
+		.from(libraryItems)
+		.where(
+			and(ne(libraryItems.status, 'dropped'), inArray(libraryItems.category, enabledCategories()))
+		)
+		.all();
 	const failedPerSource = await Promise.all(
 		SOURCES.map((source) =>
 			exclusive(source, async () => {

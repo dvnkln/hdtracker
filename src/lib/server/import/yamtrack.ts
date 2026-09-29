@@ -1,7 +1,9 @@
+import { CATEGORY_KEYS } from '$lib/categories';
 import { isStatusFor, type Category, type Status } from '$lib/status';
 import { getDb } from '../db';
 import { libraryItems, watchedEpisodes } from '../db/schema';
 import { findItem, SOURCE_FOR } from '../library';
+import { enabledCategories, setSettings } from '../settings';
 import { getAnimeByMalIds } from '../providers/anilist';
 import type { SearchResult } from '../providers/types';
 import { refreshPending } from '../releases';
@@ -69,7 +71,18 @@ export type ImportReport = {
 	episodes: number; // watched episodes taken over
 	existing: number; // already in the library, left alone
 	skipped: { title: string; reason: SkipReason }[];
+	hiddenSkipped: Partial<Record<Category, number>>; // titles of hidden areas, left out
 };
+
+// What to do with titles of areas hidden in the settings (the user is asked first).
+export type HiddenChoice = 'skip' | 'import' | 'enable';
+
+// Titles per hidden area in the file; nothing is imported until the user decides.
+export class HiddenAreasError extends Error {
+	constructor(public counts: Partial<Record<Category, number>>) {
+		super('file contains titles of hidden areas');
+	}
+}
 
 // "2026-08-15 17:16:00+00:00" -> Date (null if empty or invalid)
 function parseDate(value: string | undefined) {
@@ -82,7 +95,11 @@ export class ImportError extends Error {}
 
 // Takes over a Yamtrack CSV export. Titles already in the library are left alone.
 // Posters, descriptions and release dates are loaded afterwards by the refresh queue.
-export async function importYamtrack(text: string): Promise<ImportReport> {
+// If the file contains titles of hidden areas and no choice was made, HiddenAreasError is thrown.
+export async function importYamtrack(
+	text: string,
+	hiddenChoice?: HiddenChoice
+): Promise<ImportReport> {
 	const [header, ...lines] = parseCsv(text.replace(/^﻿/, ''));
 	if (!header || !REQUIRED_COLUMNS.every((c) => header.includes(c))) {
 		throw new ImportError('not a Yamtrack export');
@@ -91,16 +108,37 @@ export async function importYamtrack(text: string): Promise<ImportReport> {
 		Object.fromEntries(header.map((name, i) => [name, l[i] ?? '']))
 	);
 
+	// Titles of hidden areas: ask first; then skip them, import them anyway or show the areas.
+	let enabled = enabledCategories();
+	const hiddenCounts: Partial<Record<Category, number>> = {};
+	const hiddenIds = new Set<string>();
+	for (const row of rows) {
+		const category = categoryOf(row);
+		const key = `${category}:${row.media_id}`;
+		if (!category || enabled.includes(category) || hiddenIds.has(key)) continue;
+		hiddenIds.add(key);
+		hiddenCounts[category] = (hiddenCounts[category] ?? 0) + 1;
+	}
+	if (hiddenIds.size && !hiddenChoice) throw new HiddenAreasError(hiddenCounts);
+	if (hiddenIds.size && hiddenChoice === 'enable') {
+		setSettings({
+			categories: CATEGORY_KEYS.filter((c) => enabled.includes(c) || hiddenCounts[c]).join(',')
+		});
+		enabled = enabledCategories();
+	}
+	const skipHidden = hiddenChoice === 'skip';
+
 	const report: ImportReport = {
 		imported: { movies: 0, series: 0, anime: 0, games: 0 },
 		episodes: 0,
 		existing: 0,
-		skipped: []
+		skipped: [],
+		hiddenSkipped: skipHidden ? hiddenCounts : {}
 	};
 
 	// Anime: translate MyAnimeList IDs to AniList in one go.
 	const malIds = rows
-		.filter((r) => categoryOf(r) === 'anime')
+		.filter((r) => categoryOf(r) === 'anime' && !(skipHidden && !enabled.includes('anime')))
 		.map((r) => Number(r.media_id))
 		.filter((id) => Number.isInteger(id));
 	const anime = malIds.length ? await getAnimeByMalIds(malIds) : new Map<number, SearchResult>();
@@ -127,6 +165,7 @@ export async function importYamtrack(text: string): Promise<ImportReport> {
 				});
 				continue;
 			}
+			if (skipHidden && !enabled.includes(category)) continue; // counted in hiddenSkipped
 
 			let item: SearchResult;
 			if (category === 'anime') {

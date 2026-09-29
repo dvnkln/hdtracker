@@ -4,7 +4,7 @@
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { page } from '$app/state';
-	import { CATEGORIES, CATEGORY_KEYS } from '$lib/categories';
+	import { CATEGORIES } from '$lib/categories';
 	import Brand from '$lib/components/Brand.svelte';
 	import HeaderSearch from '$lib/components/HeaderSearch.svelte';
 	import { m, setLocale } from '$lib/i18n/index.svelte';
@@ -35,13 +35,23 @@
 	<header
 		class="sticky top-0 z-10 border-b border-zinc-800 bg-zinc-950/95 pt-[env(safe-area-inset-top)] backdrop-blur"
 	>
-		<div class="app-width flex items-center gap-1 px-4 py-3">
-			<a href="/" aria-label={m.common.home} class="shrink-0 transition-opacity hover:opacity-80"
-				><Brand /></a
+		<!-- Computers: three columns with equally wide outer ones, so the search field sits exactly
+		     in the middle of the screen (same axis as the content and the bottom navigation). -->
+		<div
+			class="app-width flex items-center gap-1 px-4 py-3 md:grid md:grid-cols-[minmax(8.5rem,1fr)_minmax(0,36rem)_minmax(8.5rem,1fr)] md:gap-4"
+		>
+			<a
+				href="/"
+				aria-label={m.common.home}
+				class="shrink-0 transition-opacity hover:opacity-80 md:justify-self-start"><Brand /></a
 			>
-			<HeaderSearch />
+			<HeaderSearch categories={data.categories} />
 			<!-- -mr-2: the icon itself (not its hover area) lines up with the content edge -->
-			<form method="POST" action="/logout" class="-mr-2 flex items-center gap-1">
+			<form
+				method="POST"
+				action="/logout"
+				class="-mr-2 flex items-center gap-1 md:justify-self-end"
+			>
 				<a
 					href="/settings"
 					class="rounded-lg p-2 transition-colors hover:bg-zinc-800 hover:text-zinc-100 {section ===
@@ -73,8 +83,12 @@
 	<nav
 		class="fixed inset-x-0 bottom-0 bg-zinc-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
 	>
-		<div class="mx-auto grid max-w-screen-lg grid-cols-4">
-			{#each CATEGORY_KEYS as key (key)}
+		<!-- One column per area that is switched on in the settings -->
+		<div
+			class="mx-auto grid max-w-screen-lg"
+			style:grid-template-columns="repeat({data.categories.length}, minmax(0, 1fr))"
+		>
+			{#each data.categories as key (key)}
 				{@const cat = CATEGORIES[key]}
 				{@const active = section === key}
 				<!-- Active area: icon in its colour and filled, label white. Hover previews that. -->

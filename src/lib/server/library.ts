@@ -1,4 +1,4 @@
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, count, eq, inArray } from 'drizzle-orm';
 import type { Category, Status } from '$lib/status';
 import { getDb } from './db';
 import { libraryItems } from './db/schema';
@@ -132,4 +132,16 @@ export function parseItem(category: Category, json: string): SearchResult {
 		posterUrl,
 		overview: optionalString(raw.overview, 5000)
 	};
+}
+
+// Number of entries per area, e.g. { anime: 9 }.
+export function countByCategory() {
+	const rows = getDb()
+		.select({ category: libraryItems.category, n: count() })
+		.from(libraryItems)
+		.groupBy(libraryItems.category)
+		.all();
+	return Object.fromEntries(rows.map((r) => [r.category, r.n])) as Partial<
+		Record<Category, number>
+	>;
 }

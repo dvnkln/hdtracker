@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { getDb } from './db';
 import { settings } from './db/schema';
+import { CATEGORY_KEYS, isCategory, type Category } from '$lib/categories';
 
 // Default values, used until the user changes them on the settings page.
 const DEFAULTS = {
@@ -10,7 +11,8 @@ const DEFAULTS = {
 	animeTitle: 'english', // main anime title: 'english' | 'romaji' (the other one is shown below)
 	hideSpoilers: 'on', // blur stills and descriptions of unwatched episodes: 'on' | 'off'
 	autoStatus: 'on', // change the status automatically when episodes are ticked: 'on' | 'off'
-	backupKeep: '7' // how many backup files to keep
+	backupKeep: '7', // how many backup files to keep
+	categories: 'movies,series,anime,games' // areas shown in the app (comma-separated)
 } as const;
 
 export type SettingKey = keyof typeof DEFAULTS;
@@ -30,4 +32,13 @@ export function setSettings(values: Partial<Record<SettingKey, string>>) {
 				.run();
 		}
 	});
+}
+
+// Areas switched on in the settings (at least one). Hidden areas keep their data but are not
+// shown, searched or refreshed.
+export function enabledCategories(): Category[] {
+	const list = getSetting('categories')
+		.split(',')
+		.filter((c): c is Category => isCategory(c));
+	return list.length ? CATEGORY_KEYS.filter((c) => list.includes(c)) : [...CATEGORY_KEYS];
 }

@@ -1,5 +1,6 @@
 // Shared class lists for form pages (settings, maintenance), so they look the same.
 export const ui = {
+	pageTitle: 'text-xl font-bold',
 	card: 'mt-6 rounded-xl border border-zinc-800 bg-zinc-900/40 p-4',
 	heading: 'flex items-center gap-2 text-lg font-semibold',
 	label: 'flex flex-col gap-1',

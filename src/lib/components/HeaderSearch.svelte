@@ -2,26 +2,34 @@
 	import { flushSync } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { navigating, page } from '$app/state';
-	import { CATEGORIES, CATEGORY_KEYS, isCategory, type Category } from '$lib/categories';
+	import { CATEGORIES, isCategory, type Category } from '$lib/categories';
 	import { m } from '$lib/i18n/index.svelte';
 	import { ChevronDown, LoaderCircle, Search, X } from '@lucide/svelte';
+
+	// Areas switched on in the settings
+	let { categories }: { categories: Category[] } = $props();
 
 	const STORAGE_KEY = 'hdtracker.searchCategory';
 
 	// Area to search in: the current one on a category page, otherwise the last one used.
 	let section = $derived(page.url.pathname.split('/')[1]);
-	let category = $state<Category>('movies');
+	// svelte-ignore state_referenced_locally
+	let category = $state<Category>(categories[0]);
 
 	$effect(() => {
 		try {
 			const saved = localStorage.getItem(STORAGE_KEY);
-			if (saved && isCategory(saved)) category = saved;
+			if (saved && isCategory(saved) && categories.includes(saved)) category = saved;
 		} catch {
 			// storage blocked: keep the default
 		}
 	});
 	$effect(() => {
 		if (isCategory(section)) category = section;
+	});
+	// An area that was just hidden in the settings cannot stay selected.
+	$effect(() => {
+		if (!categories.includes(category)) category = categories[0];
 	});
 
 	function choose(key: Category) {
@@ -111,7 +119,7 @@
 />
 
 <!-- Desktop: search field centred in the free space of the header, with the current area on its left -->
-<div class="mx-4 hidden flex-1 justify-center md:flex">
+<div class="hidden min-w-0 justify-center md:flex">
 	<form
 		role="search"
 		onsubmit={submit}
@@ -140,7 +148,7 @@
 					role="menu"
 					class="absolute top-full left-0 z-20 mt-2 w-44 rounded-lg border border-zinc-700 bg-zinc-900 p-1 shadow-xl shadow-black/50"
 				>
-					{#each CATEGORY_KEYS as key (key)}
+					{#each categories as key (key)}
 						{@const cat = CATEGORIES[key]}
 						<li role="none">
 							<button
@@ -253,7 +261,7 @@
 		</form>
 		<!-- Which area to search in -->
 		<div class="mt-3 grid grid-cols-4 gap-2">
-			{#each CATEGORY_KEYS as key (key)}
+			{#each categories as key (key)}
 				{@const cat = CATEGORIES[key]}
 				<button
 					type="button"

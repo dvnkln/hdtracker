@@ -1,6 +1,6 @@
 import { createHmac, randomBytes, scrypt, timingSafeEqual } from 'node:crypto';
 import { promisify } from 'node:util';
-import type { Cookies } from '@sveltejs/kit';
+import { error, type Cookies } from '@sveltejs/kit';
 import { and, count, eq, lt, ne } from 'drizzle-orm';
 import { env } from '$env/dynamic/private';
 import { getDb } from './db';
@@ -164,4 +164,17 @@ export function recordLoginFailure(ip: string) {
 
 export function clearLoginFailures(ip: string) {
 	failures.delete(ip);
+}
+
+// ---- Permissions ----
+
+// Admins may change settings for the whole installation (server, maintenance). There is only
+// one account for now, and it is the admin; with several users this becomes a real check.
+export function isAdmin(user: SessionUser | null): boolean {
+	return user !== null;
+}
+
+// For form actions and endpoints of admin pages (layout guards do not cover those).
+export function requireAdmin(user: SessionUser | null) {
+	if (!isAdmin(user)) error(403, 'Forbidden');
 }

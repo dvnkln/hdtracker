@@ -7,8 +7,15 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 <!-- Collect changes here as they are made; on release this becomes "## X.Y.Z – date".
      Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed, ### 🗑️ Removed -->
 
+### ✨ New
+
+- You can change your username (Settings → Account)
+- New “About” page in the settings: version (click it to see what's new in that release), links to GitHub, issues and license, and the data sources (moved there from the bottom of the settings)
+- Areas can be hidden in the settings (e.g. if you don't track anime): they disappear from navigation, search and the dashboard, and their data is kept but no longer refreshed. The import asks what to do with titles of hidden areas
+
 ### 🔧 Improved
 
+- Settings reorganized: a sidebar on computers and a list on phones, with the areas General, Account, Data, Server, Maintenance and About
 - Dashboard: titles without a date are collapsed under “Date not announced” by default
 - Titles without a release year show “TBA” instead of a dash
 - After an import, titles whose details are still loading show a pulsing “…”, and the import page shows how many are left

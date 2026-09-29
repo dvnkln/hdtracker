@@ -14,6 +14,7 @@ import {
 	type Frequency,
 	type TaskKey
 } from '$lib/server/tasks/scheduler';
+import { requireAdmin } from '$lib/server/auth';
 import type { Actions, PageServerLoad } from './$types';
 
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/; // "03:00"
@@ -52,7 +53,8 @@ function readKey(data: FormData) {
 }
 
 export const actions: Actions = {
-	save: async ({ request }) => {
+	save: async ({ request, locals }) => {
+		requireAdmin(locals.user);
 		const t = serverMessages();
 		const data = await request.formData();
 		const key = readKey(data);
@@ -79,7 +81,8 @@ export const actions: Actions = {
 		return { key, message: t.settings.saved };
 	},
 
-	run: async ({ request }) => {
+	run: async ({ request, locals }) => {
+		requireAdmin(locals.user);
 		const key = readKey(await request.formData());
 		if (!key) return fail(400, { key, error: serverMessages().common.invalidData });
 		const error = await runTask(key);
@@ -87,12 +90,14 @@ export const actions: Actions = {
 		return { key, message: serverMessages().maintenance.done };
 	},
 
-	deleteBackup: async ({ request }) => {
+	deleteBackup: async ({ request, locals }) => {
+		requireAdmin(locals.user);
 		deleteBackup(String((await request.formData()).get('name') ?? ''));
 		return { key: 'backup' };
 	},
 
-	deleteAllBackups: () => {
+	deleteAllBackups: ({ locals }) => {
+		requireAdmin(locals.user);
 		deleteAllBackups();
 		return { key: 'backup' };
 	}

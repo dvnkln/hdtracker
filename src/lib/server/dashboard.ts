@@ -1,8 +1,9 @@
-import { inArray, ne } from 'drizzle-orm';
+import { and, inArray, ne } from 'drizzle-orm';
 import type { Category, Status } from '$lib/status';
 import { getDb } from './db';
 import { libraryItems, releases, watchedEpisodes, type ReleaseKind } from './db/schema';
 import { today } from './providers/types';
+import { enabledCategories } from './settings';
 
 // "Kürzlich erschienen" covers this many days up to today.
 const RECENT_DAYS = 28;
@@ -32,7 +33,14 @@ export function getDashboard(): {
 	libraryEmpty: boolean;
 } {
 	const db = getDb();
-	const items = db.select().from(libraryItems).where(ne(libraryItems.status, 'dropped')).all();
+	// Not dropped, and only areas that are switched on in the settings.
+	const items = db
+		.select()
+		.from(libraryItems)
+		.where(
+			and(ne(libraryItems.status, 'dropped'), inArray(libraryItems.category, enabledCategories()))
+		)
+		.all();
 	const ids = items.map((i) => i.id);
 	if (ids.length === 0) return { recent: [], upcoming: [], libraryEmpty: true };
 

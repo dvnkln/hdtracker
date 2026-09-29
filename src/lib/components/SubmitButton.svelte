@@ -18,6 +18,9 @@
 		icon?: Component<{ size?: number }>;
 		style?: string;
 		formaction?: string;
+		// Several buttons in one form: which one was pressed
+		name?: string;
+		value?: string;
 	};
 	let {
 		text,
@@ -25,12 +28,14 @@
 		disabled = false,
 		icon: Icon,
 		style = BUTTON_PRIMARY,
-		formaction
+		formaction,
+		name,
+		value
 	}: Props = $props();
 </script>
 
 <!-- Submit button that shows a spinner while the form is being sent -->
-<button class={style} disabled={busy || disabled} {formaction}>
+<button class={style} disabled={busy || disabled} {formaction} {name} {value}>
 	{#if busy}
 		<LoaderCircle size={18} class="animate-spin" />
 	{:else if Icon}

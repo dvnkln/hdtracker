@@ -172,6 +172,21 @@ export const de = {
 	settings: {
 		general: 'Allgemein',
 		title: 'Einstellungen',
+		groupPersonal: 'Persönlich',
+		groupAdmin: 'Verwaltung',
+		generalHint: 'Sprache, Anzeige, Bereiche',
+		accountHint: 'Benutzername, Passwort, Geräte',
+		data: 'Daten',
+		dataHint: 'Import, Bibliothek leeren',
+		server: 'Server',
+		serverHint: 'Sprache der Inhalte, Region',
+		maintenanceHint: 'Hintergrundaufgaben, Backups',
+		aboutHint: 'Version, Links, Datenquellen',
+		content: 'Inhalte',
+		changeUsername: 'Benutzernamen ändern',
+		newUsername: 'Neuer Benutzername',
+		usernameChanged: 'Benutzername geändert ✓',
+		usernameTaken: 'Dieser Benutzername ist schon vergeben.',
 		save: 'Speichern',
 		saved: 'Gespeichert ✓',
 
@@ -191,6 +206,12 @@ export const de = {
 		hideSpoilersHint:
 			'Bilder und Beschreibungen noch nicht gesehener Folgen werden unscharf angezeigt.',
 
+		areas: 'Bereiche',
+		areasHint: 'Ausgeblendete Bereiche verschwinden aus Navigation, Suche und Dashboard.',
+		areaHiddenData: (n: number) =>
+			`${n} ${n === 1 ? 'Eintrag bleibt' : 'Einträge bleiben'} erhalten, ${n === 1 ? 'wird' : 'werden'} aber nicht mehr aktualisiert, und es gibt keine Benachrichtigungen dazu. Bei Bedarf in der Gefahrenzone löschen.`,
+		areasMin: 'Mindestens ein Bereich muss eingeblendet bleiben.',
+
 		behavior: 'Verhalten',
 		autoStatus: 'Status automatisch anpassen',
 		autoStatusHint:
@@ -199,6 +220,7 @@ export const de = {
 		account: 'Konto',
 		changePassword: 'Passwort ändern',
 		currentPassword: 'Aktuelles Passwort',
+		currentPasswordConfirm: 'Aktuelles Passwort zur Bestätigung',
 		newPassword: (n: number) => `Neues Passwort (min. ${n} Zeichen)`,
 		repeatPassword: 'Neues Passwort wiederholen',
 		wrongPassword: 'Das aktuelle Passwort ist falsch.',
@@ -310,6 +332,12 @@ export const de = {
 		loadingHint:
 			'Du kannst hdtracker währenddessen normal benutzen. Titel ohne Details zeigen „…“; die Bereiche zeigen den neuen Stand, sobald du sie neu öffnest.',
 		loaded: 'Alle Details geladen',
+		hiddenFound: (list: string) => `Die Datei enthält ${list} – diese Bereiche sind ausgeblendet.`,
+		hiddenSkip: 'Überspringen',
+		hiddenImport: 'Trotzdem importieren',
+		hiddenEnable: 'Einblenden und importieren',
+		hiddenSkipped: (n: number, area: string) =>
+			`${n} × ${area} übersprungen (Bereich ausgeblendet)`,
 		noFile: 'Bitte eine Datei auswählen.',
 		invalidFile: 'Das ist keine CSV-Exportdatei aus Yamtrack.',
 		failed: 'Import fehlgeschlagen:'
@@ -320,12 +348,22 @@ export const de = {
 		hoursMinutes: (h: number, min: number) => (min ? `${h} Std. ${min} Min.` : `${h} Std.`)
 	},
 
-	footer: {
-		tmdbBefore: 'Film- und Seriendaten von',
-		tmdbAfter:
-			'. Dieses Produkt nutzt die TMDB-API, wird aber nicht von TMDB unterstützt oder zertifiziert.',
-		gamesBy: 'Spieldaten von',
-		animeBy: 'Animedaten von'
+	about: {
+		title: 'Über',
+		tagline:
+			'Selbst gehosteter Tracker für Filme, Serien, Anime und Spiele – gemacht fürs gemeinsame Schauen auf der Couch.',
+		version: (v: string) => `Version: v${v}`,
+		source: 'Quellcode auf GitHub',
+		versionHint: 'Was ist neu in dieser Version?',
+		links: 'Links',
+		issues: 'Fehler melden oder Ideen vorschlagen',
+		license: 'Lizenz: GNU AGPL v3',
+		dataSources: 'Datenquellen',
+		tmdb: 'Film- und Seriendaten. Dieses Produkt nutzt die TMDB-API, wird aber nicht von TMDB unterstützt oder zertifiziert.',
+		justwatch: 'Streaming-Angebote (über TMDB)',
+		igdb: 'Spieldaten',
+		anilist: 'Animedaten',
+		ai: 'Entwickelt mit Unterstützung von KI (Claude Code).'
 	},
 
 	// Errors from the external APIs (created on the server).

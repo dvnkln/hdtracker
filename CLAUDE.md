@@ -24,13 +24,16 @@ SvelteKit (adapter-node, Svelte 5 Runes), TypeScript, Drizzle ORM, better-sqlite
 
 Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
 
+- In den Einstellungen ein-/ausblendbar (Setting `categories`, mindestens einer bleibt; `enabledCategories()` in `src/lib/server/settings.ts`). Ausgeblendet = weg aus Navigation, Suche, Dashboard; Direktaufruf leitet aufs Dashboard; Daten bleiben, aber kein Metadaten-Abgleich (Nachladen + nächtliche Aufgabe überspringen den Bereich). Gefahrenzone zeigt weiter alle Bereiche. Import fragt bei Titeln ausgeblendeter Bereiche nach (überspringen / trotzdem importieren / einblenden).
+
 ## Design
 
 - Immer dunkel (kein Light-Mode).
 - Hover-Effekte (nur Maus) für alles Klickbare; Poster: Rahmen + Titel in Akzentfarbe, Bild leicht abgedunkelt, kein Zoom; kurze Übergänge (~100 ms), damit es direkt reagiert.
 - Standard für neue Installationen: Oberfläche Englisch, Inhalte `en-US`, Region `US` (umstellbar in den Einstellungen).
 - Navigation: Leiste unten (Handy), mit Icon + Label je Bereich.
-- Breite: Kopfzeile + Poster-Seiten nutzen große Bildschirme (Utility `app-width` in `layout.css`: max. 140rem, am PC immer ~6,5 % Rand je Seite ≈ ¾ Poster; Poster-Raster `auto-fill`, am Handy 3 Spalten). Abschnitte der Bibliothek ohne Trennlinie. Detailseite `max-w-screen-xl`; Dashboard, Einstellungen und Leiste unten bleiben schmal.
+- Breite: Kopfzeile + Poster-Seiten nutzen große Bildschirme (Utility `app-width` in `layout.css`: max. 140rem, am PC immer ~6,5 % Rand je Seite ≈ ¾ Poster; Poster-Raster `auto-fill`, am Handy 3 Spalten). Abschnitte der Bibliothek ohne Trennlinie. Detailseite `max-w-screen-xl`, Einstellungen `max-w-screen-md`; Dashboard und Leiste unten bleiben schmal.
+- Gemeinsame Mittelachse am PC: Suchfeld (Kopfzeile als 3-Spalten-Raster mit gleich breiten Außenspalten), Inhalt und Leiste unten liegen mittig. Einstellungen ab xl: Inhalt mittig, Seitenleiste direkt links daneben.
 - Suche in der Kopfzeile (bleibt beim Scrollen oben): am PC Suchfeld mit Icon des aktiven Bereichs (Klick öffnet Menü zum Umschalten; Taste `/` fokussiert), am Handy Lupe → Suchleiste gleitet von oben herein. Bereich = aktuelle Kategorie-Seite, sonst der zuletzt benutzte.
 - Akzentfarbe je Bereich (neutraler Hintergrund): Filme rot, Serien blau, Anime pink, Spiele grün. Definiert in `src/lib/categories.ts`.
 - Als App installierbar (PWA): `static/manifest.webmanifest`, Icons in `static/icons/` + `static/apple-touch-icon.png` (aus dem Logo erzeugt, dunkler Hintergrund mit Pink/Blau-Schimmer), Safari-Meta-Tags in `src/app.html`, `src/service-worker.ts` cacht nur App-Dateien (keine Seiten/Daten). Installation im Browser nur über HTTPS.
@@ -38,9 +41,16 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
 - Schriftzug „hdtracker“: Schrift Outfit (self-hosted via `@fontsource/outfit`, Tailwind-Klasse `font-brand`), „hd“ mit Verlauf pink→blau. `src/lib/components/Brand.svelte`.
 - Poster-Raster für Suche und Bibliothek, aber nicht zu minimalistisch (kein reines Watcharr-Raster): Bibliothek braucht sichtbare Unterteilung in Abschnitte.
 
+## Einstellungen (Aufbau)
+
+- PC: Seitenleiste links, Handy: `/settings` zeigt eine gruppierte Liste, jeder Bereich hat „← Einstellungen“. Bereiche in `src/lib/settingsNav.ts` (neuer Bereich = eine Zeile + Seite unter `src/routes/settings/`). Überschrift „Einstellungen“ nur `sr-only`.
+- **Persönlich** (je Benutzer): Allgemein (`/settings/general`: Oberflächensprache, Anime-Titel, Spoiler-Schutz, Auto-Status, Bereiche) · Konto (`/account`: Benutzername, Passwort, andere Geräte) · Daten (`/data`: Import, später Export, Bibliothek leeren) · später Benachrichtigungen.
+- **Verwaltung** (ganze Installation, Route-Gruppe `(admin)`): Server (`/server`: Inhaltssprache, Region) · Wartung (`/maintenance`) · später Benutzer. Geschützt über `isAdmin()`/`requireAdmin()` in `src/lib/server/auth.ts` (heute immer true, einziges Konto = Admin); Form-Actions und Endpunkte der Admin-Seiten rufen `requireAdmin` selbst auf.
+- **Über** für alle, zuletzt.
+
 ## Datenquellen
 
-- TMDB: Filme, Serien inkl. Staffeln/Episoden, Watch Providers (Region DE). Attribution TMDB + JustWatch anzeigen.
+- TMDB: Filme, Serien inkl. Staffeln/Episoden, Watch Providers (Region DE). Attribution TMDB + JustWatch: im Reiter „Über“ (`/settings/about`, Version verlinkt auf die Release-Notes, GitHub, Issues, Lizenz) und JustWatch zusätzlich bei den Streaming-Angeboten der Detailseite.
 - IGDB via Twitch OAuth: Spiele.
 - AniList GraphQL: Anime.
 
@@ -93,7 +103,9 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
 ## Später (nach MVP)
 
 - Eingebautes HTTPS ohne Reverse Proxy (z. B. eigenes Zertifikat per Umgebungsvariable). Bis dahin geht das Projekt von einem Proxy aus (README).
-- Pushover-Benachrichtigungen (z. B. neue Staffel/Folge, Release eines geplanten Titels).
+- Pushover-Benachrichtigungen (z. B. neue Staffel/Folge, Release eines geplanten Titels) – als persönlicher Bereich „Benachrichtigungen“ in den Einstellungen.
+- Export der eigenen Bibliothek (Bereich „Daten“).
+- Mehrbenutzer: Admin verwaltet Benutzer (Bereich „Verwaltung → Benutzer“); `isAdmin()` wird dann eine echte Prüfung, persönliche Einstellungen/Bibliothek je Benutzer. Details noch offen.
 - Anime-Hybrid: AniList bleibt Quelle, zusätzlich Folgentitel/-beschreibungen von TMDB einblenden, wo eine Zuordnung AniList→TMDB bekannt ist (Community-Mapping-Listen). Watcharr nutzt übrigens nur TMDB für Anime.
 - Streaming-Übersicht: alle geplanten Titel nach verfügbaren Streaming-Anbietern gruppiert (z. B. „Netflix“ antippen → alles Geplante, was dort läuft). Anbieter ohne Treffer ausblenden. Offen: eigener Menüpunkt oder Teil des Dashboards.
 
