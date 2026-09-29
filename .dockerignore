@@ -11,3 +11,7 @@ data
 *.db
 *.db-*
 docs
+# Documentation is not needed for the build; keeping it out means a README change
+# does not invalidate the Docker build cache
+*.md
+LICENSE

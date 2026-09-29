@@ -20,3 +20,6 @@ vite.config.ts.timestamp-*
 *.db
 *.db-*
 /data
+
+# Claude Code: personal local settings
+.claude/settings.local.json
