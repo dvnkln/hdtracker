@@ -29,6 +29,7 @@
 - [Data sources](#-data-sources)
 - [Development](#-development)
 - [License](#-license)
+- [Changelog](CHANGELOG.md)
 
 ## ✨ Features
 

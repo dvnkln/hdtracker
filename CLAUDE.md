@@ -97,6 +97,13 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
 - Anime-Hybrid: AniList bleibt Quelle, zusätzlich Folgentitel/-beschreibungen von TMDB einblenden, wo eine Zuordnung AniList→TMDB bekannt ist (Community-Mapping-Listen). Watcharr nutzt übrigens nur TMDB für Anime.
 - Streaming-Übersicht: alle geplanten Titel nach verfügbaren Streaming-Anbietern gruppiert (z. B. „Netflix“ antippen → alles Geplante, was dort läuft). Anbieter ohne Treffer ausblenden. Offen: eigener Menüpunkt oder Teil des Dashboards.
 
+## Changelog & Releases
+
+- `CHANGELOG.md` (Englisch, Emoji-Stil): Jede für Nutzer sichtbare Änderung sofort unter `## Next release` eintragen, in `### ✨ New` / `### 🔧 Improved` / `### 🐛 Fixed` / `### 🗑️ Removed`. Aus Nutzersicht formulieren („Search is now in the header“), nicht technisch. Rein interne Änderungen (CI, Aufräumen, Tests) nur, wenn sie Nutzer betreffen.
+- Versionen bis 1.0: neue Funktionen → `0.X.0`, nur Fehlerbehebungen → `0.X.Y`.
+- Release: Changelog-Text vorher dem User zeigen. Dann `## Next release` → `## X.Y.Z – JJJJ-MM-TT` (leere Unterabschnitte weg, optional ein persönlicher Einleitungssatz), darüber neuen leeren `## Next release`; Version in `package.json` (`npm version X.Y.Z --no-git-tag-version`); Commit, Tag `vX.Y.Z`, Push.
+- Die GitHub Action baut das Image und legt danach das GitHub-Release automatisch an – mit genau dem Abschnitt der Version aus `CHANGELOG.md` (ohne Abschnitt schlägt sie fehl).
+
 ## Befehle
 
 - `npm run dev` – Dev-Server (http://localhost:5173)
@@ -105,4 +112,4 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
 - `npm run db:generate` – nach Schema-Änderung neue Migration in `drizzle/` erzeugen (mit committen!)
 - `docker compose up -d` – veröffentlichtes Image von GHCR starten (wie auf einem Server)
 - `docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build` – Image lokal aus dem Quellcode bauen und starten
-- Release: Tag `vX.Y.Z` pushen → GitHub Action baut Multi-Arch-Image nach GHCR
+- Release: siehe „Changelog & Releases“; Tag `vX.Y.Z` pushen → GitHub Action baut Multi-Arch-Image nach GHCR und legt das GitHub-Release an

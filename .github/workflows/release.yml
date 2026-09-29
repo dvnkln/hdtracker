@@ -1,4 +1,4 @@
-name: Release image
+name: Release
 
 on:
   push:
@@ -43,3 +43,30 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  # After the image is published: create the GitHub release with the matching section of
+  # CHANGELOG.md as release notes. Fails if the changelog has no section for this version.
+  release:
+    needs: docker
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Create GitHub release from CHANGELOG.md
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          VERSION="${TAG#v}"
+          awk -v v="$VERSION" '
+            /^## / { if (found) exit; if ($2 == v) { found = 1; next } }
+            found { print }
+          ' CHANGELOG.md | sed -e '/./,$!d' > notes.md
+          if ! grep -q '[^[:space:]]' notes.md; then
+            echo "::error::CHANGELOG.md has no section '## $VERSION'"
+            exit 1
+          fi
+          printf '\n---\n\n🐳 Docker image: `ghcr.io/%s:%s`\n' "$GITHUB_REPOSITORY" "$VERSION" >> notes.md
+          gh release create "$TAG" --title "$TAG" --notes-file notes.md --verify-tag
