@@ -11,8 +11,7 @@
 </p>
 
 <p align="center">
-  Self-hosted tracker for <b>movies</b>, <b>series</b>, <b>anime</b> and <b>games</b> – made for watching together on the couch.<br />
-  Mobile-first, always dark, one Docker container. Interface in English or German.
+  Self-hosted tracker for <b>movies</b>, <b>series</b>, <b>anime</b> and <b>games</b> – made for watching together on the couch.
 </p>
 
 <p align="center">
@@ -34,12 +33,13 @@
 
 ## ✨ Features
 
-- 🎬 **Four separate areas** – movies, series, anime and games, each with its own search and a library grouped by status (watching, paused, planned, completed, dropped).
+- 🎬 **Four separate areas** – movies, series, anime and games, each with a library grouped by status (watching, paused, planned, completed, dropped). Don't track games or anime? Hide the areas you don't need.
 - 📅 **Dashboard** – what was released recently and what is coming up: new episodes, new seasons, cinema and home releases, game releases.
 - 📺 **Episode tracking** – tick off single episodes, whole seasons or entire shows; see upcoming episodes and announced seasons with dates.
 - 🙈 **Spoiler protection** – images and descriptions of episodes you have not watched yet are blurred (can be switched off).
 - 🍿 **Where to watch** – streaming, rent and buy offers for your region (via JustWatch), with direct links where possible.
-- 🔎 **Detail pages** – runtime, genres, rating, release dates and similar titles.
+- 🔎 **Quick search** – always at the top of the screen; on a computer, press <kbd>/</kbd> to start typing.
+- 📄 **Detail pages** – runtime, genres, rating, release dates and similar titles.
 - 📥 **Import from Yamtrack** – take over your library including statuses, watched episodes and anime progress.
 - 🛠️ **Maintenance built in** – release dates refresh nightly; optional scheduled database backups you can download.
 - 📲 **Installable as an app** – add it to your home screen (Chrome, Edge, Safari) and it opens full screen with its own icon.
@@ -114,14 +114,15 @@
 
 ## 📥 Import from Yamtrack
 
-Coming from [Yamtrack](https://github.com/FuzzyGrim/Yamtrack)? Export your library there as CSV and upload it under **Settings → Import**.
+Coming from [Yamtrack](https://github.com/FuzzyGrim/Yamtrack)? Export your library there as CSV and upload it under **Settings → Data**.
 
 - Movies, series, anime and games are taken over with their status and dates.
 - Series keep every watched episode, anime their progress (MyAnimeList IDs are matched via AniList).
 - Titles already in your library are left unchanged, so importing twice is safe.
 - Entries created by hand in Yamtrack have no database ID and are listed as skipped.
+- If the file contains titles of areas you have hidden, you are asked whether to skip them, import them anyway or show the area again.
 
-Posters, descriptions and release dates are loaded in the background afterwards.
+Posters, descriptions and release dates are loaded in the background afterwards – the import page shows how many are left, and loading continues even if the container restarts in between.
 
 ## 💾 Backups
 
