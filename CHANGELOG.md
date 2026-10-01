@@ -2,23 +2,24 @@
 
 All notable changes to hdtracker. Each version is also published as a [GitHub release](https://github.com/dvnkln/hdtracker/releases) with a ready-to-use Docker image.
 
-<!-- Changes since the last release are collected under "## Upcoming release" right below this
-     comment – the heading only exists while there are such changes. On release it becomes
-     "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
-     ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
+<!-- Changes since the last release are collected under "## 0.3.0 – 2026-10-01
 
-## Upcoming release
+Early access games are marked, statuses only make sense for titles that are out, and a forgotten password can be reset.
 
 ### ✨ New
 
-- **Reset a forgotten password** (or username) with a command in the container: `docker exec hdtracker node reset-password.js` – see the wiki
 - **Early access games are marked**: “Early Access” next to the year and on the detail page, and the full release shows up on the dashboard once it has a date. As soon as the full version is out, the mark disappears
+- **Reset a forgotten password** (or username) with a command in the container: `docker exec hdtracker node reset-password.js` – see the [wiki](https://github.com/dvnkln/hdtracker/wiki/Reset-your-password)
 
 ### 🔧 Improved
 
-- Settings → About links to the [documentation](https://github.com/dvnkln/hdtracker/wiki)
 - **Titles that are not out yet can only be set to “Planned”** – the other statuses are greyed out. If a release date is wrong, double-tap the greyed-out status to set it anyway
 - Maintenance: the tasks used most come first, switched-off tasks are listed last
+- Settings → About links to the [documentation](https://github.com/dvnkln/hdtracker/wiki)
+
+### ⬆️ Updating
+
+Just pull the new image – the database is updated automatically on start, your library stays as it is. After the first start, hdtracker reloads release dates for your games and for recent titles once in the background; this takes a moment for large libraries.
 
 ## 0.2.0 – 2026-09-29
 
