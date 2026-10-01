@@ -16,6 +16,7 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 ### 🔧 Improved
 
 - Settings → About links to the [documentation](https://github.com/dvnkln/hdtracker/wiki)
+- Maintenance: the tasks used most come first, switched-off tasks are listed last
 
 ## 0.2.0 – 2026-09-29
 

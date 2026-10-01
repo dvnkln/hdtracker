@@ -17,19 +17,19 @@ type TaskDef = {
 	defaults: Pick<TaskRow, 'enabled' | 'frequency' | 'time' | 'weekday'>;
 };
 
-// All background tasks, in display order.
+// All background tasks, in display order: the ones used most first, the backup (off by
+// default) last. On the page, switched-off tasks are listed below the active ones.
 export const TASKS = {
-	backup: {
-		run: createBackup,
-		usesApi: false,
-		// Off by default: most people back up the whole Docker volume anyway.
-		defaults: { enabled: false, frequency: 'daily', time: '03:00', weekday: 0 }
-	},
 	metadata: {
 		// Titles, posters and release dates of all library items (for the dashboard).
 		run: refreshAll,
 		usesApi: true,
 		defaults: { enabled: true, frequency: 'daily', time: '04:30', weekday: 0 }
+	},
+	cache: {
+		run: () => void pruneCache(),
+		usesApi: false,
+		defaults: { enabled: true, frequency: 'hourly', time: '00:00', weekday: 0 }
 	},
 	optimize: {
 		// Updates the query planner statistics and compacts the file.
@@ -47,10 +47,11 @@ export const TASKS = {
 		usesApi: false,
 		defaults: { enabled: true, frequency: 'daily', time: '03:30', weekday: 0 }
 	},
-	cache: {
-		run: () => void pruneCache(),
+	backup: {
+		run: createBackup,
 		usesApi: false,
-		defaults: { enabled: true, frequency: 'hourly', time: '00:00', weekday: 0 }
+		// Off by default: most people back up the whole Docker volume anyway.
+		defaults: { enabled: false, frequency: 'daily', time: '03:00', weekday: 0 }
 	}
 } satisfies Record<string, TaskDef>;
 
@@ -121,9 +122,14 @@ function ensureRows() {
 	}
 }
 
+// All tasks in display order: active ones first, switched-off ones below (each group in the
+// order of TASKS).
 export function listTasks(): TaskRow[] {
 	const rows = getDb().select().from(tasks).all();
-	return TASK_KEYS.map((key) => rows.find((r) => r.key === key)).filter((r) => r !== undefined);
+	const ordered = TASK_KEYS.map((key) => rows.find((r) => r.key === key)).filter(
+		(r) => r !== undefined
+	);
+	return [...ordered.filter((t) => t.enabled), ...ordered.filter((t) => !t.enabled)];
 }
 
 export function updateTask(
