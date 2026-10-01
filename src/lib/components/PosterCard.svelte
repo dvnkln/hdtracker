@@ -7,13 +7,24 @@
 		year: number | null;
 		posterUrl: string | null;
 		badge?: string | null;
+		// Game that is currently only available in early access
+		earlyAccess?: boolean;
 		// Details (year, ...) not loaded yet, e.g. right after an import
 		loading?: boolean;
 		// Either a link (href) or a button (onclick)
 		href?: string;
 		onclick?: () => void;
 	};
-	let { title, year, posterUrl, badge = null, loading = false, href, onclick }: Props = $props();
+	let {
+		title,
+		year,
+		posterUrl,
+		badge = null,
+		earlyAccess = false,
+		loading = false,
+		href,
+		onclick
+	}: Props = $props();
 </script>
 
 <!-- Hover (mouse only): frame and title light up in the accent colour, the image darkens a
@@ -57,8 +68,9 @@
 	</p>
 	<!-- No year: still loading ("…") or not announced yet ("TBA"), explained on hover -->
 	<p class="text-xs text-zinc-500">
-		{#if year}{year}{:else if loading}<span title={m.common.loadingDetails} class="animate-pulse"
-				>…</span
+		{#if year}{year}{earlyAccess ? ` · ${m.common.earlyAccess}` : ''}{:else if loading}<span
+				title={m.common.loadingDetails}
+				class="animate-pulse">…</span
 			>{:else}<span title={m.common.tbaHint}>{m.common.tba}</span>{/if}
 	</p>
 </svelte:element>

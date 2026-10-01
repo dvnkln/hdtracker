@@ -19,6 +19,7 @@
 	let metaLine = $derived(
 		[
 			info.item.year ?? m.common.tba,
+			info.item.earlyAccess && m.common.earlyAccess,
 			info.format && (m.detail.formats[info.format] ?? info.format),
 			info.runtime && formatRuntime(info.runtime),
 			info.seasonCount && m.detail.seasons(info.seasonCount),
@@ -275,6 +276,7 @@
 								href="/{data.category}/{item.externalId}"
 								title={titles(data.category, item).main}
 								year={item.year}
+								earlyAccess={item.earlyAccess}
 								posterUrl={item.posterUrl}
 								badge={status ? statusLabel(data.category, status) : null}
 							/>

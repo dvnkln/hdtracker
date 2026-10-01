@@ -55,6 +55,7 @@
 						<PosterCard
 							title={titles(data.category, item).main}
 							year={item.year}
+							earlyAccess={item.earlyAccess}
 							posterUrl={item.posterUrl}
 							badge={item.status ? statusLabel(data.category, item.status) : null}
 							onclick={() => (selected = item)}
@@ -89,6 +90,7 @@
 							<PosterCard
 								title={titles(data.category, item).main}
 								year={item.year}
+								earlyAccess={item.earlyAccess}
 								posterUrl={item.posterUrl}
 								loading={item.metadataUpdatedAt === null}
 								onclick={() => (selected = item)}

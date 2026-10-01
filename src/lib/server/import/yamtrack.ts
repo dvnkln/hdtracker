@@ -186,6 +186,8 @@ export async function importYamtrack(
 					title: row.title,
 					originalTitle: null,
 					year: null,
+					releaseDate: null,
+					earlyAccess: false,
 					posterUrl: row.image?.startsWith('https://') ? row.image : null,
 					overview: null
 				};

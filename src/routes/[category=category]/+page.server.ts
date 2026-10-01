@@ -1,7 +1,8 @@
 import { fail } from '@sveltejs/kit';
 import type { Category } from '$lib/categories';
-import { isStatusFor, type Status } from '$lib/status';
+import { allowedStatuses, isReleased, isStatusFor, type Status } from '$lib/status';
 import {
+	findItem,
 	libraryStatusFor,
 	listLibrary,
 	parseItem,
@@ -10,7 +11,7 @@ import {
 	type LibraryItem
 } from '$lib/server/library';
 import { airedEpisodes, getShowDetails, hasEpisodes, setEpisodes } from '$lib/server/episodes';
-import { ProviderError, type SearchResult } from '$lib/server/providers/types';
+import { ProviderError, today, type SearchResult } from '$lib/server/providers/types';
 import { searchCategory } from '$lib/server/search';
 import { refreshPending } from '$lib/server/releases';
 import { serverMessages } from '$lib/server/i18n';
@@ -56,6 +57,13 @@ export const actions: Actions = {
 		} catch (err) {
 			console.error('Invalid item data', err);
 			return fail(400, { error: serverMessages().common.invalidData });
+		}
+		// Not released yet: only "planned" – unless the user insisted (second tap on a locked
+		// status), for the case that the release date from the API is wrong.
+		const existing = findItem(category, item.externalId);
+		const released = isReleased(item, today()) || (!!existing && isReleased(existing, today()));
+		if (!allowedStatuses(category, released).includes(status) && data.get('force') !== '1') {
+			return fail(400, { error: serverMessages().common.invalidStatus });
 		}
 		saveItem(category, item, status);
 		refreshPending(); // new titles: load release dates for the dashboard

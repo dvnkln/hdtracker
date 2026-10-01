@@ -15,6 +15,7 @@ export const de = {
 		showPassword: 'Passwort anzeigen',
 		hidePassword: 'Passwort verbergen',
 		tba: 'TBA',
+		earlyAccess: 'Early Access',
 		tbaHint: 'Erscheinungsdatum noch nicht angekündigt',
 		loadingDetails: 'Details werden geladen',
 		home: 'Startseite',
@@ -83,7 +84,9 @@ export const de = {
 		kinds: {
 			cinema: 'Kinostart',
 			home: 'Heimkino-Start',
-			release: 'Erscheinungstermin'
+			release: 'Erscheinungstermin',
+			earlyAccess: 'Early Access',
+			fullRelease: 'Vollversion'
 		} as Record<string, string>,
 		episodeCode: (season: number, episode: number) =>
 			`S${String(season).padStart(2, '0')}E${String(episode).padStart(2, '0')}`,
@@ -108,7 +111,8 @@ export const de = {
 		details: 'Details',
 		detailsAndEpisodes: 'Details & Folgen',
 		remove: 'Aus Bibliothek entfernen',
-		removeConfirm: 'Wirklich aus der Bibliothek entfernen?'
+		removeConfirm: 'Wirklich aus der Bibliothek entfernen?',
+		notReleased: 'Noch nicht erschienen – Doppeltipp setzt den Status trotzdem'
 	},
 
 	detail: {
@@ -135,6 +139,8 @@ export const de = {
 			firstAired: 'Erstausstrahlung',
 			studio: 'Studio',
 			released: 'Erschienen',
+			earlyAccess: 'Early Access',
+			fullRelease: 'Vollversion',
 			platforms: 'Plattformen',
 			developer: 'Entwickler'
 		},

@@ -25,6 +25,22 @@ export function isStatusFor(category: Category, value: string): value is Status 
 	return (statusesFor(category) as string[]).includes(value);
 }
 
+// Whether a title is out yet (first release anywhere, `today` as YYYY-MM-DD). Library items
+// whose details are still loading (metadataUpdatedAt empty) count as released: unknown must
+// not lock anything.
+export function isReleased(
+	item: { releaseDate: string | null; metadataUpdatedAt?: Date | null },
+	today: string
+) {
+	if (item.metadataUpdatedAt === null) return true;
+	return item.releaseDate !== null && item.releaseDate <= today;
+}
+
+// What is not out yet can only be planned – not watched, paused, finished or dropped.
+export function allowedStatuses(category: Category, released: boolean): Status[] {
+	return released ? statusesFor(category) : ['planned'];
+}
+
 // Categories with seasons/episodes (they get an episodes page).
 export function hasEpisodes(category: Category): category is 'series' | 'anime' {
 	return category === 'series' || category === 'anime';

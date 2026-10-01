@@ -72,6 +72,8 @@ export async function refreshItem(item: LibraryItem) {
 				title: fresh.title,
 				originalTitle: fresh.originalTitle,
 				year: fresh.year,
+				releaseDate: fresh.releaseDate,
+				earlyAccess: fresh.earlyAccess,
 				posterUrl: fresh.posterUrl,
 				overview: fresh.overview,
 				metadataUpdatedAt: new Date()

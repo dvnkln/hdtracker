@@ -7,6 +7,8 @@
 		title: string;
 		originalTitle: string | null;
 		year: number | null;
+		releaseDate: string | null;
+		earlyAccess?: boolean; // games only
 		posterUrl: string | null;
 		overview: string | null;
 		status: Status | null;
@@ -20,7 +22,13 @@
 	import type { SubmitFunction } from '@sveltejs/kit';
 	import { Info, Trash2, X } from '@lucide/svelte';
 	import { STATUS_ICONS } from '$lib/statusIcons';
-	import { hasEpisodes, statusesFor, type Category } from '$lib/status';
+	import {
+		allowedStatuses,
+		hasEpisodes,
+		isReleased,
+		statusesFor,
+		type Category
+	} from '$lib/status';
 	import { m, statusLabel } from '$lib/i18n/index.svelte';
 	import { titles } from '$lib/titles.svelte';
 
@@ -42,11 +50,46 @@
 	$effect(() => {
 		if (item) {
 			confirmRemove = false;
+			lastTap = null;
+			flash = 0;
 			dialog.showModal();
 		} else if (dialog.open) {
 			dialog.close();
 		}
 	});
+
+	// Not released yet: only "planned" can be chosen. The other tiles are greyed out; a tap on
+	// one makes the year / "TBA" glow red. A double tap sets the status anyway (in case the
+	// release date from the API is wrong).
+	const DOUBLE_TAP_MS = 400;
+	let allowed = $derived(
+		item ? allowedStatuses(category, isReleased(item, new Date().toLocaleDateString('sv-SE'))) : []
+	);
+	let flash = $state(0);
+	let forceInput = $state<HTMLInputElement>()!;
+	let lastTap: { status: Status; at: number } | null = null;
+
+	function tapLocked(e: MouseEvent, status: Status) {
+		const double = lastTap?.status === status && e.timeStamp - lastTap.at <= DOUBLE_TAP_MS;
+		lastTap = double ? null : { status, at: e.timeStamp };
+		if (double) {
+			forceInput.value = '1'; // the tap goes through and submits the form
+		} else {
+			e.preventDefault();
+			flash++;
+			// The tapped tile glows red as well and fades back (red-400 / red-500 of the theme).
+			(e.currentTarget as HTMLElement).animate(
+				[
+					{
+						color: 'rgb(248 113 113)',
+						boxShadow: 'inset 0 0 0 2px rgb(239 68 68 / 0.7), 0 0 0.75rem rgb(239 68 68 / 0.35)'
+					},
+					{ boxShadow: 'inset 0 0 0 2px rgb(239 68 68 / 0), 0 0 0.75rem rgb(239 68 68 / 0)' }
+				],
+				{ duration: 700, easing: 'ease-out' }
+			);
+		}
+	}
 
 	// Data sent to the server when saving (everything except the current status).
 	let itemJson = $derived(item ? JSON.stringify({ ...item, status: undefined }) : '');
@@ -86,12 +129,16 @@
 					{#if shown.sub}
 						<p class="text-sm text-zinc-400">{shown.sub}</p>
 					{/if}
-					<p class="text-sm text-zinc-500">
-						{#if item.year}{item.year}{:else if item.metadataUpdatedAt === null}<span
-								title={m.common.loadingDetails}
-								class="animate-pulse">…</span
-							>{:else}<span title={m.common.tbaHint}>{m.common.tba}</span>{/if}
-					</p>
+					{#key flash}
+						<p class="text-sm text-zinc-500 {flash ? 'flash-red' : ''}">
+							{#if item.year}{item.year}{item.earlyAccess
+									? ` · ${m.common.earlyAccess}`
+									: ''}{:else if item.metadataUpdatedAt === null}<span
+									title={m.common.loadingDetails}
+									class="animate-pulse">…</span
+								>{:else}<span title={m.common.tbaHint}>{m.common.tba}</span>{/if}
+						</p>
+					{/key}
 				</div>
 				<button
 					type="button"
@@ -125,17 +172,28 @@
 				class="mt-5 flex gap-1.5"
 			>
 				<input type="hidden" name="item" value={itemJson} />
+				<input type="hidden" name="force" bind:this={forceInput} />
 				{#each statusesFor(category) as status (status)}
 					{@const current = item.status === status}
+					{@const locked = !allowed.includes(status)}
 					{@const Icon = STATUS_ICONS[status]}
+					<!-- Locked tiles stay clickable (not "disabled"): a tap explains, a double tap saves -->
 					<button
 						name="status"
 						value={status}
 						disabled={busy}
 						aria-pressed={current}
-						class="flex min-w-0 flex-1 flex-col items-center gap-1.5 rounded-xl px-1 py-3 transition-colors disabled:opacity-50 {current
+						aria-disabled={locked}
+						title={locked ? m.sheet.notReleased : undefined}
+						onclick={(e) => {
+							forceInput.value = '';
+							if (locked) tapLocked(e, status);
+						}}
+						class="flex min-w-0 flex-1 touch-manipulation flex-col items-center gap-1.5 rounded-xl px-1 py-3 transition-colors disabled:opacity-50 {current
 							? 'bg-(--accent) text-white shadow-(--accent)/25 shadow-lg hover:brightness-125'
-							: 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 active:bg-zinc-700'}"
+							: locked
+								? 'bg-zinc-800/50 text-zinc-600'
+								: 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 active:bg-zinc-700'}"
 					>
 						<Icon size={22} strokeWidth={current ? 2.5 : 2} />
 						<span class="w-full text-center text-[11px] leading-tight font-medium hyphens-manual">

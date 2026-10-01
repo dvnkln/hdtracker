@@ -12,10 +12,12 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 ### ✨ New
 
 - **Reset a forgotten password** (or username) with a command in the container: `docker exec hdtracker node reset-password.js` – see the wiki
+- **Early access games are marked**: “Early Access” next to the year and on the detail page, and the full release shows up on the dashboard once it has a date. As soon as the full version is out, the mark disappears
 
 ### 🔧 Improved
 
 - Settings → About links to the [documentation](https://github.com/dvnkln/hdtracker/wiki)
+- **Titles that are not out yet can only be set to “Planned”** – the other statuses are greyed out. If a release date is wrong, double-tap the greyed-out status to set it anyway
 - Maintenance: the tasks used most come first, switched-off tasks are listed last
 
 ## 0.2.0 – 2026-09-29

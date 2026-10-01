@@ -120,6 +120,10 @@ export function parseItem(category: Category, json: string): SearchResult {
 		throw new Error('invalid year');
 	}
 
+	const releaseDate = optionalString(raw.releaseDate, 10);
+	if (releaseDate && !/^\d{4}-\d{2}-\d{2}$/.test(releaseDate))
+		throw new Error('invalid releaseDate');
+
 	const posterUrl = optionalString(raw.posterUrl, 1000);
 	if (posterUrl && !posterUrl.startsWith('https://')) throw new Error('invalid posterUrl');
 
@@ -129,6 +133,8 @@ export function parseItem(category: Category, json: string): SearchResult {
 		title,
 		originalTitle: optionalString(raw.originalTitle, 500),
 		year,
+		releaseDate,
+		earlyAccess: raw.earlyAccess === true,
 		posterUrl,
 		overview: optionalString(raw.overview, 5000)
 	};

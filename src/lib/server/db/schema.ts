@@ -37,6 +37,10 @@ export const libraryItems = sqliteTable(
 		title: text('title').notNull(),
 		originalTitle: text('original_title'),
 		year: integer('year'),
+		// First release anywhere (YYYY-MM-DD), empty = not announced; see isReleased in status.ts
+		releaseDate: text('release_date'),
+		// Games: currently only available in early access
+		earlyAccess: integer('early_access', { mode: 'boolean' }).notNull().default(false),
 		posterUrl: text('poster_url'),
 		overview: text('overview'),
 		status: text('status').$type<Status>().notNull(),
@@ -96,7 +100,7 @@ export const releases = sqliteTable(
 			.notNull()
 			.references(() => libraryItems.id, { onDelete: 'cascade' }),
 		// cinema/home: movie in cinemas / digital or disc; release: movie (no regional date) or
-		// game; episode: one episode of a series or anime (anime use season 1)
+		// game; earlyAccess/fullRelease: game that starts in early access; episode: one episode of a series or anime (anime use season 1)
 		kind: text('kind').$type<ReleaseKind>().notNull(),
 		date: text('date'),
 		season: integer('season'),
@@ -105,4 +109,4 @@ export const releases = sqliteTable(
 	(t) => [index('releases_item').on(t.itemId)]
 );
 
-export type ReleaseKind = 'cinema' | 'home' | 'release' | 'episode';
+export type ReleaseKind = 'cinema' | 'home' | 'release' | 'earlyAccess' | 'fullRelease' | 'episode';

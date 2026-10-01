@@ -10,6 +10,11 @@ export type SearchResult = {
 	title: string;
 	originalTitle: string | null;
 	year: number | null;
+	// First release anywhere (YYYY-MM-DD), null = not announced. Not shown anywhere; only decides
+	// whether the title is out yet (see isReleased in $lib/status).
+	releaseDate: string | null;
+	// Games: currently only available in early access (no full release yet)
+	earlyAccess: boolean;
 	posterUrl: string | null;
 	overview: string | null;
 };

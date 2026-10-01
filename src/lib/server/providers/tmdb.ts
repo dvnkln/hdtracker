@@ -61,6 +61,8 @@ function movieToResult(m: TmdbMovie): SearchResult {
 		title: m.title,
 		originalTitle: m.original_title !== m.title ? m.original_title : null,
 		year: yearOf(m.release_date),
+		releaseDate: m.release_date || null,
+		earlyAccess: false,
 		posterUrl: poster(m.poster_path),
 		overview: m.overview || null
 	};
@@ -73,6 +75,8 @@ function tvToResult(s: TmdbTv): SearchResult {
 		title: s.name,
 		originalTitle: s.original_name !== s.name ? s.original_name : null,
 		year: yearOf(s.first_air_date),
+		releaseDate: s.first_air_date || null,
+		earlyAccess: false,
 		posterUrl: poster(s.poster_path),
 		overview: s.overview || null
 	};
@@ -320,6 +324,8 @@ export async function getTvDetails(id: string, language: string): Promise<ShowDe
 				title: first.name,
 				originalTitle: first.original_name !== first.name ? first.original_name : null,
 				year: yearOf(first.first_air_date),
+				releaseDate: first.first_air_date || null,
+				earlyAccess: false,
 				posterUrl: poster(first.poster_path),
 				overview: first.overview || null
 			},

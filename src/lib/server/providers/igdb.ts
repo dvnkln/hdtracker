@@ -5,8 +5,11 @@ import {
 	ProviderError,
 	fetchJson,
 	missingKey,
+	today,
+	yearOf,
 	type Details,
 	type Fact,
+	type ReleaseEvent,
 	type ReleaseInfo,
 	type SearchResult
 } from './types';
@@ -19,7 +22,21 @@ type IgdbGame = {
 	first_release_date?: number; // unix seconds
 	cover?: { image_id: string };
 	summary?: string;
+	// One entry per platform/region; status says what kind of release it is
+	release_dates?: { date?: number; status?: { name: string } }[];
+	game_status?: { status: string };
 };
+
+// Fields every game query needs (see gameToResult).
+const GAME_FIELDS = [
+	'name',
+	'first_release_date',
+	'cover.image_id',
+	'summary',
+	'release_dates.date',
+	'release_dates.status.name',
+	'game_status.status'
+];
 
 // Twitch app token (valid ~60 days), kept in memory until shortly before it expires.
 let cachedToken: { value: string; expiresAt: number } | null = null;
@@ -73,7 +90,7 @@ async function igdb<T>(endpoint: string, body: string, retry = true): Promise<T>
 	}
 }
 
-const SEARCH_FIELDS = 'fields name,first_release_date,cover.image_id,summary,total_rating_count;';
+const SEARCH_FIELDS = `fields ${GAME_FIELDS.join(',')},total_rating_count;`;
 const SEARCH_LIMIT = 30;
 
 // IGDB's full-text search ignores very common words, so a title made only of them
@@ -106,13 +123,54 @@ export async function searchGames(query: string): Promise<SearchResult[]> {
 		.map(gameToResult);
 }
 
+// Unix seconds -> YYYY-MM-DD in the server timezone.
+function dateOf(seconds: number | undefined) {
+	return seconds ? new Date(seconds * 1000).toLocaleDateString('sv-SE') : null;
+}
+
+// Where a game stands, from its release dates. Only the current state counts: once the full
+// version is out, an earlier early access no longer matters.
+function releaseState(g: IgdbGame) {
+	const dates = g.release_dates ?? [];
+	const earliest = (list: typeof dates) =>
+		list
+			.map((d) => dateOf(d.date))
+			.filter((d) => d !== null)
+			.sort()[0] ?? null;
+	const earlyDate = earliest(dates.filter((d) => d.status?.name === 'Early Access'));
+	// Everything that is not a test phase or a cancellation counts as the full version.
+	const NOT_FULL = ['Early Access', 'Alpha', 'Beta', 'Cancelled', 'Offline'];
+	const fullDate = earliest(dates.filter((d) => !NOT_FULL.includes(d.status?.name ?? '')));
+	const first = dateOf(g.first_release_date);
+
+	const now = today();
+	const fullyOut = fullDate !== null && fullDate <= now;
+	// Early access is (or will be) the current release: it has a date and no full version is out.
+	const viaEarlyAccess = earlyDate !== null && !fullyOut;
+	return {
+		// First day the game could be played at all
+		playable: [earlyDate, fullDate, first].filter((d) => d !== null).sort()[0] ?? null,
+		// The release that counts: start of early access, otherwise the full version
+		current: viaEarlyAccess ? earlyDate : earlyDate && fullDate ? fullDate : (first ?? fullDate),
+		viaEarlyAccess,
+		fullDate: viaEarlyAccess ? fullDate : null,
+		earlyAccess:
+			!fullyOut &&
+			((earlyDate !== null && earlyDate <= now) ||
+				(g.game_status?.status === 'Early Access' && first !== null && first <= now))
+	};
+}
+
 function gameToResult(g: IgdbGame): SearchResult {
+	const state = releaseState(g);
 	return {
 		source: 'igdb',
 		externalId: String(g.id),
 		title: g.name,
 		originalTitle: null,
-		year: g.first_release_date ? new Date(g.first_release_date * 1000).getFullYear() : null,
+		year: yearOf(state.current),
+		releaseDate: state.playable,
+		earlyAccess: state.earlyAccess,
 		posterUrl: g.cover ? `${COVER}${g.cover.image_id}.jpg` : null,
 		overview: g.summary ?? null
 	};
@@ -123,16 +181,24 @@ function gameToResult(g: IgdbGame): SearchResult {
 export async function getGameReleases(id: string): Promise<ReleaseInfo> {
 	const [g] = await igdb<IgdbGame[]>(
 		'games',
-		`fields name,first_release_date,cover.image_id,summary; where id = ${Number(id)};`
+		`fields ${GAME_FIELDS.join(',')}; where id = ${Number(id)};`
 	);
 	if (!g) throw new ProviderError(serverMessages().errors.gameNotFound, 404);
-	const date = g.first_release_date
-		? new Date(g.first_release_date * 1000).toLocaleDateString('sv-SE')
-		: null;
-	return {
-		item: gameToResult(g),
-		events: [{ kind: 'release', date, season: null, episode: null }]
-	};
+	const state = releaseState(g);
+	const event = (kind: ReleaseEvent['kind'], date: string | null): ReleaseEvent => ({
+		kind,
+		date,
+		season: null,
+		episode: null
+	});
+	// Early access: its start and, once announced with a date, the full version.
+	const events = state.viaEarlyAccess
+		? [
+				event('earlyAccess', state.current),
+				...(state.fullDate ? [event('fullRelease', state.fullDate)] : [])
+			]
+		: [event('release', state.current)];
+	return { item: gameToResult(g), events };
 }
 
 // ---- Detail page ----
@@ -155,7 +221,7 @@ export function getGameInfo(id: string): Promise<Details> {
 	return cached(`igdb-info:${id}`, CACHE_MS, async () => {
 		const [g] = await igdb<IgdbGameFull[]>(
 			'games',
-			`fields name,url,first_release_date,cover.image_id,summary,genres.name,platforms.name,total_rating,artworks.image_id,screenshots.image_id,involved_companies.developer,involved_companies.company.name,similar_games.name,similar_games.cover.image_id,similar_games.first_release_date,similar_games.summary; where id = ${Number(id)};`
+			`fields ${GAME_FIELDS.join(',')},url,genres.name,platforms.name,total_rating,artworks.image_id,screenshots.image_id,involved_companies.developer,involved_companies.company.name,${GAME_FIELDS.map((f) => `similar_games.${f}`).join(',')}; where id = ${Number(id)};`
 		);
 		if (!g) throw new ProviderError(serverMessages().errors.gameNotFound, 404);
 
@@ -164,9 +230,12 @@ export function getGameInfo(id: string): Promise<Details> {
 			.filter((c) => c.developer)
 			.map((c) => c.company.name);
 		const facts: Fact[] = [];
-		if (g.first_release_date) {
-			const released = new Date(g.first_release_date * 1000).toLocaleDateString('sv-SE');
-			facts.push({ key: 'released', value: released, isDate: true });
+		const state = releaseState(g);
+		if (state.viaEarlyAccess) {
+			facts.push({ key: 'earlyAccess', value: state.current!, isDate: true });
+			if (state.fullDate) facts.push({ key: 'fullRelease', value: state.fullDate, isDate: true });
+		} else if (state.current) {
+			facts.push({ key: 'released', value: state.current, isDate: true });
 		}
 		if (g.platforms?.length) {
 			facts.push({ key: 'platforms', value: g.platforms.map((p) => p.name).join(', ') });

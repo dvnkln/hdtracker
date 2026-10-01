@@ -17,6 +17,18 @@
 	}
 }
 
+/* Short red glow that fades back to the normal text colour (release year / "TBA" in the
+   status sheet, when a status is tapped that needs the title to be out). */
+@keyframes flash-red {
+	from {
+		color: var(--color-red-400);
+		text-shadow: 0 0 0.75rem var(--color-red-500);
+	}
+}
+@utility flash-red {
+	animation: flash-red 1.2s ease-out;
+}
+
 /* The app is always dark. */
 @layer base {
 	html {

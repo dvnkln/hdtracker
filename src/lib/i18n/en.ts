@@ -12,6 +12,7 @@ export const en: Messages = {
 		showPassword: 'Show password',
 		hidePassword: 'Hide password',
 		tba: 'TBA',
+		earlyAccess: 'Early Access',
 		tbaHint: 'Release date not announced yet',
 		loadingDetails: 'Loading details',
 		home: 'Home',
@@ -76,7 +77,13 @@ export const en: Messages = {
 		emptyLibrary:
 			'New episodes, cinema dates and releases of everything you plan to watch or are currently watching or playing show up here. Add titles to your library via the areas below.',
 		dateOpen: 'Date not announced',
-		kinds: { cinema: 'In cinemas', home: 'Home release', release: 'Release' },
+		kinds: {
+			cinema: 'In cinemas',
+			home: 'Home release',
+			release: 'Release',
+			earlyAccess: 'Early Access',
+			fullRelease: 'Full release'
+		},
 		episodeCode: (season, episode) =>
 			`S${String(season).padStart(2, '0')}E${String(episode).padStart(2, '0')}`,
 		animeEpisodes: (from, to) => (from === to ? `Episode ${from}` : `Episodes ${from}–${to}`),
@@ -98,7 +105,8 @@ export const en: Messages = {
 		details: 'Details',
 		detailsAndEpisodes: 'Details & episodes',
 		remove: 'Remove from library',
-		removeConfirm: 'Really remove from library?'
+		removeConfirm: 'Really remove from library?',
+		notReleased: 'Not released yet – double-tap to set it anyway'
 	},
 
 	detail: {
@@ -124,6 +132,8 @@ export const en: Messages = {
 			firstAired: 'First aired',
 			studio: 'Studio',
 			released: 'Released',
+			earlyAccess: 'Early Access',
+			fullRelease: 'Full release',
 			platforms: 'Platforms',
 			developer: 'Developer'
 		},

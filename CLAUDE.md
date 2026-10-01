@@ -75,6 +75,10 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
    | completed | Gesehen        | Durchgespielt | Gesehen     |
    | dropped   | Abgebrochen    | Abgebrochen   | Abgebrochen |
 
+   Noch nicht erschienene Titel (Spalte `release_date` = erstes Erscheinen irgendwo, in der Zukunft oder leer) lassen nur „Geplant“ zu: Regel in `isReleased()`/`allowedStatuses()` (`src/lib/status.ts`), geprüft im Auswahl-Fenster (`ItemSheet.svelte`) und in der `save`-Aktion. Gesperrte Kacheln sind ausgegraut; Antippen lässt Jahr/„TBA“ rot aufleuchten, ein echter Doppeltipp (~0,4 s) setzt den Status trotzdem (`force=1`, Ausweg bei falschen Daten). Das Datum wird nur gespeichert – angezeigt wird weiter nur das Jahr. Titel, deren Details noch laden, sind nicht gesperrt; bestehende unlogische Status werden nicht automatisch geändert.
+
+   Spiele im Early Access (IGDB `release_dates` mit Art, ausgewertet in `releaseState()` in `providers/igdb.ts`): Es zählt immer nur der aktuelle Stand. Solange nur Early Access verfügbar ist: „· Early Access“ neben dem Jahr (Spalte `early_access`), Detailseite „Early Access“ + „Vollversion“ (nur mit Datum), Dashboard-Termine `earlyAccess`/`fullRelease`. Ist die Vollversion erschienen, taucht Early Access nirgends mehr auf.
+
 5. ✅ Serien/Anime: Staffeln und Episoden sehen; ganze Serie, einzelne Staffel oder einzelne Episode als gesehen markieren. Progress pro Staffel und Episode.
    - Serien (TMDB): Staffeln mit Folgenliste (Titel, Datum). Specials (Staffel 0) unten, zählen nicht zum Fortschritt.
    - Anime (AniList): keine Staffeln/Folgentitel verfügbar → Raster mit Folgennummern. Jede Anime-Staffel ist ein eigener Eintrag.

@@ -18,17 +18,20 @@ query ($search: String) {
     media(search: $search, type: ANIME, sort: SEARCH_MATCH, isAdult: false) {
       id
       title { romaji english }
-      startDate { year }
+      startDate { year month day }
+      status
       coverImage { large }
       description(asHtml: false)
     }
   }
 }`;
 
+type AniListDate = { year: number | null; month: number | null; day: number | null };
 type AniListMedia = {
 	id: number;
 	title: { romaji: string; english: string | null };
-	startDate: { year: number | null };
+	startDate: AniListDate;
+	status: 'FINISHED' | 'RELEASING' | 'NOT_YET_RELEASED' | 'CANCELLED' | 'HIATUS' | null;
 	coverImage: { large: string | null };
 	description: string | null;
 };
@@ -51,6 +54,21 @@ export async function searchAnime(query: string): Promise<SearchResult[]> {
 	return data.data.Page.media.map(toSearchResult);
 }
 
+// YYYY-MM-DD if the exact day is known.
+function fullDate({ year, month, day }: AniListDate) {
+	const pad = (n: number) => String(n).padStart(2, '0');
+	return year && month && day ? `${year}-${pad(month)}-${pad(day)}` : null;
+}
+
+// First air date, only used to tell whether the anime is out yet. Not started: the exact day
+// or nothing. Already started: old entries sometimes lack the day (or everything), so the
+// start of the year (or any day in the past) stands in.
+function releaseDateOf(m: AniListMedia) {
+	const date = fullDate(m.startDate);
+	if (date || m.status === 'NOT_YET_RELEASED') return date;
+	return `${m.startDate.year ?? 1900}-01-01`;
+}
+
 function toSearchResult(m: AniListMedia): SearchResult {
 	const title = m.title.english ?? m.title.romaji;
 	return {
@@ -59,6 +77,8 @@ function toSearchResult(m: AniListMedia): SearchResult {
 		title,
 		originalTitle: m.title.romaji !== title ? m.title.romaji : null,
 		year: m.startDate.year,
+		releaseDate: releaseDateOf(m),
+		earlyAccess: false,
 		posterUrl: m.coverImage.large,
 		overview: stripHtml(m.description)
 	};
@@ -71,10 +91,10 @@ query ($id: Int) {
   Media(id: $id, type: ANIME) {
     id
     title { romaji english }
-    startDate { year }
+    startDate { year month day }
+    status
     coverImage { large }
     description(asHtml: false)
-    status
     episodes
     duration
     siteUrl
@@ -84,7 +104,6 @@ query ($id: Int) {
 }`;
 
 type AniListDetails = AniListMedia & {
-	status: 'FINISHED' | 'RELEASING' | 'NOT_YET_RELEASED' | 'CANCELLED' | 'HIATUS';
 	episodes: number | null;
 	duration: number | null; // minutes per episode
 	siteUrl: string;
@@ -159,7 +178,8 @@ query ($ids: [Int]) {
       id
       idMal
       title { romaji english }
-      startDate { year }
+      startDate { year month day }
+      status
       coverImage { large }
       description(asHtml: false)
     }
@@ -192,7 +212,6 @@ query ($id: Int, $since: Int) {
     startDate { year month day }
     coverImage { large }
     description(asHtml: false)
-    status
   }
   Page(perPage: 50) {
     airingSchedules(mediaId: $id, airingAt_greater: $since, sort: TIME) { episode airingAt }
@@ -200,7 +219,7 @@ query ($id: Int, $since: Int) {
 }`;
 
 type AniListReleases = {
-	Media: (AniListDetails & { startDate: { month: number | null; day: number | null } }) | null;
+	Media: AniListDetails | null;
 	Page: { airingSchedules: { episode: number; airingAt: number }[] };
 };
 
@@ -226,9 +245,7 @@ export async function getAnimeReleases(id: string, sinceDays: number): Promise<R
 	);
 	// Not started and no schedule yet: the start date, if the exact day is known.
 	if (events.length === 0 && m.status === 'NOT_YET_RELEASED') {
-		const { year, month, day } = m.startDate;
-		const pad = (n: number) => String(n).padStart(2, '0');
-		events.push(episode(1, year && month && day ? `${year}-${pad(month)}-${pad(day)}` : null));
+		events.push(episode(1, fullDate(m.startDate)));
 	}
 	return { item: toSearchResult(m), events };
 }
@@ -241,6 +258,7 @@ query ($id: Int) {
     id
     title { romaji english }
     startDate { year month day }
+    status
     coverImage { large }
     bannerImage
     description(asHtml: false)
@@ -258,7 +276,8 @@ query ($id: Int) {
           id
           type
           title { romaji english }
-          startDate { year }
+          startDate { year month day }
+          status
           coverImage { large }
           description(asHtml: false)
         }
@@ -268,7 +287,6 @@ query ($id: Int) {
 }`;
 
 type AniListInfo = AniListMedia & {
-	startDate: { year: number | null; month: number | null; day: number | null };
 	bannerImage: string | null;
 	genres: string[];
 	averageScore: number | null; // 0–100
@@ -295,9 +313,7 @@ export function getAnimeInfo(id: string): Promise<Details> {
 		const m = data.data.Media;
 		if (!m) throw new ProviderError(serverMessages().errors.animeNotFound, 404);
 
-		const { year, month, day } = m.startDate;
-		const pad = (n: number) => String(n).padStart(2, '0');
-		const start = year && month && day ? `${year}-${pad(month)}-${pad(day)}` : null;
+		const start = fullDate(m.startDate);
 		const studio = m.studios.nodes.map((s) => s.name).join(', ');
 		const facts: Fact[] = [];
 		if (start) facts.push({ key: 'firstAired', value: start, isDate: true });
