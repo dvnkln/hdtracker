@@ -2,7 +2,12 @@
 
 All notable changes to hdtracker. Each version is also published as a [GitHub release](https://github.com/dvnkln/hdtracker/releases) with a ready-to-use Docker image.
 
-<!-- Changes since the last release are collected under "## 0.3.0 – 2026-10-01
+<!-- Changes since the last release are collected under "## Upcoming release" right below this
+     comment – the heading only exists while there are such changes. On release it becomes
+     "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
+     ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
+
+## 0.3.0 – 2026-10-01
 
 Early access games are marked, statuses only make sense for titles that are out, and a forgotten password can be reset.
 
