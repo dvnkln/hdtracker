@@ -104,14 +104,17 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
    - Serien: gesehene Folgen aus den `episode`-Zeilen, Anime: Folgen 1…`progress`. Titel, die schon in der Bibliothek sind, bleiben unverändert; doppelte Zeilen im Export werden ignoriert; `manual`-Einträge und andere Medientypen werden mit Grund übersprungen.
    - Poster, Beschreibung und Termine werden danach im Hintergrund nachgeladen (gebremst wegen API-Limits).
 
-## Später (nach MVP)
+## Roadmap
 
-- Eingebautes HTTPS ohne Reverse Proxy (z. B. eigenes Zertifikat per Umgebungsvariable). Bis dahin geht das Projekt von einem Proxy aus (Wiki: „HTTPS and installing as an app“).
-- Pushover-Benachrichtigungen (z. B. neue Staffel/Folge, Release eines geplanten Titels) – als persönlicher Bereich „Benachrichtigungen“ in den Einstellungen.
-- Export der eigenen Bibliothek (Bereich „Daten“).
-- Mehrbenutzer: Admin verwaltet Benutzer (Bereich „Verwaltung → Benutzer“); `isAdmin()` wird dann eine echte Prüfung, persönliche Einstellungen/Bibliothek je Benutzer. Details noch offen.
-- Anime-Hybrid: AniList bleibt Quelle, zusätzlich Folgentitel/-beschreibungen von TMDB einblenden, wo eine Zuordnung AniList→TMDB bekannt ist (Community-Mapping-Listen). Watcharr nutzt übrigens nur TMDB für Anime.
-- Streaming-Übersicht: alle geplanten Titel nach verfügbaren Streaming-Anbietern gruppiert (z. B. „Netflix“ antippen → alles Geplante, was dort läuft). Anbieter ohne Treffer ausblenden. Offen: eigener Menüpunkt oder Teil des Dashboards.
+- Was bis v1.0.0 geplant ist, steht öffentlich in `ROADMAP.md` (Englisch, Checkliste, aus Nutzersicht). Auf „was steht noch an?“ daraus antworten.
+- Pflege: neue Idee des Users für später → dort eintragen; umgesetzt → abhaken (`- [x]`); beim Release abgehakte Punkte entfernen (sie stehen dann im Changelog). Kein GitHub-Milestone – bewusst, damit der User nichts von Hand pflegen muss.
+- Technische Notizen zu den Punkten (nicht in der Roadmap):
+  - Export: Bereich „Daten“ in den Einstellungen.
+  - Benachrichtigungen (Pushover): persönlicher Bereich „Benachrichtigungen“ in den Einstellungen.
+  - Streaming-Übersicht: Anbieter ohne Treffer ausblenden. Offen: eigener Menüpunkt oder Teil des Dashboards.
+  - Anime-Hybrid: AniList bleibt Quelle, Zuordnung AniList→TMDB über Community-Mapping-Listen. Watcharr nutzt übrigens nur TMDB für Anime.
+  - Mehrbenutzer: Bereich „Verwaltung → Benutzer“; `isAdmin()` wird dann eine echte Prüfung, persönliche Einstellungen/Bibliothek je Benutzer. Details noch offen.
+- Nicht geplant: eingebautes HTTPS – das Projekt geht von einem Reverse Proxy aus (Wiki: „HTTPS and installing as an app“).
 
 ## Dokumentation (Wiki)
 

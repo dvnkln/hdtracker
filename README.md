@@ -32,7 +32,7 @@ The guides live in the **[wiki](https://github.com/dvnkln/hdtracker/wiki)**:
 - 🔑 [Reset your password](https://github.com/dvnkln/hdtracker/wiki/Reset-your-password)
 - 💻 [Development](https://github.com/dvnkln/hdtracker/wiki/Development) – running hdtracker from source
 
-What changed in each version: [Changelog](CHANGELOG.md).
+What changed in each version: [Changelog](CHANGELOG.md). What's planned: [Roadmap](ROADMAP.md).
 
 ## ✨ Features
 
