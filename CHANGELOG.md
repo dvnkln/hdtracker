@@ -15,7 +15,7 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 
 ### 🔧 Improved
 
-- The guides (installation, HTTPS, updating, backups, import, password reset) now live in the [wiki](https://github.com/dvnkln/hdtracker/wiki); Settings → About links to it
+- Settings → About links to the [documentation](https://github.com/dvnkln/hdtracker/wiki)
 
 ## 0.2.0 – 2026-09-29
 
