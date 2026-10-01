@@ -2,11 +2,20 @@
 
 All notable changes to hdtracker. Each version is also published as a [GitHub release](https://github.com/dvnkln/hdtracker/releases) with a ready-to-use Docker image.
 
+<!-- Changes since the last release are collected under "## Upcoming release" right below this
+     comment – the heading only exists while there are such changes. On release it becomes
+     "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
+     ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
+
 ## Upcoming release
 
-<!-- Collect changes here as they are made; on release this becomes "## X.Y.Z – date".
-     Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed, ### 🗑️ Removed,
-     and on release ### ⬆️ Updating (what users have to do when updating) -->
+### ✨ New
+
+- **Reset a forgotten password** (or username) with a command in the container: `docker exec hdtracker node reset-password.js` – see the wiki
+
+### 🔧 Improved
+
+- The guides (installation, HTTPS, updating, backups, import, password reset) now live in the [wiki](https://github.com/dvnkln/hdtracker/wiki); Settings → About links to it
 
 ## 0.2.0 – 2026-09-29
 

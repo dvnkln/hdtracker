@@ -102,18 +102,24 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
 
 ## Später (nach MVP)
 
-- Eingebautes HTTPS ohne Reverse Proxy (z. B. eigenes Zertifikat per Umgebungsvariable). Bis dahin geht das Projekt von einem Proxy aus (README).
+- Eingebautes HTTPS ohne Reverse Proxy (z. B. eigenes Zertifikat per Umgebungsvariable). Bis dahin geht das Projekt von einem Proxy aus (Wiki: „HTTPS and installing as an app“).
 - Pushover-Benachrichtigungen (z. B. neue Staffel/Folge, Release eines geplanten Titels) – als persönlicher Bereich „Benachrichtigungen“ in den Einstellungen.
 - Export der eigenen Bibliothek (Bereich „Daten“).
 - Mehrbenutzer: Admin verwaltet Benutzer (Bereich „Verwaltung → Benutzer“); `isAdmin()` wird dann eine echte Prüfung, persönliche Einstellungen/Bibliothek je Benutzer. Details noch offen.
 - Anime-Hybrid: AniList bleibt Quelle, zusätzlich Folgentitel/-beschreibungen von TMDB einblenden, wo eine Zuordnung AniList→TMDB bekannt ist (Community-Mapping-Listen). Watcharr nutzt übrigens nur TMDB für Anime.
 - Streaming-Übersicht: alle geplanten Titel nach verfügbaren Streaming-Anbietern gruppiert (z. B. „Netflix“ antippen → alles Geplante, was dort läuft). Anbieter ohne Treffer ausblenden. Offen: eigener Menüpunkt oder Teil des Dashboards.
 
+## Dokumentation (Wiki)
+
+- Anleitungen für Nutzer stehen im GitHub-Wiki (eigenes Git-Repo, Arbeitskopie: `/opt/projects/hdtracker.wiki`, Englisch): Installation, HTTPS + als App installieren, Updating, Backups and restore, Import from Yamtrack, Reset your password, `_Sidebar`. Die README bleibt Schaufenster (Features, Screenshots, kurzer Quick start, Links ins Wiki, Datenquellen, Development, **Built with AI und License bleiben in der README**).
+- Ändert sich etwas an Installation, `.env`, Update, Backup, Import oder Rettungswegen: Wiki-Seite mit anpassen und pushen (Wiki-Commits wie Code-Commits erst nach Okay).
+- Passwort vergessen: `reset-password.js` im Projektstamm (ins Image kopiert) setzt ein Übergangspasswort und meldet alle Geräte ab; schreibt dasselbe Hash-Format wie `hashPassword()` in `auth.ts` – beide zusammen ändern.
+
 ## Changelog & Releases
 
-- `CHANGELOG.md` (Englisch, Emoji-Stil): Jede für Nutzer sichtbare Änderung sofort unter `## Upcoming release` eintragen, in `### ✨ New` / `### 🔧 Improved` / `### 🐛 Fixed` / `### 🗑️ Removed`. Aus Nutzersicht formulieren („Search is now in the header“), nicht technisch. Rein interne Änderungen (CI, Aufräumen, Tests) nur, wenn sie Nutzer betreffen.
+- `CHANGELOG.md` (Englisch, Emoji-Stil): Jede für Nutzer sichtbare Änderung sofort unter `## Upcoming release` eintragen (die Überschrift gibt es nur, solange es solche Änderungen gibt: bei der ersten Änderung nach einem Release oben anlegen, direkt nach einem Release steht sie nicht da), in `### ✨ New` / `### 🔧 Improved` / `### 🐛 Fixed` / `### 🗑️ Removed`. Aus Nutzersicht formulieren („Search is now in the header“), nicht technisch. Rein interne Änderungen (CI, Aufräumen, Tests) nur, wenn sie Nutzer betreffen.
 - Versionen bis 1.0: neue Funktionen → `0.X.0`, nur Fehlerbehebungen → `0.X.Y`.
-- Release: Changelog-Text vorher dem User zeigen. Dann `## Upcoming release` → `## X.Y.Z – JJJJ-MM-TT` (leere Unterabschnitte weg, Wichtigstes zuerst, ein kurzer Einleitungssatz, am Ende `### ⬆️ Updating` mit dem, was Nutzer beim Update tun müssen), darüber neuen leeren `## Upcoming release`; Version in `package.json` (`npm version X.Y.Z --no-git-tag-version`); Commit, Tag `vX.Y.Z`, Push.
+- Release: Changelog-Text vorher dem User zeigen. Dann `## Upcoming release` → `## X.Y.Z – JJJJ-MM-TT` (leere Unterabschnitte weg, Wichtigstes zuerst, ein kurzer Einleitungssatz, am Ende `### ⬆️ Updating` mit dem, was Nutzer beim Update tun müssen) – kein neuer leerer `## Upcoming release`-Abschnitt; Version in `package.json` (`npm version X.Y.Z --no-git-tag-version`); Commit, Tag `vX.Y.Z`, Push.
 - Die GitHub Action baut das Image und stellt danach den Release-Text in ihre Zusammenfassung: Abschnitt der Version aus `CHANGELOG.md` + Image-Zeile + „Full Changelog“-Link zum vorigen Tag (ohne Abschnitt schlägt sie fehl). **Das GitHub-Release legt der User selbst an**, damit er als Autor erscheint – bewusst ohne Personal Access Token (Sicherheit). Nach dem Tag-Push den fertigen Text im Chat mitgeben.
 
 ## Befehle

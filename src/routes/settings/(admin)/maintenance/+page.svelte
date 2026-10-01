@@ -120,7 +120,15 @@
 				{:else}
 					<p class="mt-2 text-sm text-zinc-500">{m.maintenance.noBackups}</p>
 				{/if}
-				<p class="mt-3 {hint}">{m.maintenance.restoreHint}</p>
+				<p class="mt-3 {hint}">
+					{m.maintenance.restoreHint}
+					<a
+						href="https://github.com/dvnkln/hdtracker/wiki/Backups-and-restore"
+						target="_blank"
+						rel="noreferrer"
+						class="underline hover:text-zinc-300">{m.maintenance.restoreLink}</a
+					>
+				</p>
 			</div>
 		</TaskCard>
 	{:else}

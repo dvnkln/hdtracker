@@ -28,6 +28,7 @@ export function getSecret() {
 // ---- Passwords ----
 
 // Format: scrypt$<salt hex>$<hash hex>
+// (reset-password.js in the project root writes the same format – keep both in sync.)
 export async function hashPassword(password: string) {
 	const salt = randomBytes(16);
 	const hash = await scryptAsync(password, salt, 64);

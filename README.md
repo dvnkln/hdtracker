@@ -25,8 +25,7 @@
 - [Features](#-features)
 - [Screenshots](#-screenshots)
 - [Quick start](#-quick-start)
-- [Import from Yamtrack](#-import-from-yamtrack)
-- [Backups](#-backups)
+- [Documentation](#-documentation)
 - [Data sources](#-data-sources)
 - [Development](#-development)
 - [Built with AI](#-built-with-ai)
@@ -80,70 +79,28 @@
      hdtracker-data:
    ```
 
-2. Next to it, create a `.env` file (template: [`.env.example`](.env.example)):
+2. Next to it, create a `.env` file (template: [`.env.example`](.env.example)) with a random `SECRET`, your API keys for TMDB and IGDB, your time zone and `ORIGIN` – **exactly** the address you open the app with, e.g. `http://192.168.1.50:3000`.
 
-   ```env
-   SECRET=
-   TMDB_API_TOKEN=
-   IGDB_CLIENT_ID=
-   IGDB_CLIENT_SECRET=
-   TZ=Europe/Berlin
-   ORIGIN=http://192.168.1.50:3000
-   ```
-
-   | Variable                                | What to put in                                                                                                                                                                                     |
-   | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-   | `SECRET`                                | Random string, at least 32 characters: `openssl rand -hex 32`                                                                                                                                      |
-   | `TMDB_API_TOKEN`                        | [themoviedb.org](https://www.themoviedb.org/settings/api) → Settings → API → **API Read Access Token** (the long one)                                                                              |
-   | `IGDB_CLIENT_ID` / `IGDB_CLIENT_SECRET` | [dev.twitch.tv/console/apps](https://dev.twitch.tv/console/apps) → Register Your Application (Redirect URL `http://localhost`, Client Type _Confidential_)                                         |
-   | `TZ`                                    | Your [time zone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)                                                                                                                     |
-   | `ORIGIN`                                | **Exactly** the address you open the app with – otherwise login fails. E.g. `http://192.168.1.50:3000` or `https://tracker.example.com` behind a reverse proxy. Several addresses: comma-separated |
-
-   Anime (AniList) needs no key. Without TMDB or IGDB keys only those areas are unavailable.
-
-3. Start it and open the `ORIGIN` address. On first start you create your account.
+3. Start it and open that address. On first start you create your account.
 
    ```bash
    docker compose up -d
    ```
 
-**Install as an app:** open hdtracker on your phone and choose _Install app_ (Chrome/Edge) or _Share → Add to Home Screen_ (Safari). Browsers only install web apps from **HTTPS** addresses (on plain `http://` Safari still adds it to the home screen, Chrome only creates a bookmark).
+Where to get the keys and what every setting means: **[Installation guide](https://github.com/dvnkln/hdtracker/wiki/Installation)**.
 
-**HTTPS:** hdtracker itself speaks plain HTTP and currently expects a **reverse proxy** in front of it for HTTPS (e.g. Nginx Proxy Manager, Caddy or Traefik). Put the HTTPS address into `ORIGIN`.
+## 📖 Documentation
 
-**Port:** change the left side of `3000:3000` (e.g. `8080:3000`) and adjust `ORIGIN` accordingly.
-**Update:** `docker compose pull && docker compose up -d`. Your data lives in the `hdtracker-data` volume.
+The guides live in the **[wiki](https://github.com/dvnkln/hdtracker/wiki)**:
 
-## 📥 Import from Yamtrack
+- 🐳 [Installation](https://github.com/dvnkln/hdtracker/wiki/Installation) – Docker Compose, the `.env` file, API keys
+- 🔐 [HTTPS and installing as an app](https://github.com/dvnkln/hdtracker/wiki/HTTPS-and-installing-as-an-app) – reverse proxy, `ORIGIN`, home screen
+- ⬆️ [Updating](https://github.com/dvnkln/hdtracker/wiki/Updating)
+- 💾 [Backups and restore](https://github.com/dvnkln/hdtracker/wiki/Backups-and-restore)
+- 📥 [Import from Yamtrack](https://github.com/dvnkln/hdtracker/wiki/Import-from-Yamtrack)
+- 🔑 [Reset your password](https://github.com/dvnkln/hdtracker/wiki/Reset-your-password)
 
-Coming from [Yamtrack](https://github.com/FuzzyGrim/Yamtrack)? Export your library there as CSV and upload it under **Settings → Data**.
-
-- Movies, series, anime and games are taken over with their status and dates.
-- Series keep every watched episode, anime their progress (MyAnimeList IDs are matched via AniList).
-- Titles already in your library are left unchanged, so importing twice is safe.
-- Entries created by hand in Yamtrack have no database ID and are listed as skipped.
-- If the file contains titles of areas you have hidden, you are asked whether to skip them, import them anyway or show the area again.
-
-Posters, descriptions and release dates are loaded in the background afterwards – the import page shows how many are left, and loading continues even if the container restarts in between.
-
-## 💾 Backups
-
-Under **Settings → Maintenance** hdtracker can back up its database on a schedule (off by default). The copies are stored in `/data/backups` inside the volume and can also be downloaded there.
-
-**Backing up the whole volume instead?** Copy it while the container is stopped, or always copy `hdtracker.db`, `hdtracker.db-wal` and `hdtracker.db-shm` together. Otherwise the copy may be incomplete.
-
-**Restoring a backup:**
-
-```bash
-docker compose stop
-# Volume name: see `docker volume ls` (usually <folder>_hdtracker-data).
-# Backup from the volume: /data/backups/<file>. Downloaded backup in the current folder: /in/<file>
-docker run --rm -v <folder>_hdtracker-data:/data -v "$PWD":/in alpine sh -c '
-  cp /data/backups/hdtracker-2026-09-27_030000.db /data/hdtracker.db &&
-  rm -f /data/hdtracker.db-wal /data/hdtracker.db-shm &&
-  chown 1000:1000 /data/hdtracker.db'
-docker compose start
-```
+What changed in each version: [Changelog](CHANGELOG.md).
 
 ## 🙏 Data sources
 

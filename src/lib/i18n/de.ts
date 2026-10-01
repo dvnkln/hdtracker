@@ -305,7 +305,8 @@ export const de = {
 		deleteAllConfirm: 'Wirklich alle löschen?',
 		refreshFailed: (failed: number, total: number) =>
 			`${failed} von ${total} Einträgen konnten nicht aktualisiert werden.`,
-		restoreHint: 'Wie man ein Backup zurückspielt, steht in der README.'
+		restoreHint: 'Wie man ein Backup zurückspielt, steht in der Dokumentation:',
+		restoreLink: 'Backups and restore'
 	},
 
 	importData: {
@@ -353,6 +354,7 @@ export const de = {
 		tagline:
 			'Selbst gehosteter Tracker für Filme, Serien, Anime und Spiele – gemacht fürs gemeinsame Schauen auf der Couch.',
 		version: (v: string) => `Version: v${v}`,
+		docs: 'Dokumentation (Wiki)',
 		source: 'Quellcode auf GitHub',
 		versionHint: 'Was ist neu in dieser Version?',
 		links: 'Links',

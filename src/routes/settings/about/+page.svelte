@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { m } from '$lib/i18n/index.svelte';
 	import { ui } from '$lib/ui';
-	import { Bug, Database, ExternalLink, History, Link, Scale } from '@lucide/svelte';
+	import { BookOpen, Bug, Database, ExternalLink, History, Link, Scale } from '@lucide/svelte';
 
 	let { data } = $props();
 
@@ -9,6 +9,7 @@
 	const REPO = 'https://github.com/dvnkln/hdtracker';
 
 	let links = $derived([
+		{ href: `${REPO}/wiki`, label: m.about.docs, icon: BookOpen },
 		{ href: REPO, label: m.about.source, icon: ExternalLink },
 		{ href: `${REPO}/issues`, label: m.about.issues, icon: Bug },
 		{ href: `${REPO}/blob/main/LICENSE`, label: m.about.license, icon: Scale }

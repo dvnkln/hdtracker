@@ -28,6 +28,8 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/build ./build
 COPY --from=build /app/drizzle ./drizzle
 COPY --from=build /app/start.js ./start.js
+# Rescue tool: docker exec hdtracker node reset-password.js
+COPY --from=build /app/reset-password.js ./reset-password.js
 
 USER node
 VOLUME /data

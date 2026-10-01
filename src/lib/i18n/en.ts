@@ -286,7 +286,8 @@ export const en: Messages = {
 		deleteAll: 'Delete all',
 		deleteAllConfirm: 'Really delete all?',
 		refreshFailed: (failed, total) => `${failed} of ${total} entries could not be refreshed.`,
-		restoreHint: 'How to restore a backup is described in the README.'
+		restoreHint: 'How to restore a backup is described in the documentation:',
+		restoreLink: 'Backups and restore'
 	},
 
 	importData: {
@@ -333,6 +334,7 @@ export const en: Messages = {
 		tagline:
 			'Self-hosted tracker for movies, series, anime and games – made for watching together on the couch.',
 		version: (v) => `Version: v${v}`,
+		docs: 'Documentation (wiki)',
 		source: 'Source code on GitHub',
 		versionHint: 'What’s new in this version?',
 		links: 'Links',
