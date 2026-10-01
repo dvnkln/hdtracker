@@ -111,7 +111,7 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
 
 ## Dokumentation (Wiki)
 
-- Anleitungen für Nutzer stehen im GitHub-Wiki (eigenes Git-Repo, Arbeitskopie: `/opt/projects/hdtracker.wiki`, Englisch): Installation, HTTPS + als App installieren, Updating, Backups and restore, Import from Yamtrack, Reset your password, `_Sidebar`. Die README bleibt Schaufenster (Features, Screenshots, kurzer Quick start, Links ins Wiki, Datenquellen, Development, **Built with AI und License bleiben in der README**).
+- Anleitungen für Nutzer stehen im GitHub-Wiki (eigenes Git-Repo, Arbeitskopie: `/opt/projects/hdtracker.wiki`, Englisch): Installation, HTTPS + als App installieren, Updating, Backups and restore, Import from Yamtrack, Reset your password, Development, `_Sidebar`. Die README bleibt Schaufenster (Wordmark + Mockup, direkt darunter die Links ins Wiki, dann Features – nur was hdtracker auszeichnet, keine Selbstverständlichkeiten –, Screenshots, kurzer Quick start, Datenquellen; kein Inhaltsverzeichnis, kein Development-Abschnitt; **Built with AI und License bleiben in der README**).
 - Ändert sich etwas an Installation, `.env`, Update, Backup, Import oder Rettungswegen: Wiki-Seite mit anpassen und pushen (Wiki-Commits wie Code-Commits erst nach Okay).
 - Passwort vergessen: `reset-password.js` im Projektstamm (ins Image kopiert) setzt ein Übergangspasswort und meldet alle Geräte ab; schreibt dasselbe Hash-Format wie `hashPassword()` in `auth.ts` – beide zusammen ändern.
 

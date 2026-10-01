@@ -20,17 +20,19 @@
   <img src="docs/screenshots/devices.jpg" alt="hdtracker on a desktop screen and two phones" />
 </p>
 
-## 📑 Contents
+## 📖 Documentation
 
-- [Features](#-features)
-- [Screenshots](#-screenshots)
-- [Quick start](#-quick-start)
-- [Documentation](#-documentation)
-- [Data sources](#-data-sources)
-- [Development](#-development)
-- [Built with AI](#-built-with-ai)
-- [License](#-license)
-- [Changelog](CHANGELOG.md)
+The guides live in the **[wiki](https://github.com/dvnkln/hdtracker/wiki)**:
+
+- 🐳 [Installation](https://github.com/dvnkln/hdtracker/wiki/Installation) – Docker Compose, the `.env` file, API keys
+- 🔐 [HTTPS and installing as an app](https://github.com/dvnkln/hdtracker/wiki/HTTPS-and-installing-as-an-app) – reverse proxy, `ORIGIN`, home screen
+- ⬆️ [Updating](https://github.com/dvnkln/hdtracker/wiki/Updating)
+- 💾 [Backups and restore](https://github.com/dvnkln/hdtracker/wiki/Backups-and-restore)
+- 📥 [Import from Yamtrack](https://github.com/dvnkln/hdtracker/wiki/Import-from-Yamtrack)
+- 🔑 [Reset your password](https://github.com/dvnkln/hdtracker/wiki/Reset-your-password)
+- 💻 [Development](https://github.com/dvnkln/hdtracker/wiki/Development) – running hdtracker from source
+
+What changed in each version: [Changelog](CHANGELOG.md).
 
 ## ✨ Features
 
@@ -43,8 +45,6 @@
 - 📄 **Detail pages** – runtime, genres, rating, release dates and similar titles.
 - 📥 **Import from Yamtrack** – take over your library including statuses, watched episodes and anime progress.
 - 🛠️ **Maintenance built in** – release dates refresh nightly; optional scheduled database backups you can download.
-- 📲 **Installable as an app** – add it to your home screen (Chrome, Edge, Safari) and it opens full screen with its own icon.
-- 🌍 **Two languages** – interface in English or German; content language and region are adjustable.
 - 🔒 **Private** – runs on your own server, single account, all data in one SQLite file.
 
 ## 📱 Screenshots
@@ -89,32 +89,9 @@
 
 Where to get the keys and what every setting means: **[Installation guide](https://github.com/dvnkln/hdtracker/wiki/Installation)**.
 
-## 📖 Documentation
-
-The guides live in the **[wiki](https://github.com/dvnkln/hdtracker/wiki)**:
-
-- 🐳 [Installation](https://github.com/dvnkln/hdtracker/wiki/Installation) – Docker Compose, the `.env` file, API keys
-- 🔐 [HTTPS and installing as an app](https://github.com/dvnkln/hdtracker/wiki/HTTPS-and-installing-as-an-app) – reverse proxy, `ORIGIN`, home screen
-- ⬆️ [Updating](https://github.com/dvnkln/hdtracker/wiki/Updating)
-- 💾 [Backups and restore](https://github.com/dvnkln/hdtracker/wiki/Backups-and-restore)
-- 📥 [Import from Yamtrack](https://github.com/dvnkln/hdtracker/wiki/Import-from-Yamtrack)
-- 🔑 [Reset your password](https://github.com/dvnkln/hdtracker/wiki/Reset-your-password)
-
-What changed in each version: [Changelog](CHANGELOG.md).
-
 ## 🙏 Data sources
 
 Movie and series data from [TMDB](https://www.themoviedb.org). This product uses the TMDB API but is not endorsed or certified by TMDB. Streaming availability by [JustWatch](https://www.justwatch.com). Game data from [IGDB](https://www.igdb.com), anime data from [AniList](https://anilist.co).
-
-## 💻 Development
-
-```bash
-npm install
-npm run dev
-```
-
-SvelteKit, TypeScript, Drizzle ORM with SQLite, Tailwind CSS. Build the Docker image from source with
-`docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build`.
 
 ## 🤖 Built with AI
 
