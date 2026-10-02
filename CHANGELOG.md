@@ -7,13 +7,23 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
-## Upcoming release
+## 0.4.0 – 2026-10-02
+
+Your browser now only talks to your own hdtracker: images are fetched and stored by the server.
+
+### ✨ New
+
+- **Images are loaded through your own server**: posters, episode images and logos are fetched and stored by hdtracker – your browser no longer contacts TMDB, IGDB or AniList at all. The posters of your library are kept ready, so they show up right away
+- **Clean up images**: a new maintenance task removes stored images that were not needed for 30 days or are too old. It cannot be switched off, because the data sources limit how long images may be kept
 
 ### 🔧 Improved
 
-- **Images are loaded through your own server**: posters, episode images and logos are fetched and stored by hdtracker – your browser no longer contacts TMDB, IGDB or AniList at all
 - Maintenance shows how much space images, database and backups use, and how much a clean-up freed
 - Games: dates are now simply called “Early Access” and “Release”, on the dashboard and on the detail page
+
+### ⬆️ Updating
+
+Just pull the new image – the database is updated automatically on start, your library stays as it is. Images are now stored in the folder `/data/images` inside the volume (roughly 50 kB per poster); it fills up as you use the app and does not need to be backed up. If you restrict outgoing connections of the server, allow `image.tmdb.org`, `images.igdb.com` and `s4.anilist.co` – see [Privacy and security](https://github.com/dvnkln/hdtracker/wiki/Privacy-and-security).
 
 ## 0.3.0 – 2026-10-01
 
