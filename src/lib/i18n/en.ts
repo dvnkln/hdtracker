@@ -254,7 +254,7 @@ export const en: Messages = {
 			metadata: {
 				name: 'Refresh metadata',
 				description:
-					'Reloads details, release dates and images of all entries in your library and keeps them ready, so the dashboard and detail pages open instantly. Dropped titles are skipped.'
+					'Reloads details, release dates and images of all entries in your library and keeps them ready, so the dashboard and detail pages open instantly. Watched movies and anime and completed games are only refreshed once a week, dropped titles once a month.'
 			},
 			optimize: {
 				name: 'Database care',
@@ -368,6 +368,7 @@ export const en: Messages = {
 		justwatch: 'Streaming offers (via TMDB)',
 		igdb: 'Game data',
 		anilist: 'Anime data',
+		wikidata: 'Direct links to titles on streaming services',
 		ai: 'Built with the help of AI (Claude Code).'
 	},
 

@@ -176,14 +176,51 @@ function gameToResult(g: IgdbGame): SearchResult {
 	};
 }
 
+// ---- One game with everything the app needs ----
+
+type IgdbGameFull = IgdbGame & {
+	url: string;
+	genres?: { name: string }[];
+	platforms?: { name: string }[];
+	total_rating?: number; // 0–100
+	artworks?: { image_id: string }[];
+	screenshots?: { image_id: string }[];
+	involved_companies?: { developer: boolean; company: { name: string } }[];
+	similar_games?: IgdbGame[];
+};
+
+const CACHE_MS = 10 * 60 * 1000;
+const BACKDROP = 'https://images.igdb.com/igdb/image/upload/t_1080p/';
+
+const FULL_FIELDS = [
+	...GAME_FIELDS,
+	'url',
+	'genres.name',
+	'platforms.name',
+	'total_rating',
+	'artworks.image_id',
+	'screenshots.image_id',
+	'involved_companies.developer',
+	'involved_companies.company.name',
+	...GAME_FIELDS.map((f) => `similar_games.${f}`)
+];
+
+// Release dates and the detail page come from a single request per game.
+function loadGame(id: string) {
+	return cached(`igdb:${id}`, CACHE_MS, async () => {
+		const [g] = await igdb<IgdbGameFull[]>(
+			'games',
+			`fields ${FULL_FIELDS.join(',')}; where id = ${Number(id)};`
+		);
+		if (!g) throw new ProviderError(serverMessages().errors.gameNotFound, 404);
+		return g;
+	});
+}
+
 // ---- Release date (dashboard) ----
 
 export async function getGameReleases(id: string): Promise<ReleaseInfo> {
-	const [g] = await igdb<IgdbGame[]>(
-		'games',
-		`fields ${GAME_FIELDS.join(',')}; where id = ${Number(id)};`
-	);
-	if (!g) throw new ProviderError(serverMessages().errors.gameNotFound, 404);
+	const g = await loadGame(id);
 	const state = releaseState(g);
 	const event = (kind: ReleaseEvent['kind'], date: string | null): ReleaseEvent => ({
 		kind,
@@ -203,61 +240,40 @@ export async function getGameReleases(id: string): Promise<ReleaseInfo> {
 
 // ---- Detail page ----
 
-type IgdbGameFull = IgdbGame & {
-	url: string;
-	genres?: { name: string }[];
-	platforms?: { name: string }[];
-	total_rating?: number; // 0–100
-	artworks?: { image_id: string }[];
-	screenshots?: { image_id: string }[];
-	involved_companies?: { developer: boolean; company: { name: string } }[];
-	similar_games?: IgdbGame[];
-};
+export async function getGameInfo(id: string): Promise<Details> {
+	const g = await loadGame(id);
+	const backdrop = g.artworks?.[0] ?? g.screenshots?.[0];
+	const developers = (g.involved_companies ?? [])
+		.filter((c) => c.developer)
+		.map((c) => c.company.name);
+	const facts: Fact[] = [];
+	const state = releaseState(g);
+	if (state.viaEarlyAccess) {
+		facts.push({ key: 'earlyAccess', value: state.current!, isDate: true });
+		if (state.fullDate) facts.push({ key: 'fullRelease', value: state.fullDate, isDate: true });
+	} else if (state.current) {
+		facts.push({ key: 'fullRelease', value: state.current, isDate: true });
+	}
+	if (g.platforms?.length) {
+		facts.push({ key: 'platforms', value: g.platforms.map((p) => p.name).join(', ') });
+	}
+	if (developers.length) facts.push({ key: 'developer', value: developers.join(', ') });
 
-const CACHE_MS = 10 * 60 * 1000;
-const BACKDROP = 'https://images.igdb.com/igdb/image/upload/t_1080p/';
-
-export function getGameInfo(id: string): Promise<Details> {
-	return cached(`igdb-info:${id}`, CACHE_MS, async () => {
-		const [g] = await igdb<IgdbGameFull[]>(
-			'games',
-			`fields ${GAME_FIELDS.join(',')},url,genres.name,platforms.name,total_rating,artworks.image_id,screenshots.image_id,involved_companies.developer,involved_companies.company.name,${GAME_FIELDS.map((f) => `similar_games.${f}`).join(',')}; where id = ${Number(id)};`
-		);
-		if (!g) throw new ProviderError(serverMessages().errors.gameNotFound, 404);
-
-		const backdrop = g.artworks?.[0] ?? g.screenshots?.[0];
-		const developers = (g.involved_companies ?? [])
-			.filter((c) => c.developer)
-			.map((c) => c.company.name);
-		const facts: Fact[] = [];
-		const state = releaseState(g);
-		if (state.viaEarlyAccess) {
-			facts.push({ key: 'earlyAccess', value: state.current!, isDate: true });
-			if (state.fullDate) facts.push({ key: 'fullRelease', value: state.fullDate, isDate: true });
-		} else if (state.current) {
-			facts.push({ key: 'fullRelease', value: state.current, isDate: true });
-		}
-		if (g.platforms?.length) {
-			facts.push({ key: 'platforms', value: g.platforms.map((p) => p.name).join(', ') });
-		}
-		if (developers.length) facts.push({ key: 'developer', value: developers.join(', ') });
-
-		return {
-			item: gameToResult(g),
-			externalUrl: g.url,
-			sourceLabel: 'IGDB',
-			backdropUrl: backdrop ? `${BACKDROP}${backdrop.image_id}.jpg` : null,
-			genres: (g.genres ?? []).map((x) => x.name),
-			rating: g.total_rating ? Math.round(g.total_rating) / 10 : null,
-			runtime: null,
-			seasonCount: null,
-			episodeCount: null,
-			episodeRuntime: null,
-			format: null,
-			facts,
-			watch: null,
-			links: [],
-			similar: (g.similar_games ?? []).map(gameToResult)
-		};
-	});
+	return {
+		item: gameToResult(g),
+		externalUrl: g.url,
+		sourceLabel: 'IGDB',
+		backdropUrl: backdrop ? `${BACKDROP}${backdrop.image_id}.jpg` : null,
+		genres: (g.genres ?? []).map((x) => x.name),
+		rating: g.total_rating ? Math.round(g.total_rating) / 10 : null,
+		runtime: null,
+		seasonCount: null,
+		episodeCount: null,
+		episodeRuntime: null,
+		format: null,
+		facts,
+		watch: null,
+		links: [],
+		similar: (g.similar_games ?? []).map(gameToResult)
+	};
 }

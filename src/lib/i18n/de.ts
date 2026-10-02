@@ -263,7 +263,7 @@ export const de = {
 			metadata: {
 				name: 'Metadaten aktualisieren',
 				description:
-					'Lädt für alle Einträge der Bibliothek Details, Erscheinungstermine und Bilder neu und hält sie vor, damit Dashboard und Detailseiten sofort da sind. Abgebrochene Titel werden übersprungen.'
+					'Lädt für alle Einträge der Bibliothek Details, Erscheinungstermine und Bilder neu und hält sie vor, damit Dashboard und Detailseiten sofort da sind. Gesehene Filme und Anime sowie durchgespielte Spiele kommen nur einmal pro Woche dran, Abgebrochenes einmal im Monat.'
 			},
 			optimize: {
 				name: 'Datenbank-Pflege',
@@ -387,6 +387,7 @@ export const de = {
 		justwatch: 'Streaming-Angebote (über TMDB)',
 		igdb: 'Spieldaten',
 		anilist: 'Animedaten',
+		wikidata: 'Direktlinks zu Titeln bei Streaming-Diensten',
 		ai: 'Entwickelt mit Unterstützung von KI (Claude Code).'
 	},
 

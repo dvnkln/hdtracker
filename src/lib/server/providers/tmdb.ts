@@ -197,80 +197,54 @@ function regionalDates(releaseDates: TmdbReleaseDates, region: string) {
 	return { cinema: earliest([2, 3]), home: earliest([4, 5]) };
 }
 
-// Movie metadata and its release dates in the region (for the dashboard).
-export function getMovieReleases(id: string, language: string, region: string) {
-	return cached(`tmdb:movie-releases:${id}:${language}:${region}`, CACHE_MS, async () => {
-		const m = await tmdb<TmdbMovie & { release_dates: TmdbReleaseDates }>(`/movie/${id}`, {
-			language,
-			append_to_response: 'release_dates'
-		});
-		const { cinema, home } = regionalDates(m.release_dates, region);
-		const info: ReleaseInfo = { item: movieToResult(m), events: [] };
-		const event = (kind: 'cinema' | 'home' | 'release', date: string | null) =>
-			info.events.push({ kind, date, season: null, episode: null });
-		if (cinema) event('cinema', cinema);
-		if (home) event('home', home);
-		// No dates for the region: fall back to the general release date (or "no date yet").
-		if (!cinema && !home) event('release', m.release_date || null);
-		return info;
-	});
-}
+// ---- One movie with everything the app needs ----
 
-export function getMovieInfo(id: string, language: string, region: string): Promise<Details> {
-	return cached(`tmdb:movie-info:${id}:${language}:${region}`, CACHE_MS, async () => {
-		const m = await tmdb<TmdbMovieFull>(`/movie/${id}`, {
+// Release dates and the detail page come from a single request per movie.
+function loadMovie(id: string, language: string) {
+	return cached(`tmdb:movie:${id}:${language}`, CACHE_MS, () =>
+		tmdb<TmdbMovieFull>(`/movie/${id}`, {
 			language,
 			append_to_response: 'release_dates,watch/providers,recommendations,external_ids'
-		});
-
-		const { cinema, home } = regionalDates(m.release_dates, region);
-		const facts: Fact[] = [];
-		if (cinema) facts.push({ key: 'cinema', value: cinema, isDate: true });
-		if (home) facts.push({ key: 'home', value: home, isDate: true });
-
-		return {
-			...common(m),
-			item: movieToResult(m),
-			externalUrl: `https://www.themoviedb.org/movie/${m.id}`,
-			runtime: m.runtime || null,
-			seasonCount: null,
-			episodeCount: null,
-			episodeRuntime: null,
-			facts,
-			watch: await watchFor(m['watch/providers'], region, m.title, m.external_ids.wikidata_id),
-			similar: m.recommendations.results.slice(0, 12).map(movieToResult)
-		};
-	});
+		})
+	);
 }
 
-export function getTvInfo(id: string, language: string, region: string): Promise<Details> {
-	return cached(`tmdb:tv-info:${id}:${language}:${region}`, CACHE_MS, async () => {
-		const s = await tmdb<TmdbTvFull>(`/tv/${id}`, {
-			language,
-			append_to_response: 'watch/providers,recommendations,external_ids'
-		});
-		const facts: Fact[] = [];
-		if (s.networks.length) {
-			facts.push({ key: 'network', value: s.networks.map((n) => n.name).join(', ') });
-		}
-		facts.push({ key: 'episodes', value: String(s.number_of_episodes) });
-
-		return {
-			...common(s),
-			item: tvToResult(s),
-			externalUrl: `https://www.themoviedb.org/tv/${s.id}`,
-			runtime: null,
-			seasonCount: s.number_of_seasons,
-			episodeCount: null,
-			episodeRuntime: s.episode_run_time[0] ?? null,
-			facts,
-			watch: await watchFor(s['watch/providers'], region, s.name, s.external_ids.wikidata_id),
-			similar: s.recommendations.results.slice(0, 12).map(tvToResult)
-		};
-	});
+// Movie metadata and its release dates in the region (for the dashboard).
+export async function getMovieReleases(id: string, language: string, region: string) {
+	const m = await loadMovie(id, language);
+	const { cinema, home } = regionalDates(m.release_dates, region);
+	const info: ReleaseInfo = { item: movieToResult(m), events: [] };
+	const event = (kind: 'cinema' | 'home' | 'release', date: string | null) =>
+		info.events.push({ kind, date, season: null, episode: null });
+	if (cinema) event('cinema', cinema);
+	if (home) event('home', home);
+	// No dates for the region: fall back to the general release date (or "no date yet").
+	if (!cinema && !home) event('release', m.release_date || null);
+	return info;
 }
 
-// ---- Series details with all seasons and episodes ----
+export async function getMovieInfo(id: string, language: string, region: string): Promise<Details> {
+	const m = await loadMovie(id, language);
+	const { cinema, home } = regionalDates(m.release_dates, region);
+	const facts: Fact[] = [];
+	if (cinema) facts.push({ key: 'cinema', value: cinema, isDate: true });
+	if (home) facts.push({ key: 'home', value: home, isDate: true });
+
+	return {
+		...common(m),
+		item: movieToResult(m),
+		externalUrl: `https://www.themoviedb.org/movie/${m.id}`,
+		runtime: m.runtime || null,
+		seasonCount: null,
+		episodeCount: null,
+		episodeRuntime: null,
+		facts,
+		watch: await watchFor(m['watch/providers'], region, m.title, m.external_ids.wikidata_id),
+		similar: m.recommendations.results.slice(0, 12).map(movieToResult)
+	};
+}
+
+// ---- One series with everything the app needs ----
 
 type TmdbEpisode = {
 	episode_number: number;
@@ -286,73 +260,105 @@ type TmdbSeason = {
 	air_date: string | null;
 	episodes: TmdbEpisode[];
 };
-type TmdbTvDetails = TmdbTv & {
-	status: string; // e.g. "Returning Series", "Ended", "Canceled"
+type TmdbTvWithSeasons = TmdbTvFull & {
 	seasons: { season_number: number }[];
 	[key: `season/${number}`]: TmdbSeason | undefined;
 };
 
-const SEASONS_PER_REQUEST = 20; // TMDB limit for append_to_response
+// TMDB allows 20 extra parts per request (append_to_response).
+const PARTS_PER_REQUEST = 20;
+const TV_PARTS = ['watch/providers', 'recommendations', 'external_ids'];
 
-export async function getTvDetails(id: string, language: string): Promise<ShowDetails> {
+// The detail page and all seasons with their episodes. The first request asks for the parts
+// of the detail page plus seasons 0–16 (seasons that do not exist are simply left out), so
+// almost every series needs a single request; longer ones get the rest in batches of 20.
+function loadTv(id: string, language: string) {
 	return cached(`tmdb:tv:${id}:${language}`, CACHE_MS, async () => {
-		const first = await tmdb<TmdbTvDetails>(`/tv/${id}`, { language });
-		const numbers = first.seasons.map((s) => s.season_number);
+		const seasonPart = (n: number) => `season/${n}`;
+		const guessed = Array.from({ length: PARTS_PER_REQUEST - TV_PARTS.length }, (_, n) => n);
+		const show = await tmdb<TmdbTvWithSeasons>(`/tv/${id}`, {
+			language,
+			append_to_response: [...TV_PARTS, ...guessed.map(seasonPart)].join(',')
+		});
+		const numbers = show.seasons.map((s) => s.season_number);
+		const loaded = new Map<number, TmdbSeason>();
+		for (const n of numbers) {
+			const season = show[`season/${n}`];
+			if (season) loaded.set(n, season);
+		}
 
-		// Load seasons in batches of 20 via append_to_response.
-		const seasons: TmdbSeason[] = [];
-		for (let i = 0; i < numbers.length; i += SEASONS_PER_REQUEST) {
-			const batch = numbers.slice(i, i + SEASONS_PER_REQUEST);
-			const data = await tmdb<TmdbTvDetails>(`/tv/${id}`, {
+		const missing = numbers.filter((n) => !loaded.has(n) && !guessed.includes(n));
+		for (let i = 0; i < missing.length; i += PARTS_PER_REQUEST) {
+			const batch = missing.slice(i, i + PARTS_PER_REQUEST);
+			const data = await tmdb<TmdbTvWithSeasons>(`/tv/${id}`, {
 				language,
-				append_to_response: batch.map((n) => `season/${n}`).join(',')
+				append_to_response: batch.map(seasonPart).join(',')
 			});
 			for (const n of batch) {
 				const season = data[`season/${n}`];
-				if (season) seasons.push(season);
+				if (season) loaded.set(n, season);
 			}
 		}
-
-		const now = today();
-		const regular = seasons.filter((s) => s.season_number > 0);
-		const specials = seasons.filter((s) => s.season_number === 0);
-
-		return {
-			item: {
-				source: 'tmdb',
-				externalId: String(first.id),
-				title: first.name,
-				originalTitle: first.original_name !== first.name ? first.original_name : null,
-				year: yearOf(first.first_air_date),
-				releaseDate: first.first_air_date || null,
-				earlyAccess: false,
-				posterUrl: poster(first.poster_path),
-				overview: first.overview || null
-			},
-			ended: first.status === 'Ended' || first.status === 'Canceled',
-			externalUrl: `https://www.themoviedb.org/tv/${first.id}`,
-			episodeRuntime: null,
-			// Regular seasons first, specials at the bottom.
-			seasons: [...regular, ...specials].map((s) => ({
-				number: s.season_number,
-				name:
-					s.season_number === 0
-						? serverMessages().episodes.specials
-						: s.name || serverMessages().episodes.season(s.season_number),
-				special: s.season_number === 0,
-				airDate: s.air_date || null,
-				episodes: s.episodes.map((e) => ({
-					number: e.episode_number,
-					title: e.name || null,
-					airDate: e.air_date || null,
-					aired: !!e.air_date && e.air_date <= now,
-					overview: e.overview || null,
-					stillUrl: e.still_path ? STILL + e.still_path : null,
-					runtime: e.runtime || null
-				}))
-			}))
-		};
+		// In the order TMDB lists the seasons
+		const seasons = numbers.map((n) => loaded.get(n)).filter((s) => s !== undefined);
+		return { show, seasons };
 	});
+}
+
+export async function getTvInfo(id: string, language: string, region: string): Promise<Details> {
+	const { show: s } = await loadTv(id, language);
+	const facts: Fact[] = [];
+	if (s.networks.length) {
+		facts.push({ key: 'network', value: s.networks.map((n) => n.name).join(', ') });
+	}
+	facts.push({ key: 'episodes', value: String(s.number_of_episodes) });
+
+	return {
+		...common(s),
+		item: tvToResult(s),
+		externalUrl: `https://www.themoviedb.org/tv/${s.id}`,
+		runtime: null,
+		seasonCount: s.number_of_seasons,
+		episodeCount: null,
+		episodeRuntime: s.episode_run_time[0] ?? null,
+		facts,
+		watch: await watchFor(s['watch/providers'], region, s.name, s.external_ids.wikidata_id),
+		similar: s.recommendations.results.slice(0, 12).map(tvToResult)
+	};
+}
+
+// Series details with all seasons and episodes.
+export async function getTvDetails(id: string, language: string): Promise<ShowDetails> {
+	const { show: first, seasons } = await loadTv(id, language);
+	const now = today();
+	const regular = seasons.filter((s) => s.season_number > 0);
+	const specials = seasons.filter((s) => s.season_number === 0);
+
+	return {
+		item: tvToResult(first),
+		ended: first.status === 'Ended' || first.status === 'Canceled',
+		externalUrl: `https://www.themoviedb.org/tv/${first.id}`,
+		episodeRuntime: null,
+		// Regular seasons first, specials at the bottom.
+		seasons: [...regular, ...specials].map((s) => ({
+			number: s.season_number,
+			name:
+				s.season_number === 0
+					? serverMessages().episodes.specials
+					: s.name || serverMessages().episodes.season(s.season_number),
+			special: s.season_number === 0,
+			airDate: s.air_date || null,
+			episodes: s.episodes.map((e) => ({
+				number: e.episode_number,
+				title: e.name || null,
+				airDate: e.air_date || null,
+				aired: !!e.air_date && e.air_date <= now,
+				overview: e.overview || null,
+				stillUrl: e.still_path ? STILL + e.still_path : null,
+				runtime: e.runtime || null
+			}))
+		}))
+	};
 }
 
 // ---- Choices for the settings page ----

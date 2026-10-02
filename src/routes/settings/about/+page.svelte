@@ -20,7 +20,8 @@
 		{ name: 'TMDB', href: 'https://www.themoviedb.org', text: m.about.tmdb },
 		{ name: 'JustWatch', href: 'https://www.justwatch.com', text: m.about.justwatch },
 		{ name: 'IGDB', href: 'https://www.igdb.com', text: m.about.igdb },
-		{ name: 'AniList', href: 'https://anilist.co', text: m.about.anilist }
+		{ name: 'AniList', href: 'https://anilist.co', text: m.about.anilist },
+		{ name: 'Wikidata', href: 'https://www.wikidata.org', text: m.about.wikidata }
 	]);
 
 	const linkClass =

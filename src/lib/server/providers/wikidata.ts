@@ -1,9 +1,15 @@
-import { cached } from '../cache';
+import { eq, lt } from 'drizzle-orm';
+import pkg from '../../../../package.json';
+import { getDb } from '../db';
+import { wikidataLinks } from '../db/schema';
 import { fetchJson } from './types';
 
 const DAY = 24 * 60 * 60 * 1000;
-// Wikidata asks API users to identify themselves.
-const USER_AGENT = 'hdtracker (self-hosted media tracker; https://github.com/dvnkln/hdtracker)';
+// Links to streaming services rarely change: a stored answer is used for a month, so the
+// nightly refresh of the library hardly ever asks Wikidata (they ask API users to cache).
+const KEEP_MS = 30 * DAY;
+// Wikimedia's User-Agent policy: name/version and a way to contact the operator.
+const USER_AGENT = `hdtracker/${pkg.version} (https://github.com/dvnkln/hdtracker)`;
 
 export type StreamingLinks = Partial<Record<'netflix' | 'disney' | 'prime' | 'apple', string>>;
 
@@ -28,34 +34,66 @@ const PROPERTIES: Record<keyof StreamingLinks, [string, string][]> = {
 
 type Entity = { claims: Record<string, { mainsnak: { datavalue?: { value: unknown } } }[]> };
 
-// Direct links to a title on streaming services, if Wikidata knows them. Never throws.
-export async function getStreamingLinks(wikidataId: string | null | undefined) {
-	if (!wikidataId || !/^Q\d+$/.test(wikidataId)) return {};
-	try {
-		return await cached(`wikidata:${wikidataId}`, DAY, async () => {
-			const data = await fetchJson<{ entities: Record<string, Entity> }>(
-				'Wikidata',
-				`https://www.wikidata.org/wiki/Special:EntityData/${wikidataId}.json`,
-				{ headers: { 'User-Agent': USER_AGENT, Accept: 'application/json' } }
-			);
-			const claims = Object.values(data.entities)[0]?.claims ?? {};
-			const links: StreamingLinks = {};
-			for (const [service, props] of Object.entries(PROPERTIES)) {
-				for (const [prop, pattern] of props) {
-					const value = claims[prop]?.[0]?.mainsnak.datavalue?.value;
-					if (typeof value === 'string' && value) {
-						links[service as keyof StreamingLinks] = pattern.replace(
-							'$1',
-							encodeURIComponent(value)
-						);
-						break;
-					}
-				}
+// Requests for the same title that arrive together share one lookup.
+const loading = new Map<string, Promise<StreamingLinks>>();
+
+// Reads the whole entry of a title (Wikidata's "Linked Data Interface", meant for single
+// known entries) and picks the IDs at the streaming services.
+async function lookUp(wikidataId: string): Promise<StreamingLinks> {
+	const data = await fetchJson<{ entities: Record<string, Entity> }>(
+		'Wikidata',
+		`https://www.wikidata.org/wiki/Special:EntityData/${wikidataId}.json`,
+		{ headers: { 'User-Agent': USER_AGENT, Accept: 'application/json' } }
+	);
+	const claims = Object.values(data.entities)[0]?.claims ?? {};
+	const links: StreamingLinks = {};
+	for (const [service, props] of Object.entries(PROPERTIES)) {
+		for (const [prop, pattern] of props) {
+			const value = claims[prop]?.[0]?.mainsnak.datavalue?.value;
+			if (typeof value === 'string' && value) {
+				links[service as keyof StreamingLinks] = pattern.replace('$1', encodeURIComponent(value));
+				break;
 			}
-			return links;
-		});
-	} catch (err) {
-		console.error('Wikidata lookup failed', err);
-		return {};
+		}
 	}
+	return links;
+}
+
+// Direct links to a title on streaming services, if Wikidata knows them. Never throws.
+export async function getStreamingLinks(
+	wikidataId: string | null | undefined
+): Promise<StreamingLinks> {
+	if (!wikidataId || !/^Q\d+$/.test(wikidataId)) return {};
+	const db = getDb();
+	const stored = db.select().from(wikidataLinks).where(eq(wikidataLinks.id, wikidataId)).get();
+	if (stored && stored.fetchedAt.getTime() > Date.now() - KEEP_MS) return stored.links;
+
+	let pending = loading.get(wikidataId);
+	if (!pending) {
+		pending = lookUp(wikidataId)
+			.then((links) => {
+				const values = { links, fetchedAt: new Date() };
+				db.insert(wikidataLinks)
+					.values({ id: wikidataId, ...values })
+					.onConflictDoUpdate({ target: wikidataLinks.id, set: values })
+					.run();
+				return links;
+			})
+			.catch((err) => {
+				console.error('Wikidata lookup failed', err);
+				// Wikidata cannot be reached: an older answer is better than none.
+				return stored?.links ?? {};
+			})
+			.finally(() => loading.delete(wikidataId));
+		loading.set(wikidataId, pending);
+	}
+	return pending;
+}
+
+// Removes answers that were not renewed for two months (titles nobody looks at any more).
+export function pruneWikidataLinks() {
+	return getDb()
+		.delete(wikidataLinks)
+		.where(lt(wikidataLinks.fetchedAt, new Date(Date.now() - 2 * KEEP_MS)))
+		.run().changes;
 }

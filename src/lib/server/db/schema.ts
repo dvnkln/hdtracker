@@ -69,6 +69,14 @@ export const itemDetails = sqliteTable('item_details', {
 	fetchedAt: integer('fetched_at', { mode: 'timestamp' }).notNull()
 });
 
+// Direct links to a title on streaming services, as found on Wikidata (see providers/
+// wikidata.ts). Kept for a month, so Wikidata is asked as rarely as possible.
+export const wikidataLinks = sqliteTable('wikidata_links', {
+	id: text('id').primaryKey(), // Wikidata ID, e.g. "Q189330"
+	links: text('links', { mode: 'json' }).$type<Record<string, string>>().notNull(),
+	fetchedAt: integer('fetched_at', { mode: 'timestamp' }).notNull()
+});
+
 // One row per watched episode. Anime use season 1.
 export const watchedEpisodes = sqliteTable(
 	'watched_episodes',

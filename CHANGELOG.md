@@ -12,6 +12,8 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 ### 🔧 Improved
 
 - **Titles in your library open instantly**: details and images of a title are loaded in the background as soon as you add it and refreshed every night, so detail pages no longer wait for TMDB, IGDB or AniList
+- The nightly refresh is much gentler on the data sources: one request per title instead of two or three; watched movies and anime and completed games are refreshed once a week, dropped titles once a month (they were never refreshed before); direct streaming links (Wikidata) are only looked up once a month
+- Settings → About lists Wikidata as a data source
 - Maintenance shows how many titles are preloaded; a long “Run now” keeps running in the background instead of blocking the page
 
 ### 🐛 Fixed

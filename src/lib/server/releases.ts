@@ -1,4 +1,4 @@
-import { and, count, eq, inArray, isNull, ne, notInArray } from 'drizzle-orm';
+import { and, count, eq, inArray, isNull, notInArray } from 'drizzle-orm';
 import { hasEpisodes, type Category } from '$lib/status';
 import { getDb } from './db';
 import { getImage } from './images';
@@ -233,17 +233,33 @@ export function pendingStatus() {
 	};
 }
 
-// Background task "metadata": refreshes all items except dropped ones and hidden areas; one
-// after another per service, the services in parallel.
+// How often the nightly task refreshes an item. Whatever is finished hardly changes, so the
+// data sources are asked less often for it; a series may get a new season, so it stays nightly.
+// Dropped items are still refreshed once a month: nothing stored may get older than the six
+// months TMDB allows.
+const HOUR = 60 * 60 * 1000;
+const WEEKLY: Category[] = ['movies', 'games', 'anime'];
+function isDue(item: LibraryItem, now: number) {
+	if (!item.metadataUpdatedAt) return true;
+	const age = now - item.metadataUpdatedAt.getTime();
+	if (item.status === 'dropped') return age >= 30 * 24 * HOUR;
+	// A few hours short of a week, so a run at the same time of day counts as "a week later".
+	if (item.status === 'completed' && WEEKLY.includes(item.category))
+		return age >= 7 * 24 * HOUR - 6 * HOUR;
+	return true;
+}
+
+// Background task "metadata": refreshes the items of all shown areas that are due (see isDue);
+// one after another per service, the services in parallel.
 export async function refreshAll() {
 	deleteDetailsOfHiddenAreas();
+	const now = Date.now();
 	const items = getDb()
 		.select()
 		.from(libraryItems)
-		.where(
-			and(ne(libraryItems.status, 'dropped'), inArray(libraryItems.category, enabledCategories()))
-		)
-		.all();
+		.where(inArray(libraryItems.category, enabledCategories()))
+		.all()
+		.filter((item) => isDue(item, now));
 	const failedPerSource = await Promise.all(
 		SOURCES.map((source) =>
 			exclusive(source, async () => {

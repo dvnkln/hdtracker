@@ -47,8 +47,9 @@ export function runInBackground<T>(work: () => Promise<T>) {
 }
 
 // Minimum pause between two background requests per service. AniList allows ~30 requests
-// per minute; 3 s leaves room for the user's own anime pages in the meantime.
-const PAUSE_MS: Record<string, number> = { TMDB: 100, IGDB: 300, AniList: 3000 };
+// per minute; 3 s leaves room for the user's own anime pages in the meantime. Wikidata has no
+// fixed limit but asks for considerate, serial use.
+const PAUSE_MS: Record<string, number> = { TMDB: 100, IGDB: 300, AniList: 3000, Wikidata: 1000 };
 const lastRequest: Record<string, number> = {};
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 

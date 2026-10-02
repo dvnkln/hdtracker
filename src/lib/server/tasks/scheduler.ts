@@ -5,6 +5,7 @@ import { pruneCache } from '../cache';
 import { DB_PATH } from '../config';
 import { getDb } from '../db';
 import { pruneImages } from '../images';
+import { pruneWikidataLinks } from '../providers/wikidata';
 import { tasks } from '../db/schema';
 import { refreshAll, refreshPending } from '../releases';
 import { createBackup } from './backups';
@@ -33,7 +34,10 @@ export const TASKS = {
 		defaults: { enabled: true, frequency: 'daily', time: '04:30', weekday: 0 }
 	},
 	cache: {
-		run: () => void pruneCache(),
+		run: () => {
+			pruneCache();
+			pruneWikidataLinks();
+		},
 		usesApi: false,
 		defaults: { enabled: true, frequency: 'hourly', time: '00:00', weekday: 0 }
 	},
