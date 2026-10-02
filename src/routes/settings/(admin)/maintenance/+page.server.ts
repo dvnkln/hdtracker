@@ -1,10 +1,13 @@
 import { fail } from '@sveltejs/kit';
 import { serverMessages } from '$lib/server/i18n';
+import { imageStats } from '$lib/server/images';
 import { getSetting, setSettings } from '$lib/server/settings';
 import { deleteAllBackups, deleteBackup, listBackups } from '$lib/server/tasks/backups';
 import {
 	FREQUENCIES,
 	TASKS,
+	databaseSize,
+	isRequired,
 	isRunning,
 	isTaskKey,
 	listTasks,
@@ -20,12 +23,27 @@ import type { Actions, PageServerLoad } from './$types';
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/; // "03:00"
 const MAX_KEEP = 100;
 
-export const load: PageServerLoad = () => {
+export const load: PageServerLoad = async () => {
+	const backups = listBackups();
+	const images = await imageStats();
+	// Disk space of what a task looks after: stored images, the database file, all backups.
+	type Used =
+		| { kind: 'images'; bytes: number; count: number }
+		| { kind: 'optimize' | 'backup'; bytes: number };
+	const used: Partial<Record<TaskKey, Used>> = {
+		images: { kind: 'images', bytes: images.bytes, count: images.count },
+		optimize: { kind: 'optimize', bytes: databaseSize() }
+	};
+	if (backups.length) {
+		used.backup = { kind: 'backup', bytes: backups.reduce((sum, b) => sum + b.size, 0) };
+	}
 	const taskList = listTasks().map((t) => {
 		const key = t.key as TaskKey;
 		return {
 			key,
 			enabled: t.enabled,
+			required: isRequired(key),
+			used: used[key] ?? null,
 			frequency: t.frequency,
 			time: t.time,
 			weekday: t.weekday,
@@ -33,6 +51,7 @@ export const load: PageServerLoad = () => {
 			running: isRunning(key),
 			lastRunAt: t.lastRunAt?.toISOString() ?? null,
 			lastDurationMs: t.lastDurationMs,
+			lastFreedBytes: t.lastFreedBytes,
 			lastError: t.lastError,
 			nextRunAt: t.enabled ? nextSlot(t).toISOString() : null
 		};
@@ -40,7 +59,7 @@ export const load: PageServerLoad = () => {
 	return {
 		tasks: taskList,
 		frequencies: FREQUENCIES,
-		backups: listBackups(),
+		backups,
 		backupKeep: Number(getSetting('backupKeep')),
 		maxKeep: MAX_KEEP,
 		timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone

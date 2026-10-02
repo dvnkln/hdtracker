@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { CATEGORIES } from '$lib/categories';
 	import { m } from '$lib/i18n/index.svelte';
+	import { img } from '$lib/images';
 	import { titles } from '$lib/titles.svelte';
 	import type { DashboardEntry } from '$lib/server/dashboard';
 	import { CalendarClock, ChevronRight, History, ImageOff } from '@lucide/svelte';
@@ -105,9 +106,9 @@
 					<div
 						class="aspect-[2/3] w-11 shrink-0 overflow-hidden rounded bg-zinc-900 ring-1 ring-zinc-800 transition-shadow duration-100 group-hover/row:ring-(--accent)"
 					>
-						{#if entry.posterUrl}
+						{#if img(entry.posterUrl)}
 							<img
-								src={entry.posterUrl}
+								src={img(entry.posterUrl)}
 								alt=""
 								loading="lazy"
 								referrerpolicy="no-referrer"

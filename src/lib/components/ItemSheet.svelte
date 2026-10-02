@@ -30,6 +30,7 @@
 		type Category
 	} from '$lib/status';
 	import { m, statusLabel } from '$lib/i18n/index.svelte';
+	import { img } from '$lib/images';
 	import { titles } from '$lib/titles.svelte';
 
 	type Props = {
@@ -116,9 +117,9 @@
 		{@const shown = titles(category, item)}
 		<div class="p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
 			<div class="flex gap-4">
-				{#if item.posterUrl}
+				{#if img(item.posterUrl)}
 					<img
-						src={item.posterUrl}
+						src={img(item.posterUrl)}
 						alt=""
 						referrerpolicy="no-referrer"
 						class="aspect-[2/3] w-20 shrink-0 rounded-lg object-cover"

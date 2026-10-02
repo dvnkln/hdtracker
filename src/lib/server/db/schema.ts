@@ -86,6 +86,8 @@ export const tasks = sqliteTable('tasks', {
 	changedAt: integer('changed_at', { mode: 'timestamp' }).notNull(),
 	lastRunAt: integer('last_run_at', { mode: 'timestamp' }),
 	lastDurationMs: integer('last_duration_ms'),
+	// Disk space the last run freed (clean-up tasks only)
+	lastFreedBytes: integer('last_freed_bytes'),
 	lastError: text('last_error')
 });
 

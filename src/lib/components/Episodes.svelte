@@ -5,6 +5,7 @@
 	import type { ShowDetails } from '$lib/server/providers/types';
 	import { CalendarClock, Check, CheckCheck, ChevronRight } from '@lucide/svelte';
 	import { formatDate, formatShortDate, m } from '$lib/i18n/index.svelte';
+	import { img } from '$lib/images';
 
 	// Progress, seasons and episodes of a series/anime. Form actions live on the detail page.
 	type Props = {
@@ -255,9 +256,9 @@
 										<span
 											class="relative aspect-video w-28 shrink-0 overflow-hidden rounded-md bg-zinc-800 sm:w-36"
 										>
-											{#if ep.stillUrl}
+											{#if img(ep.stillUrl)}
 												<img
-													src={ep.stillUrl}
+													src={img(ep.stillUrl)}
 													alt=""
 													loading="lazy"
 													referrerpolicy="no-referrer"

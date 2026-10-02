@@ -267,6 +267,11 @@ export const en: Messages = {
 			cache: {
 				name: 'Clean up cache',
 				description: 'Removes outdated answers from TMDB, IGDB and AniList from memory.'
+			},
+			images: {
+				name: 'Clean up images',
+				description:
+					'Deletes stored posters and images that were not needed for 30 days or are too old – all others stay stored. Cannot be switched off, because the data sources limit how long images may be kept.'
 			}
 		},
 		frequency: 'How often',
@@ -278,6 +283,12 @@ export const en: Messages = {
 		lastRun: (date) => `Last run: ${date}`,
 		neverRun: 'Never run yet',
 		nextRun: (date) => `Next run: ${date}`,
+		freed: (size) => `${size} freed`,
+		stored: {
+			images: (size, count) => `Stored: ${count} ${count === 1 ? 'image' : 'images'} (${size})`,
+			optimize: (size) => `Database size: ${size}`,
+			backup: (size) => `All backups: ${size}`
+		},
 		off: 'Switched off',
 		failed: 'Failed:',
 		running: 'Running …',

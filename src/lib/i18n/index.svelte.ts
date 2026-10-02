@@ -50,7 +50,13 @@ export function formatDateTime(iso: string) {
 // 1536000 -> "1,5 MB" / "1.5 MB"
 export function formatFileSize(bytes: number) {
 	const [value, unit] =
-		bytes >= 1e6 ? [bytes / 1e6, 'megabyte'] : [Math.max(bytes / 1e3, 0.1), 'kilobyte'];
+		bytes >= 1e9
+			? [bytes / 1e9, 'gigabyte']
+			: bytes >= 1e6
+				? [bytes / 1e6, 'megabyte']
+				: bytes === 0
+					? [0, 'kilobyte']
+					: [Math.max(bytes / 1e3, 0.1), 'kilobyte'];
 	return new Intl.NumberFormat(m.locale, {
 		style: 'unit',
 		unit,

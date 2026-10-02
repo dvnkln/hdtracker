@@ -1,7 +1,10 @@
+import { existsSync, statSync } from 'node:fs';
 import { eq } from 'drizzle-orm';
 import { deleteExpiredSessions } from '../auth';
 import { pruneCache } from '../cache';
+import { DB_PATH } from '../config';
 import { getDb } from '../db';
+import { pruneImages } from '../images';
 import { tasks } from '../db/schema';
 import { refreshAll, refreshPending } from '../releases';
 import { createBackup } from './backups';
@@ -11,7 +14,10 @@ export type Frequency = TaskRow['frequency'];
 export const FREQUENCIES: Frequency[] = ['hourly', 'daily', 'weekly', 'monthly'];
 
 type TaskDef = {
-	run: () => void | Promise<void>;
+	// Clean-up tasks return how many bytes of disk space they freed.
+	run: () => void | number | Promise<void | number>;
+	// Cannot be switched off.
+	required?: boolean;
 	// Calls external APIs: the settings page then warns before "Run now" (rate limits).
 	usesApi: boolean;
 	defaults: Pick<TaskRow, 'enabled' | 'frequency' | 'time' | 'weekday'>;
@@ -31,13 +37,22 @@ export const TASKS = {
 		usesApi: false,
 		defaults: { enabled: true, frequency: 'hourly', time: '00:00', weekday: 0 }
 	},
+	images: {
+		// Always on: the data sources limit how long their images may be kept.
+		run: pruneImages,
+		required: true,
+		usesApi: false,
+		defaults: { enabled: true, frequency: 'daily', time: '03:45', weekday: 0 }
+	},
 	optimize: {
 		// Updates the query planner statistics and compacts the file.
 		run: () => {
+			const before = databaseSize();
 			const client = getDb().$client;
 			client.pragma('optimize');
 			client.exec('VACUUM');
 			client.pragma('wal_checkpoint(TRUNCATE)');
+			return Math.max(before - databaseSize(), 0);
 		},
 		usesApi: false,
 		defaults: { enabled: true, frequency: 'weekly', time: '04:00', weekday: 0 }
@@ -56,6 +71,18 @@ export const TASKS = {
 } satisfies Record<string, TaskDef>;
 
 export type TaskKey = keyof typeof TASKS;
+
+export function isRequired(key: TaskKey) {
+	return (TASKS[key] as TaskDef).required === true;
+}
+
+// Size of the database on disk, including changes not yet written into the main file.
+export function databaseSize() {
+	return [DB_PATH, `${DB_PATH}-wal`].reduce(
+		(sum, f) => sum + (existsSync(f) ? statSync(f).size : 0),
+		0
+	);
+}
 export const TASK_KEYS = Object.keys(TASKS) as TaskKey[];
 
 export function isTaskKey(value: string): value is TaskKey {
@@ -138,7 +165,7 @@ export function updateTask(
 ) {
 	getDb()
 		.update(tasks)
-		.set({ ...values, changedAt: new Date() })
+		.set({ ...values, enabled: values.enabled || isRequired(key), changedAt: new Date() })
 		.where(eq(tasks.key, key))
 		.run();
 	loadRows();
@@ -158,8 +185,9 @@ export async function runTask(key: TaskKey): Promise<string | null> {
 	running.add(key);
 	const started = new Date();
 	let error: string | null = null;
+	let freed: number | null = null;
 	try {
-		await TASKS[key].run();
+		freed = (await TASKS[key].run()) ?? null;
 	} catch (err) {
 		console.error(`Task ${key} failed`, err);
 		error = err instanceof Error ? err.message : String(err);
@@ -168,7 +196,12 @@ export async function runTask(key: TaskKey): Promise<string | null> {
 	}
 	getDb()
 		.update(tasks)
-		.set({ lastRunAt: started, lastDurationMs: Date.now() - started.getTime(), lastError: error })
+		.set({
+			lastRunAt: started,
+			lastDurationMs: Date.now() - started.getTime(),
+			lastFreedBytes: freed,
+			lastError: error
+		})
 		.where(eq(tasks.key, key))
 		.run();
 	loadRows();

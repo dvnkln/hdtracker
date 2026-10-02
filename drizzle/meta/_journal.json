@@ -29,6 +29,13 @@
       "when": 1790884231040,
       "tag": "0003_early_access",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1790941030355,
+      "tag": "0004_task_freed_bytes",
+      "breakpoints": true
     }
   ]
 }

@@ -276,6 +276,11 @@ export const de = {
 			cache: {
 				name: 'Zwischenspeicher aufräumen',
 				description: 'Wirft veraltete Antworten von TMDB, IGDB und AniList aus dem Arbeitsspeicher.'
+			},
+			images: {
+				name: 'Bilder aufräumen',
+				description:
+					'Löscht gespeicherte Poster und Bilder, die 30 Tage nicht gebraucht wurden oder zu alt sind – alle anderen bleiben gespeichert. Lässt sich nicht ausschalten, weil die Datenquellen begrenzen, wie lange Bilder aufbewahrt werden dürfen.'
 			}
 		} as Record<string, { name: string; description: string }>,
 		frequency: 'Wie oft',
@@ -292,6 +297,14 @@ export const de = {
 		lastRun: (date: string) => `Zuletzt: ${date}`,
 		neverRun: 'Noch nie ausgeführt',
 		nextRun: (date: string) => `Nächster Lauf: ${date}`,
+		freed: (size: string) => `${size} freigegeben`,
+		// What a task looks after takes this much space (not: what a run would free)
+		stored: {
+			images: (size: string, count: number) =>
+				`Gespeichert: ${count} ${count === 1 ? 'Bild' : 'Bilder'} (${size})`,
+			optimize: (size: string) => `Größe der Datenbank: ${size}`,
+			backup: (size: string) => `Backups gesamt: ${size}`
+		},
 		off: 'Ausgeschaltet',
 		failed: 'Fehlgeschlagen:',
 		running: 'Läuft gerade …',

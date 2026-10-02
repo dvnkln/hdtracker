@@ -15,6 +15,8 @@ export default defineConfig({
 			adapter: adapter(),
 			// Our own origin check in hooks.server.ts replaces this, because ORIGIN may list several addresses.
 			csrf: { trustedOrigins: ['*'] },
+			// Images only from our own server (see src/lib/images.ts): browsers refuse anything else.
+			csp: { directives: { 'img-src': ['self', 'data:'] } },
 			typescript: {
 				config: (config) => {
 					config.include.push('../drizzle.config.ts');

@@ -3,6 +3,7 @@
 	import { hasEpisodes } from '$lib/status';
 	import { formatDate, formatRating, formatRuntime, m, statusLabel } from '$lib/i18n/index.svelte';
 	import { STATUS_ICONS } from '$lib/statusIcons';
+	import { img } from '$lib/images';
 	import { titles } from '$lib/titles.svelte';
 	import ItemSheet from '$lib/components/ItemSheet.svelte';
 	import PosterCard from '$lib/components/PosterCard.svelte';
@@ -54,10 +55,10 @@
 
 <div style:--accent={cat.accent}>
 	<!-- Backdrop image, fading into the page background -->
-	{#if info.backdropUrl}
+	{#if img(info.backdropUrl)}
 		<div class="relative h-56 overflow-hidden sm:h-80">
 			<img
-				src={info.backdropUrl}
+				src={img(info.backdropUrl)}
 				alt=""
 				referrerpolicy="no-referrer"
 				class="h-full w-full object-cover"
@@ -68,7 +69,9 @@
 		</div>
 	{/if}
 
-	<main class="relative mx-auto max-w-screen-xl p-4 {info.backdropUrl ? '-mt-44 sm:-mt-56' : ''}">
+	<main
+		class="relative mx-auto max-w-screen-xl p-4 {img(info.backdropUrl) ? '-mt-44 sm:-mt-56' : ''}"
+	>
 		<a
 			href="/{data.category}"
 			class="inline-flex items-center gap-1 rounded-full bg-zinc-950/70 px-2.5 py-1 text-sm text-(--accent) backdrop-blur transition-colors hover:bg-zinc-900"
@@ -82,9 +85,9 @@
 			<div
 				class="aspect-[2/3] w-28 shrink-0 overflow-hidden rounded-lg bg-zinc-900 shadow-xl ring-1 ring-zinc-800 sm:w-44"
 			>
-				{#if info.item.posterUrl}
+				{#if img(info.item.posterUrl)}
 					<img
-						src={info.item.posterUrl}
+						src={img(info.item.posterUrl)}
 						alt=""
 						referrerpolicy="no-referrer"
 						class="h-full w-full object-cover"
@@ -198,7 +201,7 @@
 										{#each info.watch[kind] as provider (provider.name)}
 											<a href={provider.url} target="_blank" rel="noreferrer" title={provider.name}>
 												<img
-													src={provider.logoUrl}
+													src={img(provider.logoUrl)}
 													alt={provider.name}
 													loading="lazy"
 													referrerpolicy="no-referrer"

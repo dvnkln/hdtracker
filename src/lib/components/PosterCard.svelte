@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { m } from '$lib/i18n/index.svelte';
+	import { img } from '$lib/images';
 	import { ImageOff } from '@lucide/svelte';
 
 	type Props = {
@@ -40,9 +41,9 @@
 	<div
 		class="relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-zinc-900 ring-1 ring-zinc-800 transition-shadow duration-100 group-hover/poster:ring-2 group-hover/poster:ring-(--accent) group-focus-visible/poster:ring-2 group-focus-visible/poster:ring-(--accent)"
 	>
-		{#if posterUrl}
+		{#if img(posterUrl)}
 			<img
-				src={posterUrl}
+				src={img(posterUrl)}
 				alt={title}
 				loading="lazy"
 				referrerpolicy="no-referrer"

@@ -1,6 +1,7 @@
 import { and, count, eq, inArray, isNull, ne, notInArray } from 'drizzle-orm';
 import type { Category } from '$lib/status';
 import { getDb } from './db';
+import { getImage } from './images';
 import { libraryItems, releases, watchedEpisodes } from './db/schema';
 import { airedEpisodes, getShowDetails } from './episodes';
 import { serverMessages } from './i18n';
@@ -89,6 +90,8 @@ export async function refreshItem(item: LibraryItem) {
 				.run();
 		}
 	});
+	// Keep the poster in the image store and fresh, so library titles are never without one.
+	if (fresh.posterUrl) await getImage(fresh.posterUrl);
 }
 
 type Source = LibraryItem['source'];

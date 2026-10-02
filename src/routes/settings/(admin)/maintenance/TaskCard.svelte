@@ -2,7 +2,7 @@
 	import { enhance } from '$app/forms';
 	import type { Snippet } from 'svelte';
 	import type { FormFeedback } from '$lib/forms.svelte';
-	import { formatDateTime, formatDuration, m } from '$lib/i18n/index.svelte';
+	import { formatDateTime, formatDuration, formatFileSize, m } from '$lib/i18n/index.svelte';
 	import { ui } from '$lib/ui';
 	import FeedbackText from '$lib/components/FeedbackText.svelte';
 	import SubmitButton, { BUTTON_SECONDARY } from '$lib/components/SubmitButton.svelte';
@@ -52,7 +52,12 @@
 				<span class="text-lg font-semibold">{text.name}</span>
 				<span class={hint}>{text.description}</span>
 			</label>
-			<Switch id="enabled-{task.key}" name="enabled" checked={task.enabled} />
+			<Switch
+				id="enabled-{task.key}"
+				name="enabled"
+				checked={task.enabled}
+				locked={task.required}
+			/>
 		</div>
 
 		<!-- Last and next run -->
@@ -70,6 +75,11 @@
 					{#if task.lastDurationMs !== null}
 						<span class="text-zinc-500">· {formatDuration(task.lastDurationMs)}</span>
 					{/if}
+					{#if task.lastFreedBytes}
+						<span class="text-zinc-500">
+							· {m.maintenance.freed(formatFileSize(task.lastFreedBytes))}
+						</span>
+					{/if}
 				</p>
 				{#if task.lastError}
 					<p class="text-xs break-words text-red-400">
@@ -83,6 +93,14 @@
 			<p class="text-zinc-500">
 				{task.nextRunAt ? m.maintenance.nextRun(formatDateTime(task.nextRunAt)) : m.maintenance.off}
 			</p>
+			{#if task.used}
+				{@const size = formatFileSize(task.used.bytes)}
+				<p class="text-zinc-500">
+					{task.used.kind === 'images'
+						? m.maintenance.stored.images(size, task.used.count)
+						: m.maintenance.stored[task.used.kind](size)}
+				</p>
+			{/if}
 		</div>
 
 		<!-- Schedule -->

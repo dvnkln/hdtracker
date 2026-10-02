@@ -11,6 +11,8 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 
 ### 🔧 Improved
 
+- **Images are loaded through your own server**: posters, episode images and logos are fetched and stored by hdtracker – your browser no longer contacts TMDB, IGDB or AniList at all
+- Maintenance shows how much space images, database and backups use, and how much a clean-up freed
 - Games: dates are now simply called “Early Access” and “Release”, on the dashboard and on the detail page
 
 ## 0.3.0 – 2026-10-01
