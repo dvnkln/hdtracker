@@ -1,10 +1,19 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import { CATEGORIES } from '$lib/categories';
+	import { sortByDate, type DashboardSection, type Order } from '$lib/dashboardOrder';
 	import { m } from '$lib/i18n/index.svelte';
 	import { img } from '$lib/images';
 	import { titles } from '$lib/titles.svelte';
 	import type { DashboardEntry } from '$lib/server/dashboard';
-	import { CalendarClock, ChevronRight, History, ImageOff } from '@lucide/svelte';
+	import {
+		CalendarArrowDown,
+		CalendarArrowUp,
+		CalendarClock,
+		ChevronRight,
+		History,
+		ImageOff
+	} from '@lucide/svelte';
 
 	let { data } = $props();
 
@@ -69,24 +78,34 @@
 		return label;
 	}
 
-	let sections = $derived([
-		{
-			key: 'recent',
-			title: m.home.recent,
-			hint: m.home.recentHint,
-			icon: History,
-			entries: data.recent,
-			empty: m.home.noRecent
-		},
-		{
-			key: 'upcoming',
-			title: m.home.upcoming,
-			hint: null,
-			icon: CalendarClock,
-			entries: data.upcoming,
-			empty: m.home.noUpcoming
-		}
-	]);
+	// Order of each list: what the server remembers, or what was just tapped (so the list
+	// turns around at once, before the server has answered).
+	let tapped = $state<Partial<Record<DashboardSection, Order>>>({});
+	const orderOf = (key: DashboardSection) => tapped[key] ?? data.order[key];
+
+	let sections = $derived(
+		[
+			{
+				key: 'recent' as const,
+				title: m.home.recent,
+				hint: m.home.recentHint,
+				icon: History,
+				entries: data.recent,
+				empty: m.home.noRecent
+			},
+			{
+				key: 'upcoming' as const,
+				title: m.home.upcoming,
+				hint: null,
+				icon: CalendarClock,
+				entries: data.upcoming,
+				empty: m.home.noUpcoming
+			}
+		].map((section) => {
+			const order = orderOf(section.key);
+			return { ...section, order, entries: sortByDate(section.entries, order) };
+		})
+	);
 </script>
 
 <svelte:head><title>hdtracker</title></svelte:head>
@@ -145,8 +164,35 @@
 			<section class="mt-8 first:mt-2">
 				<h2 class="flex items-baseline gap-2">
 					<section.icon size={20} class="self-center text-zinc-400" />
-					<span class="text-lg font-semibold">{section.title}</span>
-					{#if section.hint}<span class="text-xs text-zinc-500">{section.hint}</span>{/if}
+					<span class="text-lg font-semibold whitespace-nowrap">{section.title}</span>
+					{#if section.hint}<span class="min-w-0 truncate text-xs text-zinc-500"
+							>{section.hint}</span
+						>{/if}
+					<!-- Reverses the order of this list; the choice is remembered -->
+					{#if section.entries.length > 1}
+						{@const next = section.order === 'asc' ? 'desc' : 'asc'}
+						{@const label = `${m.home.order[section.key][section.order]} – ${m.home.order.reverse}`}
+						<form
+							method="POST"
+							action="?/order"
+							use:enhance={() => {
+								tapped[section.key] = next;
+							}}
+							class="ml-auto self-center"
+						>
+							<input type="hidden" name="section" value={section.key} />
+							<input type="hidden" name="order" value={next} />
+							<button
+								class="rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-100"
+								title={label}
+								aria-label={label}
+							>
+								{#if section.order === 'asc'}<CalendarArrowUp size={18} />{:else}<CalendarArrowDown
+										size={18}
+									/>{/if}
+							</button>
+						</form>
+					{/if}
 				</h2>
 
 				{#if section.entries.length === 0}

@@ -70,13 +70,18 @@ export const en: Messages = {
 
 	home: {
 		recent: 'Recently released',
-		recentHint: 'Last 4 weeks',
+		recentHint: '4 weeks',
 		upcoming: 'Coming up',
 		noRecent: 'Nothing new was released in the last 4 weeks.',
 		noUpcoming: 'No upcoming dates known.',
 		emptyLibrary:
 			'New episodes, cinema dates and releases of everything you plan to watch or are currently watching or playing show up here. Add titles to your library via the areas below.',
 		dateOpen: 'Date not announced',
+		order: {
+			recent: { desc: 'Newest first', asc: 'Oldest first' },
+			upcoming: { asc: 'Next first', desc: 'Latest first' },
+			reverse: 'reverse order'
+		},
 		kinds: {
 			cinema: 'In cinemas',
 			home: 'Home release',

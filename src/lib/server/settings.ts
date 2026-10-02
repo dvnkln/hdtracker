@@ -12,7 +12,11 @@ const DEFAULTS = {
 	hideSpoilers: 'on', // blur stills and descriptions of unwatched episodes: 'on' | 'off'
 	autoStatus: 'on', // change the status automatically when episodes are ticked: 'on' | 'off'
 	backupKeep: '7', // how many backup files to keep
-	categories: 'movies,series,anime,games' // areas shown in the app (comma-separated)
+	categories: 'movies,series,anime,games', // areas shown in the app (comma-separated)
+	// Order of the dashboard lists: 'asc' | 'desc'. Personal, like uiLanguage or animeTitle:
+	// with several users these move to the user.
+	dashboardRecent: 'desc', // newest first
+	dashboardUpcoming: 'asc' // next first
 } as const;
 
 export type SettingKey = keyof typeof DEFAULTS;

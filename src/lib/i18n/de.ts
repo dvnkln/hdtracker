@@ -74,13 +74,18 @@ export const de = {
 
 	home: {
 		recent: 'Kürzlich erschienen',
-		recentHint: 'Letzte 4 Wochen',
+		recentHint: '4 Wochen',
 		upcoming: 'Demnächst',
 		noRecent: 'In den letzten 4 Wochen ist nichts Neues erschienen.',
 		noUpcoming: 'Keine anstehenden Termine bekannt.',
 		emptyLibrary:
 			'Hier erscheinen neue Folgen, Kinostarts und Releases von allem, was du geplant hast oder gerade schaust bzw. spielst. Füge dazu Titel über die Bereiche unten zur Bibliothek hinzu.',
 		dateOpen: 'Datum offen',
+		order: {
+			recent: { desc: 'Neueste zuerst', asc: 'Älteste zuerst' },
+			upcoming: { asc: 'Nächste zuerst', desc: 'Späteste zuerst' },
+			reverse: 'Reihenfolge umkehren'
+		},
 		kinds: {
 			cinema: 'Kinostart',
 			home: 'Heimkino-Start',

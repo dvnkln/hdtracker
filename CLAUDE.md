@@ -98,6 +98,8 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
    - Kürzlich erschienen (letzte 4 Wochen)
    - Demnächst
 
+   Jede der beiden Listen lässt sich über den Kalender-Pfeil-Knopf in ihrer Überschrift umdrehen (Standard: Neueste zuerst / Nächste zuerst; „Datum offen“ bleibt am Ende). Gemerkt als persönliche Einstellung `dashboardRecent`/`dashboardUpcoming` (Tabelle `settings`, wandert bei Mehrbenutzer zum Benutzer – nicht im Browser speichern); Sortierung in `src/lib/dashboardOrder.ts`, Form-Aktion `order` der Startseite.
+
    Keine harte Trennung nach Kategorie, sondern Kategorie-Icon/Akzentfarbe pro Eintrag. Filme: Kinostart DE und Heimkino-Start DE (digital/Disc) als eigene Termine. Neue Staffel einer (teilweise) gesehenen Serie (z. B. S2 gesehen, S3 angekündigt/erschienen) landet automatisch im Dashboard. Braucht Erscheinungsdaten in der DB, die regelmäßig aktualisiert werden.
 
 9. ✅ Import von Yamtrack-Exporten (CSV), damit die bestehende Bibliothek nicht manuell übertragen werden muss.

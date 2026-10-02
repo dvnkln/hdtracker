@@ -1,9 +1,10 @@
 import { and, inArray, ne } from 'drizzle-orm';
+import { isOrder, sortByDate, type Order } from '$lib/dashboardOrder';
 import type { Category, Status } from '$lib/status';
 import { getDb } from './db';
 import { libraryItems, releases, watchedEpisodes, type ReleaseKind } from './db/schema';
 import { today } from './providers/types';
-import { enabledCategories } from './settings';
+import { enabledCategories, getSetting } from './settings';
 
 // "Kürzlich erschienen" covers this many days up to today.
 const RECENT_DAYS = 28;
@@ -27,11 +28,23 @@ export type DashboardEntry = {
 
 type Row = typeof releases.$inferSelect;
 
+// The remembered order of both lists (see dashboardOrder.ts).
+function dashboardOrder(): { recent: Order; upcoming: Order } {
+	const recent = getSetting('dashboardRecent');
+	const upcoming = getSetting('dashboardUpcoming');
+	return {
+		recent: isOrder(recent) ? recent : 'desc',
+		upcoming: isOrder(upcoming) ? upcoming : 'asc'
+	};
+}
+
 export function getDashboard(): {
 	recent: DashboardEntry[];
 	upcoming: DashboardEntry[];
+	order: { recent: Order; upcoming: Order };
 	libraryEmpty: boolean;
 } {
+	const order = dashboardOrder();
 	const db = getDb();
 	// Not dropped, and only areas that are switched on in the settings.
 	const items = db
@@ -42,7 +55,7 @@ export function getDashboard(): {
 		)
 		.all();
 	const ids = items.map((i) => i.id);
-	if (ids.length === 0) return { recent: [], upcoming: [], libraryEmpty: true };
+	if (ids.length === 0) return { recent: [], upcoming: [], order, libraryEmpty: true };
 
 	const rows = db.select().from(releases).where(inArray(releases.itemId, ids)).all();
 	const watched = db
@@ -112,8 +125,12 @@ export function getDashboard(): {
 		if (next) upcoming.push(entry(next));
 	}
 
-	// Newest first / next first; entries without a date at the end.
-	recent.sort((a, b) => b.date!.localeCompare(a.date!));
-	upcoming.sort((a, b) => (a.date ?? '9999').localeCompare(b.date ?? '9999'));
-	return { recent, upcoming, libraryEmpty: false };
+	// In the remembered order (newest first / next first unless reversed); entries without a
+	// date at the end.
+	return {
+		recent: sortByDate(recent, order.recent),
+		upcoming: sortByDate(upcoming, order.upcoming),
+		order,
+		libraryEmpty: false
+	};
 }

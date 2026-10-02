@@ -11,6 +11,7 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 
 ### ✨ New
 
+- **Dashboard order**: both lists can be reversed with one tap on the calendar button next to their heading (newest or oldest first, next or latest first); your choice is remembered on all your devices
 - **Export your library** (Settings → Data): downloads everything as a CSV file – statuses, watched episodes and anime progress. The file has the format of Yamtrack and can be imported there or into hdtracker again
 
 ### 🔧 Improved
