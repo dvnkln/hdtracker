@@ -42,6 +42,9 @@
 
 	// What happens, e.g. "Kinostart", "S03E01 · Staffelstart", "S02E03–E05", "Folgen 3–5".
 	function eventLabel(e: DashboardEntry) {
+		// Games only know "Early Access" and "Release" (the finished game, with or without
+		// early access before it).
+		if (e.category === 'games' && e.kind === 'release') return m.home.kinds.fullRelease;
 		if (e.kind !== 'episode') return m.home.kinds[e.kind];
 		const first = e.episode ?? 1;
 		const last = e.lastEpisode ?? first;

@@ -7,6 +7,12 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
+## Upcoming release
+
+### 🔧 Improved
+
+- Games: dates are now simply called “Early Access” and “Release”, on the dashboard and on the detail page
+
 ## 0.3.0 – 2026-10-01
 
 Early access games are marked, statuses only make sense for titles that are out, and a forgotten password can be reset.

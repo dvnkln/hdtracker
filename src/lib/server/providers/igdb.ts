@@ -235,7 +235,7 @@ export function getGameInfo(id: string): Promise<Details> {
 			facts.push({ key: 'earlyAccess', value: state.current!, isDate: true });
 			if (state.fullDate) facts.push({ key: 'fullRelease', value: state.fullDate, isDate: true });
 		} else if (state.current) {
-			facts.push({ key: 'released', value: state.current, isDate: true });
+			facts.push({ key: 'fullRelease', value: state.current, isDate: true });
 		}
 		if (g.platforms?.length) {
 			facts.push({ key: 'platforms', value: g.platforms.map((p) => p.name).join(', ') });

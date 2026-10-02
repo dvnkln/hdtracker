@@ -82,7 +82,7 @@ export const en: Messages = {
 			home: 'Home release',
 			release: 'Release',
 			earlyAccess: 'Early Access',
-			fullRelease: 'Full release'
+			fullRelease: 'Release'
 		},
 		episodeCode: (season, episode) =>
 			`S${String(season).padStart(2, '0')}E${String(episode).padStart(2, '0')}`,
@@ -131,9 +131,8 @@ export const en: Messages = {
 			episodes: 'Episodes',
 			firstAired: 'First aired',
 			studio: 'Studio',
-			released: 'Released',
 			earlyAccess: 'Early Access',
-			fullRelease: 'Full release',
+			fullRelease: 'Release',
 			platforms: 'Platforms',
 			developer: 'Developer'
 		},

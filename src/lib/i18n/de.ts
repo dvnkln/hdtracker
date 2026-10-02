@@ -86,7 +86,7 @@ export const de = {
 			home: 'Heimkino-Start',
 			release: 'Erscheinungstermin',
 			earlyAccess: 'Early Access',
-			fullRelease: 'Vollversion'
+			fullRelease: 'Release'
 		} as Record<string, string>,
 		episodeCode: (season: number, episode: number) =>
 			`S${String(season).padStart(2, '0')}E${String(episode).padStart(2, '0')}`,
@@ -138,9 +138,8 @@ export const de = {
 			episodes: 'Folgen',
 			firstAired: 'Erstausstrahlung',
 			studio: 'Studio',
-			released: 'Erschienen',
 			earlyAccess: 'Early Access',
-			fullRelease: 'Vollversion',
+			fullRelease: 'Release',
 			platforms: 'Plattformen',
 			developer: 'Entwickler'
 		},
