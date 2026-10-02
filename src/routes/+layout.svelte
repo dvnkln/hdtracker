@@ -33,6 +33,7 @@
 {#if data.user}
 	<!-- Stays at the top while scrolling -->
 	<header
+		data-chrome="header"
 		class="sticky top-0 z-10 border-b border-zinc-800 bg-zinc-950/95 pt-[env(safe-area-inset-top)] backdrop-blur"
 	>
 		<!-- Computers: three columns with equally wide outer ones, so the search field sits exactly

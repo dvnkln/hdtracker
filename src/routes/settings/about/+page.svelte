@@ -24,6 +24,12 @@
 		{ name: 'Wikidata', href: 'https://www.wikidata.org', text: m.about.wikidata }
 	]);
 
+	const palettes = [
+		{ name: 'Dracula', href: 'https://draculatheme.com' },
+		{ name: 'Tokyo Night', href: 'https://github.com/tokyo-night/tokyo-night-vscode-theme' },
+		{ name: "SynthWave '84", href: 'https://github.com/robb0wen/synthwave-vscode' }
+	];
+
 	const linkClass =
 		'-mx-2 flex items-center gap-2.5 rounded-lg px-2 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-zinc-100';
 </script>
@@ -80,6 +86,18 @@
 			</li>
 		{/each}
 	</ul>
+	<!-- Themes built on well-known palettes -->
+	<p class="mt-4 {hint}">
+		{m.about.palettes}
+		{#each palettes as palette, i (palette.name)}
+			{i ? ', ' : ''}<a
+				href={palette.href}
+				target="_blank"
+				rel="noreferrer"
+				class="underline hover:text-zinc-300">{palette.name}</a
+			>
+		{/each}
+	</p>
 </section>
 
 <p class="mt-6 text-center {hint}">{m.about.ai}</p>

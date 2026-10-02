@@ -155,7 +155,7 @@
 			{#each CATEGORY_KEYS as key (key)}
 				{@const cat = CATEGORIES[key]}
 				<li class="flex items-center gap-2">
-					<cat.icon size={16} color={cat.accent} />
+					<cat.icon size={16} style="color: {cat.accent}" />
 					{m.categories[key]}: {report.imported[key]}
 				</li>
 			{/each}

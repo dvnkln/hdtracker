@@ -158,7 +158,7 @@
 			{#if showDetailsLink}
 				<a
 					href="/{category}/{item.externalId}"
-					class="mt-4 flex items-center justify-center gap-2 rounded-xl border border-zinc-700 p-3 text-sm font-medium hover:bg-zinc-800"
+					class="ui-btn mt-4 flex items-center justify-center gap-2 rounded-xl border border-zinc-700 p-3 text-sm font-medium hover:bg-zinc-800"
 				>
 					<Info size={18} class="text-(--accent)" />
 					{hasEpisodes(category) ? m.sheet.detailsAndEpisodes : m.sheet.details}
@@ -190,8 +190,8 @@
 							forceInput.value = '';
 							if (locked) tapLocked(e, status);
 						}}
-						class="flex min-w-0 flex-1 touch-manipulation flex-col items-center gap-1.5 rounded-xl px-1 py-3 transition-colors disabled:opacity-50 {current
-							? 'bg-(--accent) text-white shadow-(--accent)/25 shadow-lg hover:brightness-125'
+						class="ui-btn flex min-w-0 flex-1 touch-manipulation flex-col items-center gap-1.5 rounded-xl px-1 py-3 transition-colors disabled:opacity-50 {current
+							? 'ui-keep bg-(--accent) text-white shadow-(--accent)/25 shadow-lg hover:brightness-125'
 							: locked
 								? 'bg-zinc-800/50 text-zinc-600'
 								: 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 active:bg-zinc-700'}"

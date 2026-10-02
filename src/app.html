@@ -1,10 +1,12 @@
 <!doctype html>
-<html lang="%lang%">
+<html lang="%lang%" data-theme="%theme%">
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 		<meta name="text-scale" content="scale" />
-		<meta name="theme-color" content="#09090b" />
+		<!-- Colour of the browser's bar; the second one applies on devices set to light -->
+		<meta name="theme-color" content="%themeColor%" />
+		<meta name="theme-color" media="(prefers-color-scheme: light)" content="%themeColorLight%" />
 		<!-- Installable as an app (Chrome, Edge, Android) -->
 		<link rel="manifest" href="%sveltekit.assets%/manifest.webmanifest" />
 		<!-- Home screen app on iPhone/iPad (Safari): icon, full screen, dark status bar -->

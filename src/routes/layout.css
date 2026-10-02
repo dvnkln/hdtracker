@@ -29,7 +29,498 @@
 	animation: flash-red 1.2s ease-out;
 }
 
-/* The app is always dark. */
+/* ---- Themes ----
+   A theme replaces the grey scale the whole interface is drawn with; some also change corners
+   and font. The attribute can sit on any element (the previews in the settings use that),
+   normally on <html>. "dark" is Tailwind's own zinc scale and the default. */
+
+/* What every theme starts from, so a preview inside another theme is drawn correctly:
+   accent colours of the four areas, corners, font. */
+:root,
+[data-theme] {
+	--accent-movies: #ef4444;
+	--accent-series: #3b82f6;
+	--accent-anime: #ec4899;
+	--accent-games: #22c55e;
+	--radius-xs: 0.125rem;
+	--radius-sm: 0.25rem;
+	--radius-md: 0.375rem;
+	--radius-lg: 0.5rem;
+	--radius-xl: 0.75rem;
+	--radius-2xl: 1rem;
+	--radius-3xl: 1.5rem;
+	--radius-4xl: 2rem;
+	--default-font-family: var(--font-sans);
+	--round: calc(infinity * 1px);
+	/* Signature colours a theme may set (unset = the plain grey scale is used):
+	   headings, a glow around them, the main button and its lettering, text links */
+	--ui-heading: initial;
+	--ui-heading-glow: initial;
+	--ui-primary: initial;
+	--ui-on-primary: initial;
+	--ui-link: initial;
+}
+
+/* Main buttons ("ui-primary"): the theme's signature colour, otherwise light on dark. */
+.ui-primary {
+	background-color: var(--ui-primary, var(--color-zinc-100));
+	color: var(--ui-on-primary, var(--color-zinc-900));
+}
+.ui-primary:hover:not(:disabled) {
+	filter: brightness(0.88);
+}
+/* Heading in the theme previews */
+.ui-heading-bar {
+	background-color: var(--ui-heading, var(--color-zinc-300));
+}
+
+/* Pills, switches and dots follow the theme: round, or square in the square themes. */
+.rounded-full,
+.after\:rounded-full::after {
+	border-radius: var(--round);
+}
+
+[data-theme='dark'],
+[data-theme='system'] {
+	color-scheme: dark;
+	--color-zinc-50: #fafafa;
+	--color-zinc-100: #f4f4f5;
+	--color-zinc-200: #e4e4e7;
+	--color-zinc-300: #d4d4d8;
+	--color-zinc-400: #9f9fa9;
+	--color-zinc-500: #71717b;
+	--color-zinc-600: #52525c;
+	--color-zinc-700: #3f3f46;
+	--color-zinc-800: #27272a;
+	--color-zinc-900: #18181b;
+	--color-zinc-950: #09090b;
+}
+
+/* Status colours tuned for dark backgrounds get darker (or lighter) counterparts on light
+   pages, and the accent colours of the areas a darker shade of the same colour. */
+[data-theme='light'],
+[data-theme='retro95'] {
+	color-scheme: light;
+	--color-red-300: #b91c1c;
+	--color-red-400: #dc2626;
+	--color-red-900: #fca5a5;
+	--color-red-950: #fee2e2;
+	--color-emerald-400: #047857;
+	--color-emerald-900: #6ee7b7;
+	--color-amber-400: #b45309;
+	--accent-movies: #dc2626;
+	--accent-series: #2563eb;
+	--accent-anime: #db2777;
+	--accent-games: #15803d;
+}
+
+/* The scale turned around: light page, white cards and fields, dark text. */
+[data-theme='light'] {
+	--color-zinc-50: #09090b;
+	--color-zinc-100: #18181b;
+	--color-zinc-200: #27272a;
+	--color-zinc-300: #3f3f46;
+	--color-zinc-400: #52525c;
+	--color-zinc-500: #6b6b76;
+	--color-zinc-600: #a1a1aa;
+	--color-zinc-700: #c9c9d0;
+	--color-zinc-800: #e0e0e5;
+	--color-zinc-900: #ffffff;
+	--color-zinc-950: #f4f4f5;
+}
+
+/* "System" on a device set to light: everything "light" has (keep in step with the two
+   blocks above – a media query cannot share a block with a plain selector). */
+@media (prefers-color-scheme: light) {
+	[data-theme='system'] {
+		color-scheme: light;
+		--color-red-300: #b91c1c;
+		--color-red-400: #dc2626;
+		--color-red-900: #fca5a5;
+		--color-red-950: #fee2e2;
+		--color-emerald-400: #047857;
+		--color-emerald-900: #6ee7b7;
+		--color-amber-400: #b45309;
+		--accent-movies: #dc2626;
+		--accent-series: #2563eb;
+		--accent-anime: #db2777;
+		--accent-games: #15803d;
+		--color-zinc-50: #09090b;
+		--color-zinc-100: #18181b;
+		--color-zinc-200: #27272a;
+		--color-zinc-300: #3f3f46;
+		--color-zinc-400: #52525c;
+		--color-zinc-500: #6b6b76;
+		--color-zinc-600: #a1a1aa;
+		--color-zinc-700: #c9c9d0;
+		--color-zinc-800: #e0e0e5;
+		--color-zinc-900: #ffffff;
+		--color-zinc-950: #f4f4f5;
+	}
+}
+
+/* ---- Well-known palettes, used with their original colours ---- */
+
+/* Tokyo Night (github.com/tokyo-night/tokyo-night-vscode-theme): dark blue-violet page, its
+   blue for headings and the main button, the palette's green, red and yellow for statuses */
+[data-theme='tokyonight'] {
+	color-scheme: dark;
+	--color-zinc-50: #eef0fc;
+	--color-zinc-100: #d5daf7;
+	--color-zinc-200: #cbd2f6;
+	--color-zinc-300: #c0caf5;
+	--color-zinc-400: #a9b1d6;
+	--color-zinc-500: #7f88b0;
+	--color-zinc-600: #545c7e;
+	--color-zinc-700: #3b4261;
+	--color-zinc-800: #292e42;
+	--color-zinc-900: #1f2335;
+	--color-zinc-950: #1a1b26;
+	--ui-heading: #7aa2f7;
+	--ui-primary: #7aa2f7;
+	--ui-on-primary: #1a1b26;
+	--ui-link: #7dcfff;
+	--color-emerald-400: #9ece6a;
+	--color-emerald-500: #9ece6a;
+	--color-red-300: #f7768e;
+	--color-red-400: #f7768e;
+	--color-amber-400: #e0af68;
+}
+
+/* Dracula (draculatheme.com): violet-grey page, purple headings, pink main button, cyan
+   links, the palette's green, red and orange for statuses */
+[data-theme='dracula'] {
+	color-scheme: dark;
+	--color-zinc-50: #ffffff;
+	--color-zinc-100: #f8f8f2;
+	--color-zinc-200: #f0f0ec;
+	--color-zinc-300: #e2e2ea;
+	--color-zinc-400: #bfc2d9;
+	--color-zinc-500: #9aa5ce;
+	--color-zinc-600: #6272a4;
+	--color-zinc-700: #565a72;
+	--color-zinc-800: #44475a;
+	--color-zinc-900: #343746;
+	--color-zinc-950: #282a36;
+	--ui-heading: #bd93f9;
+	--ui-primary: #ff79c6;
+	--ui-on-primary: #282a36;
+	--ui-link: #8be9fd;
+	--color-emerald-400: #50fa7b;
+	--color-emerald-500: #50fa7b;
+	--color-red-300: #ff6e6e;
+	--color-red-400: #ff5555;
+	--color-amber-400: #ffb86c;
+}
+
+/* SynthWave '84 (github.com/robb0wen/synthwave-vscode): dark violet, glowing pink headings,
+   yellow main button, cyan links, lavender text */
+[data-theme='synthwave'] {
+	color-scheme: dark;
+	--color-zinc-50: #ffffff;
+	--color-zinc-100: #f6f0ff;
+	--color-zinc-200: #e9e0fa;
+	--color-zinc-300: #dcd4f3;
+	--color-zinc-400: #b9b4e0;
+	--color-zinc-500: #8f95c6;
+	--color-zinc-600: #6d6aa0;
+	--color-zinc-700: #524a7a;
+	--color-zinc-800: #3b3055;
+	--color-zinc-900: #241b2f;
+	--color-zinc-950: #262335;
+	--ui-heading: #ff7edb;
+	--ui-heading-glow: 0 0 0.6em rgb(255 126 219 / 0.6);
+	--ui-primary: #fede5d;
+	--ui-on-primary: #262335;
+	--ui-link: #36f9f6;
+	--color-emerald-400: #72f1b8;
+	--color-emerald-500: #2ee2a0;
+	--color-red-300: #ff7a85;
+	--color-red-400: #fe4450;
+	--color-amber-400: #f97e72;
+}
+
+/* ---- Themes with a character of their own ---- */
+
+/* Cyberpunk, after the game's menus: almost black with a dark red glow, nearly all lettering
+   in coral red, dark red panels with red frames, cyan for what is secondary or selected,
+   yellow only for small highlights, headings and buttons in capitals. */
+[data-theme='cyberpunk'] {
+	color-scheme: dark;
+	--color-zinc-50: #ffb3ab;
+	--color-zinc-100: #ff8076;
+	--color-zinc-200: #ff766c;
+	--color-zinc-300: #ff6b62;
+	--color-zinc-400: #5ef6ff;
+	--color-zinc-500: #c9524f;
+	--color-zinc-600: #94333a;
+	--color-zinc-700: #7a1f27;
+	--color-zinc-800: #3f1118;
+	--color-zinc-900: #1c0b0f;
+	--color-zinc-950: #0d0608;
+	--ui-heading: #ff5a55;
+	--ui-primary: #a3282e;
+	--ui-on-primary: #fff0a0;
+	--ui-link: #5ef6ff;
+	--color-red-300: #ff9a3d;
+	--color-red-400: #ff9a3d;
+	--color-emerald-400: #1ded83;
+	--color-emerald-500: #17c46c;
+	--color-amber-400: #fcee0a;
+}
+/* the glow behind everything, and the bright line under the top bar */
+html[data-theme='cyberpunk'] {
+	background-image: radial-gradient(ellipse 120% 70% at 50% 0%, #2c0c13 0%, #0d0608 70%);
+	background-attachment: fixed;
+}
+[data-theme='cyberpunk'] [data-chrome='header'] {
+	border-color: #ff5a55;
+}
+[data-theme='cyberpunk'] :is(h1, h2, h3, .ui-btn) {
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+/* ---- Square corners ---- */
+[data-theme='cyberpunk'],
+[data-theme='retro95'],
+[data-theme='terminal'],
+[data-theme='c64'] {
+	--radius-xs: 0;
+	--radius-sm: 0;
+	--radius-md: 0;
+	--radius-lg: 0;
+	--radius-xl: 0;
+	--radius-2xl: 0;
+	--radius-3xl: 0;
+	--radius-4xl: 0;
+	--round: 0;
+}
+
+/* Cyberpunk: buttons and cards with a cut corner. The clip would also cut off the focus
+   frame, so it is dropped while a button has the keyboard focus. */
+[data-theme='cyberpunk'] .ui-btn {
+	--cut: 0.6rem;
+	clip-path: polygon(
+		0 0,
+		100% 0,
+		100% calc(100% - var(--cut)),
+		calc(100% - var(--cut)) 100%,
+		0 100%
+	);
+	/* the frame along the cut corner (outlined buttons) */
+	background-image: linear-gradient(
+		to bottom right,
+		transparent calc(50% - 1px),
+		var(--color-zinc-700) calc(50% - 1px),
+		var(--color-zinc-700) 50%,
+		transparent 50%
+	);
+	background-position: bottom right;
+	background-size: var(--cut) var(--cut);
+	background-repeat: no-repeat;
+	background-origin: border-box;
+}
+[data-theme='cyberpunk'] .ui-btn.aspect-square {
+	--cut: 0.35rem;
+}
+[data-theme='cyberpunk'] .ui-btn:focus-visible,
+[data-theme='cyberpunk'] .ui-btn:has(:focus-visible) {
+	clip-path: none;
+}
+[data-theme='cyberpunk'] .ui-card {
+	--cut: 1.1rem;
+	clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
+	/* the frame along the cut corner */
+	background-image: linear-gradient(
+		to top right,
+		transparent calc(50% - 1px),
+		var(--color-zinc-800) calc(50% - 1px),
+		var(--color-zinc-800) 50%,
+		transparent 50%
+	);
+	background-position: top right;
+	background-size: var(--cut) var(--cut);
+	background-repeat: no-repeat;
+}
+
+/* ---- Old computer interfaces: also their own font ---- */
+
+/* Desktop of the 90s: silver-grey windows, white fields, black text, navy title bar */
+[data-theme='retro95'] {
+	--default-font-family:
+		'MS Sans Serif', 'Microsoft Sans Serif', Tahoma, Geneva, Verdana, sans-serif;
+	--color-zinc-50: #000000;
+	--color-zinc-100: #000000;
+	--color-zinc-200: #111111;
+	--color-zinc-300: #1f1f1f;
+	--color-zinc-400: #333333;
+	--color-zinc-500: #4a4a4a;
+	--color-zinc-600: #6b6b6b;
+	--color-zinc-700: #808080;
+	--color-zinc-800: #a6a6a6;
+	--color-zinc-900: #ffffff;
+	--color-zinc-950: #c0c0c0;
+}
+/* Silver is darker than white: status and accent colours one more step down */
+[data-theme='retro95'] {
+	--color-red-300: #7f0000;
+	--color-red-400: #a00000;
+	--color-emerald-400: #005a2b;
+	--color-amber-400: #7a4300;
+	--accent-movies: #b00000;
+	--accent-series: #0000a8;
+	--accent-anime: #a8006a;
+	--accent-games: #006400;
+}
+/* Raised buttons and windows, sunken fields: light edge top left, dark edge bottom right.
+   "ui-keep" marks buttons that keep their own colours (e.g. the current status). */
+[data-theme='retro95'] .ui-btn {
+	border: 2px solid;
+	border-color: #ffffff #404040 #404040 #ffffff;
+	box-shadow: 1px 1px 0 #000000;
+}
+[data-theme='retro95'] .ui-btn:not(.ui-keep) {
+	background: #c0c0c0;
+	color: #000000;
+}
+[data-theme='retro95'] .ui-btn[class*='bg-red-'] {
+	color: #a00000;
+}
+/* pressed in: while clicking, the chosen option, the current status */
+[data-theme='retro95'] .ui-btn:active:not(:disabled),
+[data-theme='retro95'] .ui-btn.ui-keep,
+[data-theme='retro95'] .ui-btn[aria-pressed='true'],
+[data-theme='retro95'] .ui-btn:has(input:checked) {
+	border-color: #404040 #ffffff #ffffff #404040;
+	box-shadow: none;
+}
+[data-theme='retro95'] .ui-btn[aria-pressed='true']:not(.ui-keep),
+[data-theme='retro95'] .ui-btn:has(input:checked) {
+	background: #dcdcdc;
+}
+/* not available: greyed-out lettering */
+[data-theme='retro95'] .ui-btn[aria-disabled='true'] {
+	color: #808080;
+	text-shadow: 1px 1px 0 #ffffff;
+}
+[data-theme='retro95'] .ui-card,
+[data-theme='retro95'] dialog {
+	border: 2px solid;
+	border-color: #ffffff #808080 #808080 #ffffff;
+	background: #c0c0c0;
+	box-shadow: 1px 1px 0 #000000;
+}
+[data-theme='retro95']
+	:is(input:not([type='checkbox'], [type='radio'], .border-0), select, textarea),
+[data-theme='retro95'] form[role='search'] {
+	border: 2px solid;
+	border-color: #808080 #ffffff #ffffff #808080;
+}
+/* The header is the window's title bar: white on navy; the search field stays a white field. */
+[data-theme='retro95'] [data-chrome='header'] {
+	background: #000080;
+	color: #ffffff;
+	--color-zinc-100: #ffffff;
+	--color-zinc-400: #dcdcff;
+	--color-zinc-800: #2a2aa8;
+}
+[data-theme='retro95'] [data-chrome='header'] form[role='search'] {
+	--color-zinc-100: #000000;
+	--color-zinc-400: #333333;
+	--color-zinc-800: #a6a6a6;
+}
+
+/* Green phosphor screen, after the wrist computer of a well-known post-apocalyptic game:
+   mint-green glowing lettering on dark green that is lighter in the middle, scan lines over
+   the whole picture, thin lines as frames, headings in capitals, fixed-width font. Errors are
+   amber, the only other colour such a screen would show. */
+[data-theme='terminal'] {
+	color-scheme: dark;
+	--default-font-family:
+		ui-monospace, 'Cascadia Mono', 'DejaVu Sans Mono', Menlo, Consolas, monospace;
+	--color-zinc-50: #c4ffe0;
+	--color-zinc-100: #4dffa3;
+	--color-zinc-200: #46f29a;
+	--color-zinc-300: #3fe590;
+	--color-zinc-400: #34c97d;
+	--color-zinc-500: #2aa869;
+	--color-zinc-600: #1f8552;
+	--color-zinc-700: #1a6a43;
+	--color-zinc-800: #0f3b26;
+	--color-zinc-900: #082218;
+	--color-zinc-950: #04140c;
+	--color-red-300: #ffc96b;
+	--color-red-400: #ffb642;
+	--color-red-900: #7a5210;
+	--color-red-950: #2b1e06;
+	--color-emerald-400: #4dffa3;
+	--color-emerald-500: #2fd884;
+	--color-amber-400: #ffb642;
+}
+html[data-theme='terminal'] {
+	background-image: radial-gradient(ellipse 90% 70% at 50% 35%, #0d3222 0%, #04140c 80%);
+	background-attachment: fixed;
+	/* the glow of the phosphor */
+	text-shadow: 0 0 0.4em rgb(77 255 163 / 0.4);
+}
+/* scan lines, drawn on top of everything */
+html[data-theme='terminal']::after {
+	content: '';
+	position: fixed;
+	inset: 0;
+	z-index: 100;
+	background-image: repeating-linear-gradient(
+		to bottom,
+		rgb(0 0 0 / 0.2) 0,
+		rgb(0 0 0 / 0.2) 1px,
+		transparent 1px,
+		transparent 3px
+	);
+	pointer-events: none;
+}
+[data-theme='terminal'] :is(h1, h2, h3) {
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+}
+
+/* Home computer of the 80s: light blue on dark blue with a light blue frame around the screen,
+   capitals, fixed-width font. The original light blue is too faint for small text, so the
+   lettering is a lighter shade of it. */
+[data-theme='c64'] {
+	color-scheme: dark;
+	--default-font-family:
+		ui-monospace, 'Cascadia Mono', 'DejaVu Sans Mono', Menlo, Consolas, monospace;
+	--color-zinc-50: #e4dfff;
+	--color-zinc-100: #cfc8ff;
+	--color-zinc-200: #c4bcfc;
+	--color-zinc-300: #b9b0f7;
+	--color-zinc-400: #a59bea;
+	--color-zinc-500: #9389dc;
+	--color-zinc-600: #7869c4;
+	--color-zinc-700: #6c5eb5;
+	--color-zinc-800: #4f41a3;
+	--color-zinc-900: #40318d;
+	--color-zinc-950: #352879;
+}
+/* capitals everywhere, except in what is typed (buttons do not inherit this by themselves) */
+html[data-theme='c64'] *:not(input, textarea) {
+	text-transform: uppercase;
+}
+/* the frame of the screen, drawn on top of everything – on computers only: phones have
+   rounded display corners, which cut into a square frame */
+@media (width >= 64rem) {
+	html[data-theme='c64']::before {
+		content: '';
+		position: fixed;
+		inset: 0;
+		z-index: 100;
+		border: 0.4rem solid #6c5eb5;
+		pointer-events: none;
+	}
+}
+
+/* The app is dark unless a theme says otherwise. */
 @layer base {
 	html {
 		/* Always reserve room for the scrollbar, so the layout does not shift between
@@ -54,6 +545,17 @@
 	}
 	button:disabled {
 		cursor: not-allowed;
+	}
+
+	/* Headings and text links in the theme's signature colour, if it has one. */
+	h1,
+	h2,
+	h3 {
+		color: var(--ui-heading, inherit);
+		text-shadow: var(--ui-heading-glow, none);
+	}
+	a.underline {
+		color: var(--ui-link, inherit);
 	}
 
 	/* Visible focus frame when using the keyboard (Tab), not when clicking. */

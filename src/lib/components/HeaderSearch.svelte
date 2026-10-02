@@ -271,7 +271,7 @@
 					}}
 					style:--cat={cat.accent}
 					aria-pressed={category === key}
-					class="flex flex-col items-center gap-1 rounded-lg border py-2 text-xs transition-colors {category ===
+					class="ui-btn flex flex-col items-center gap-1 rounded-lg border py-2 text-xs transition-colors {category ===
 					key
 						? 'border-(--cat) bg-(--cat)/15 text-(--cat)'
 						: 'border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'}"

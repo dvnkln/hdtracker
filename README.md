@@ -47,6 +47,7 @@ What changed in each version: [Changelog](CHANGELOG.md). What's planned: [Roadma
 - 📄 **Detail pages** – runtime, genres, rating, release dates and similar titles.
 - 📥 **Import and export** – take over your library from Yamtrack including statuses, watched episodes and anime progress, and download it again as a file Yamtrack can read.
 - 🛠️ **Maintenance built in** – release dates refresh nightly; optional scheduled database backups you can download.
+- 🎨 **Themes** – follows your device (dark or light) by default; or pick dark, light, Tokyo Night, Dracula, SynthWave '84, Cyberpunk, Retro 95, Terminal and Breadbin.
 - 🔒 **Private** – runs on your own server, single account, all data in one SQLite file. No tracking, no cloud – [what is sent where](https://github.com/dvnkln/hdtracker/wiki/Privacy-and-security) is documented.
 
 ## 📱 Screenshots
@@ -58,6 +59,12 @@ What changed in each version: [Changelog](CHANGELOG.md). What's planned: [Roadma
 |                         Details & where to watch                         |                     Episodes (spoiler protection)                      |                                 Maintenance                                  |
 | :----------------------------------------------------------------------: | :--------------------------------------------------------------------: | :--------------------------------------------------------------------------: |
 | <img src="docs/screenshots/details.jpg" alt="Detail page" width="260" /> | <img src="docs/screenshots/episodes.jpg" alt="Episodes" width="260" /> | <img src="docs/screenshots/maintenance.jpg" alt="Maintenance" width="260" /> |
+
+### 🎨 Themes
+
+<p align="center">
+  <img src="docs/screenshots/themes.jpg" alt="The same library in nine themes: Dark, Light, Tokyo Night, Dracula, SynthWave '84, Cyberpunk, Retro 95, Terminal and Breadbin" />
+</p>
 
 <p align="center"><sub>Screenshots with a demo library. Posters and data from TMDB, AniList and IGDB.</sub></p>
 

@@ -15,6 +15,7 @@ const DEFAULTS = {
 	categories: 'movies,series,anime,games', // areas shown in the app (comma-separated)
 	// Order of the dashboard lists: 'asc' | 'desc'. Personal, like uiLanguage or animeTitle:
 	// with several users these move to the user.
+	theme: 'system', // colour theme, see $lib/themes ('system' follows the device)
 	dashboardRecent: 'desc', // newest first
 	dashboardUpcoming: 'asc' // next first
 } as const;

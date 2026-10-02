@@ -8,7 +8,7 @@
 
 <!-- Hint box: neutral dark card with an icon in front (grey "i" or yellow warning triangle) -->
 <div
-	class="flex gap-2.5 rounded-lg border border-zinc-800 bg-zinc-900 p-3 text-sm text-zinc-300 {extra}"
+	class="ui-card flex gap-2.5 rounded-lg border border-zinc-800 bg-zinc-900 p-3 text-sm text-zinc-300 {extra}"
 >
 	{#if kind === 'warning'}
 		<TriangleAlert size={18} class="mt-px shrink-0 text-amber-400" />

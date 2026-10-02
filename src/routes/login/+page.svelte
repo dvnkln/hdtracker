@@ -35,7 +35,7 @@
 		{/if}
 
 		<button
-			class="rounded-lg bg-zinc-100 p-3 font-medium text-zinc-900 transition-colors hover:bg-zinc-300 active:bg-zinc-400"
+			class="ui-btn ui-primary rounded-lg bg-zinc-100 p-3 font-medium text-zinc-900 transition-colors hover:bg-zinc-300 active:bg-zinc-400"
 		>
 			{m.auth.login}
 		</button>

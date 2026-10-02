@@ -91,7 +91,7 @@
 </script>
 
 <!-- Overall progress -->
-<section class="mt-5 rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+<section class="ui-card mt-5 rounded-xl border border-zinc-800 bg-zinc-900 p-4">
 	<div class="flex items-center justify-between gap-3">
 		<div class="text-sm">
 			<span class="font-semibold">{overall.done} / {overall.aired}</span>
@@ -105,9 +105,9 @@
 			<form method="POST" action="?/all" use:enhance={confirmReset}>
 				<input type="hidden" name="watched" value={allDone ? '0' : '1'} />
 				<button
-					class="flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium {allDone
+					class="ui-btn flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium {allDone
 						? 'text-zinc-400 hover:bg-zinc-800'
-						: 'bg-(--accent) text-white hover:brightness-125'} transition"
+						: 'ui-keep bg-(--accent) text-white hover:brightness-125'} transition"
 				>
 					{#if allDone}{m.episodes.reset}{:else}<CheckCheck size={16} />
 						{m.episodes.allWatched}{/if}
@@ -147,8 +147,8 @@
 				value={ep.number}
 				disabled={!ep.aired}
 				aria-pressed={watched}
-				class="flex aspect-square flex-col items-center justify-center rounded-lg text-sm font-semibold transition-colors {watched
-					? 'bg-(--accent) text-white hover:brightness-125'
+				class="ui-btn flex aspect-square flex-col items-center justify-center rounded-lg text-sm font-semibold transition-colors {watched
+					? 'ui-keep bg-(--accent) text-white hover:brightness-125'
 					: ep.aired
 						? 'bg-zinc-800 text-zinc-200 hover:bg-zinc-700'
 						: 'border border-dashed border-zinc-700 text-zinc-500'}"
@@ -181,7 +181,7 @@
 			</div>
 		{:else}
 			<details
-				class="group mt-3 rounded-xl border bg-zinc-900 {upcoming
+				class="ui-card group mt-3 rounded-xl border bg-zinc-900 {upcoming
 					? 'border-dashed border-zinc-700'
 					: 'border-zinc-800'}"
 				open={untrack(() => season.number === firstOpen)}

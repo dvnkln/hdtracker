@@ -10,6 +10,8 @@ import {
 } from '$lib/server/auth';
 import { allowedOrigins, isAllowedOrigin, isHttps } from '$lib/server/origins';
 import { getSetting } from '$lib/server/settings';
+import { themeFor } from '$lib/server/theme';
+import { barColors } from '$lib/themes';
 import { startScheduler } from '$lib/server/tasks/scheduler';
 
 // Runs once when the server starts, before the first request is handled.
@@ -71,8 +73,18 @@ export const handle: Handle = async ({ event, resolve }) => {
 	return resolveWithLang(event, resolve);
 };
 
-// Fills in <html lang="%lang%"> (app.html) with the interface language.
+// Fills in the placeholders of app.html: interface language and colour theme (set on the
+// server, so a page never flashes in the wrong theme while loading).
 function resolveWithLang(event: RequestEvent, resolve: Parameters<Handle>[0]['resolve']) {
 	const lang = getSetting('uiLanguage');
-	return resolve(event, { transformPageChunk: ({ html }) => html.replace('%lang%', lang) });
+	const theme = themeFor(event);
+	const [dark, light] = barColors(theme);
+	return resolve(event, {
+		transformPageChunk: ({ html }) =>
+			html
+				.replace('%lang%', lang)
+				.replace('%theme%', theme)
+				.replace('%themeColor%', dark)
+				.replace('%themeColorLight%', light)
+	});
 }

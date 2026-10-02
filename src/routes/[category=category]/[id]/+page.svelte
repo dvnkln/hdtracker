@@ -74,7 +74,7 @@
 	>
 		<a
 			href="/{data.category}"
-			class="inline-flex items-center gap-1 rounded-full bg-zinc-950/70 px-2.5 py-1 text-sm text-(--accent) backdrop-blur transition-colors hover:bg-zinc-900"
+			class="ui-btn inline-flex items-center gap-1 rounded-full bg-zinc-950/70 px-2.5 py-1 text-sm text-(--accent) backdrop-blur transition-colors hover:bg-zinc-900"
 		>
 			<ArrowLeft size={16} />
 			{m.categories[data.category]}
@@ -124,8 +124,8 @@
 					<button
 						type="button"
 						onclick={() => (sheetOpen = true)}
-						class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium {data.status
-							? 'bg-(--accent) text-white hover:brightness-125'
+						class="ui-btn inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium {data.status
+							? 'ui-keep bg-(--accent) text-white hover:brightness-125'
 							: 'border border-zinc-600 bg-zinc-900/80 hover:bg-zinc-800'} transition"
 					>
 						{#if data.status}
@@ -239,7 +239,7 @@
 							href={link.url}
 							target="_blank"
 							rel="noreferrer"
-							class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 px-3 py-1.5 text-sm hover:bg-zinc-800"
+							class="ui-btn inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 px-3 py-1.5 text-sm hover:bg-zinc-800"
 						>
 							{link.name}
 							<ExternalLink size={13} class="text-zinc-500" />

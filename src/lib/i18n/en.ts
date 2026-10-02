@@ -193,6 +193,23 @@ export const en: Messages = {
 		save: 'Save',
 		saved: 'Saved ✓',
 
+		appearance: 'Appearance',
+		appearanceHint: 'Colour theme of the interface',
+		theme: 'Theme',
+		themeHint:
+			'Applies to your account on all devices – and to the login page of this device. “System” follows the light/dark setting of the device.',
+		themes: {
+			system: 'System',
+			dark: 'Dark',
+			light: 'Light',
+			tokyonight: 'Tokyo Night',
+			dracula: 'Dracula',
+			synthwave: "SynthWave '84",
+			cyberpunk: 'Cyberpunk',
+			retro95: 'Retro 95',
+			terminal: 'Terminal',
+			c64: 'Breadbin'
+		},
 		display: 'Display',
 		uiLanguage: 'Interface language',
 		contentLanguage: 'Content language',
@@ -385,6 +402,7 @@ export const en: Messages = {
 		igdb: 'Game data',
 		anilist: 'Anime data',
 		wikidata: 'Direct links to titles on streaming services',
+		palettes: 'Some themes use free colour palettes:',
 		ai: 'Built with the help of AI (Claude Code).'
 	},
 

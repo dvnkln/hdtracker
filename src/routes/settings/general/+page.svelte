@@ -126,7 +126,7 @@
 			{@const cat = CATEGORIES[key]}
 			<div class="flex items-center justify-between gap-4">
 				<label for="area-{key}" class="flex cursor-pointer items-center gap-2 {labelText}">
-					<cat.icon size={18} color={cat.accent} />
+					<cat.icon size={18} style="color: {cat.accent}" />
 					{m.categories[key]}
 				</label>
 				<Switch

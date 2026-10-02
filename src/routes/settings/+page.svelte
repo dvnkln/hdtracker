@@ -30,7 +30,7 @@
 				</p>
 			{/if}
 			<ul
-				class="divide-y divide-zinc-800 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/40"
+				class="ui-card divide-y divide-zinc-800 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/40"
 			>
 				{#each group.items as item (item.href)}
 					<li>

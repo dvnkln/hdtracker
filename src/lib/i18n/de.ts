@@ -200,6 +200,23 @@ export const de = {
 		save: 'Speichern',
 		saved: 'Gespeichert ✓',
 
+		appearance: 'Design',
+		appearanceHint: 'Farbschema der Oberfläche',
+		theme: 'Farbschema',
+		themeHint:
+			'Gilt für dein Konto auf allen Geräten – und für die Anmeldeseite dieses Geräts. „System“ folgt der Hell/Dunkel-Einstellung des Geräts.',
+		themes: {
+			system: 'System',
+			dark: 'Dunkel',
+			light: 'Hell',
+			tokyonight: 'Tokyo Night',
+			dracula: 'Dracula',
+			synthwave: "SynthWave '84",
+			cyberpunk: 'Cyberpunk',
+			retro95: 'Retro 95',
+			terminal: 'Terminal',
+			c64: 'Brotkasten'
+		},
 		display: 'Darstellung',
 		uiLanguage: 'Sprache der Oberfläche',
 		contentLanguage: 'Sprache der Inhalte',
@@ -404,6 +421,7 @@ export const de = {
 		igdb: 'Spieldaten',
 		anilist: 'Animedaten',
 		wikidata: 'Direktlinks zu Titeln bei Streaming-Diensten',
+		palettes: 'Einige Farbschemata nutzen freie Farbpaletten:',
 		ai: 'Entwickelt mit Unterstützung von KI (Claude Code).'
 	},
 
