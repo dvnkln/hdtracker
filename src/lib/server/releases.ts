@@ -1,8 +1,10 @@
 import { and, count, eq, inArray, isNull, ne, notInArray } from 'drizzle-orm';
-import type { Category } from '$lib/status';
+import { hasEpisodes, type Category } from '$lib/status';
 import { getDb } from './db';
 import { getImage } from './images';
+import { deleteDetailsOfHiddenAreas, saveDetails } from './itemDetails';
 import { libraryItems, releases, watchedEpisodes } from './db/schema';
+import { getDetails } from './details';
 import { airedEpisodes, getShowDetails } from './episodes';
 import { serverMessages } from './i18n';
 import type { LibraryItem } from './library';
@@ -57,16 +59,23 @@ function fetchReleases(category: Category, externalId: string): Promise<ReleaseI
 		case 'series':
 			return getSeriesReleases(externalId, language);
 		case 'anime':
-			return getAnimeReleases(externalId, KEEP_DAYS);
+			return getAnimeReleases(externalId);
 		case 'games':
 			return getGameReleases(externalId);
 	}
 }
 
-// Loads the current metadata (title, poster, ...) and release dates of one library item.
+// Loads everything about one library item and stores it: title and poster, release dates
+// (dashboard), all details of its detail page and the images shown there. After this, the
+// item's pages open without asking the API.
 export async function refreshItem(item: LibraryItem) {
 	const { item: fresh, events } = await fetchReleases(item.category, item.externalId);
-	getDb().transaction((tx) => {
+	const info = await getDetails(item.category, item.externalId);
+	const show = hasEpisodes(item.category)
+		? await getShowDetails(item.category, item.externalId)
+		: null;
+
+	const saved = getDb().transaction((tx) => {
 		const updated = tx
 			.update(libraryItems)
 			.set({
@@ -82,16 +91,32 @@ export async function refreshItem(item: LibraryItem) {
 			.where(eq(libraryItems.id, item.id))
 			.run();
 		// Removed from the library meanwhile (e.g. library cleared while loading): nothing to save.
-		if (updated.changes === 0) return;
+		if (updated.changes === 0) return false;
 		tx.delete(releases).where(eq(releases.itemId, item.id)).run();
 		if (events.length) {
 			tx.insert(releases)
 				.values(events.map((e) => ({ ...e, itemId: item.id })))
 				.run();
 		}
+		return true;
 	});
-	// Keep the poster in the image store and fresh, so library titles are never without one.
-	if (fresh.posterUrl) await getImage(fresh.posterUrl);
+	if (!saved) return;
+	saveDetails(item.id, info, show);
+
+	// Keep the images at the top of the detail page in the image store and fresh. Episode
+	// images and the posters of similar titles take a lot of space and are further down the
+	// page: they are loaded when somebody looks at them. A missing image must not make the
+	// whole refresh fail.
+	const images = [
+		fresh.posterUrl,
+		info.backdropUrl,
+		...(info.watch ? [...info.watch.flatrate, ...info.watch.rent, ...info.watch.buy] : []).map(
+			(p) => p.logoUrl
+		)
+	];
+	await Promise.all(
+		[...new Set(images)].filter((url) => url !== null).map((url) => getImage(url).catch(() => null))
+	);
 }
 
 type Source = LibraryItem['source'];
@@ -108,6 +133,17 @@ function exclusive<T>(source: Source, work: () => Promise<T>): Promise<T> {
 	const run = locks[source].then(() => runInBackground(work));
 	locks[source] = run.catch(() => {});
 	return run;
+}
+
+// Refreshes one item in the background, e.g. when its detail page shows an older stored copy.
+// Never twice at the same time for one item; waits its turn behind other work for the service.
+const refreshing = new Set<number>();
+export function refreshSoon(item: LibraryItem) {
+	if (refreshing.has(item.id)) return;
+	refreshing.add(item.id);
+	exclusive(item.source, () => refreshItem(item))
+		.catch((err) => console.error(`Refreshing ${item.category}/${item.externalId} failed`, err))
+		.finally(() => refreshing.delete(item.id));
 }
 
 const isRateLimited = (err: unknown) => err instanceof ProviderError && err.status === 429;
@@ -189,7 +225,7 @@ export function pendingStatus() {
 		)
 		.groupBy(libraryItems.source)
 		.all();
-	const perItem: Record<LibraryItem['source'], number> = { tmdb: 0.3, igdb: 0.4, anilist: 3.2 };
+	const perItem: Record<LibraryItem['source'], number> = { tmdb: 0.6, igdb: 0.8, anilist: 3.2 };
 	return {
 		pending: rows.reduce((sum, r) => sum + r.n, 0),
 		// The services load in parallel, so the slowest one decides.
@@ -200,6 +236,7 @@ export function pendingStatus() {
 // Background task "metadata": refreshes all items except dropped ones and hidden areas; one
 // after another per service, the services in parallel.
 export async function refreshAll() {
+	deleteDetailsOfHiddenAreas();
 	const items = getDb()
 		.select()
 		.from(libraryItems)

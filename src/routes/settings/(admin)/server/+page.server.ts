@@ -1,7 +1,10 @@
 import { fail } from '@sveltejs/kit';
 import { requireAdmin } from '$lib/server/auth';
+import { getDb } from '$lib/server/db';
+import { libraryItems } from '$lib/server/db/schema';
 import { serverMessages } from '$lib/server/i18n';
 import { getContentLanguages, getWatchRegions } from '$lib/server/providers/tmdb';
+import { refreshPending } from '$lib/server/releases';
 import { getSetting, setSettings } from '$lib/server/settings';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -39,7 +42,13 @@ export const actions: Actions = {
 		if (!LANGUAGE_PATTERN.test(language) || !REGION_PATTERN.test(region)) {
 			return fail(400, { section: 'content', error: serverMessages().common.invalidData });
 		}
+		const changed = language !== getSetting('language') || region !== getSetting('region');
 		setSettings({ language, region });
+		// Stored texts and streaming offers depend on both: load the whole library again.
+		if (changed) {
+			getDb().update(libraryItems).set({ metadataUpdatedAt: null }).run();
+			refreshPending();
+		}
 		return { section: 'content', message: serverMessages().settings.saved };
 	}
 };

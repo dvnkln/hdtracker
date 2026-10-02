@@ -254,7 +254,7 @@ export const en: Messages = {
 			metadata: {
 				name: 'Refresh metadata',
 				description:
-					'Reloads titles, posters and release dates of all entries (for the dashboard). Dropped titles are skipped.'
+					'Reloads details, release dates and images of all entries in your library and keeps them ready, so the dashboard and detail pages open instantly. Dropped titles are skipped.'
 			},
 			optimize: {
 				name: 'Database care',
@@ -286,6 +286,8 @@ export const en: Messages = {
 		freed: (size) => `${size} freed`,
 		stored: {
 			images: (size, count) => `Stored: ${count} ${count === 1 ? 'image' : 'images'} (${size})`,
+			metadata: (size, count) =>
+				`Preloaded: details of ${count} ${count === 1 ? 'title' : 'titles'} (${size})`,
 			optimize: (size) => `Database size: ${size}`,
 			backup: (size) => `All backups: ${size}`
 		},
@@ -294,6 +296,7 @@ export const en: Messages = {
 		running: 'Running …',
 		runNow: 'Run now',
 		done: 'Done ✓',
+		stillRunning: 'Still running in the background – reload the page later to see the result.',
 		apiHint:
 			'This task sends many requests to TMDB, IGDB or AniList. Please do not start it by hand too often, or the services may block the app for a while.',
 		keep: 'How many backups to keep',

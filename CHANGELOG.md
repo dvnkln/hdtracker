@@ -7,6 +7,17 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
+## Upcoming release
+
+### 🔧 Improved
+
+- **Titles in your library open instantly**: details and images of a title are loaded in the background as soon as you add it and refreshed every night, so detail pages no longer wait for TMDB, IGDB or AniList
+- Maintenance shows how many titles are preloaded; a long “Run now” keeps running in the background instead of blocking the page
+
+### 🐛 Fixed
+
+- Anime that have not started yet and have no exact start date were treated as already released: they were missing on the dashboard and their statuses were not locked
+
 ## 0.4.0 – 2026-10-02
 
 Your browser now only talks to your own hdtracker: images are fetched and stored by the server.

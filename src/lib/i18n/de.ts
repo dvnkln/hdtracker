@@ -263,7 +263,7 @@ export const de = {
 			metadata: {
 				name: 'Metadaten aktualisieren',
 				description:
-					'Holt Titel, Poster und Erscheinungstermine aller Einträge neu (für das Dashboard). Abgebrochene Titel werden übersprungen.'
+					'Lädt für alle Einträge der Bibliothek Details, Erscheinungstermine und Bilder neu und hält sie vor, damit Dashboard und Detailseiten sofort da sind. Abgebrochene Titel werden übersprungen.'
 			},
 			optimize: {
 				name: 'Datenbank-Pflege',
@@ -302,6 +302,8 @@ export const de = {
 		stored: {
 			images: (size: string, count: number) =>
 				`Gespeichert: ${count} ${count === 1 ? 'Bild' : 'Bilder'} (${size})`,
+			metadata: (size: string, count: number) =>
+				`Vorgeladen: Details zu ${count} ${count === 1 ? 'Titel' : 'Titeln'} (${size})`,
 			optimize: (size: string) => `Größe der Datenbank: ${size}`,
 			backup: (size: string) => `Backups gesamt: ${size}`
 		},
@@ -310,6 +312,8 @@ export const de = {
 		running: 'Läuft gerade …',
 		runNow: 'Jetzt ausführen',
 		done: 'Erledigt ✓',
+		stillRunning:
+			'Läuft im Hintergrund weiter – das Ergebnis steht nach dem Neuladen der Seite hier.',
 		apiHint:
 			'Diese Aufgabe stellt viele Anfragen an TMDB, IGDB bzw. AniList. Bitte nicht zu oft von Hand starten, sonst sperren die Dienste die App vorübergehend.',
 		keep: 'Wie viele Backups behalten',

@@ -3,14 +3,13 @@ import type { Category } from '$lib/categories';
 import {
 	airedEpisodes,
 	findItem,
-	getShowDetails,
 	hasEpisodes,
 	setEpisodes,
 	watchedKeys
 } from '$lib/server/episodes';
-import { getDetails } from '$lib/server/details';
+import { detailsFor } from '$lib/server/itemDetails';
 import { libraryStatusFor } from '$lib/server/library';
-import { ProviderError } from '$lib/server/providers/types';
+import { ProviderError, type ShowDetails } from '$lib/server/providers/types';
 import { serverMessages } from '$lib/server/i18n';
 import { getSetting } from '$lib/server/settings';
 import type { Actions, PageServerLoad } from './$types';
@@ -30,11 +29,14 @@ async function loadDetails(params: { category: string; id: string }) {
 	const category = params.category as Category;
 	if (!hasEpisodes(category) || !ID_PATTERN.test(params.id))
 		error(404, serverMessages().common.notFound);
+	let show: ShowDetails | null;
 	try {
-		return { category, details: await getShowDetails(category, params.id) };
+		({ show } = await detailsFor(category, params.id));
 	} catch (err) {
 		failLoading(err);
 	}
+	if (!show) error(404, serverMessages().common.notFound);
+	return { category, details: show };
 }
 
 export const load: PageServerLoad = async ({ params }) => {
@@ -42,11 +44,8 @@ export const load: PageServerLoad = async ({ params }) => {
 	if (!ID_PATTERN.test(params.id)) error(404, serverMessages().common.notFound);
 
 	try {
-		// Details and (for series/anime) the episode list are loaded in parallel.
-		const [info, show] = await Promise.all([
-			getDetails(category, params.id),
-			hasEpisodes(category) ? getShowDetails(category, params.id) : null
-		]);
+		// Titles of the library come from the database, everything else from the API.
+		const { info, show } = await detailsFor(category, params.id);
 		const item = findItem(category, info.item.externalId);
 		const similarStatus = libraryStatusFor(
 			category,

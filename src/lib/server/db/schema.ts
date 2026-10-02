@@ -1,6 +1,6 @@
 import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 import type { Category, Status } from '../../status';
-import type { SearchResult } from '../providers/types';
+import type { Details, SearchResult, ShowDetails } from '../providers/types';
 
 // Simple key/value store for app settings (region, language, ...).
 export const settings = sqliteTable('settings', {
@@ -56,6 +56,18 @@ export const libraryItems = sqliteTable(
 	},
 	(t) => [uniqueIndex('library_items_unique').on(t.category, t.source, t.externalId)]
 );
+
+// Everything the detail page of a library item shows, kept so the page opens without asking
+// the API (see server/itemDetails.ts). Removed together with the item.
+export const itemDetails = sqliteTable('item_details', {
+	itemId: integer('item_id')
+		.primaryKey()
+		.references(() => libraryItems.id, { onDelete: 'cascade' }),
+	info: text('info', { mode: 'json' }).$type<Details>().notNull(),
+	// Seasons and episodes (series and anime only)
+	show: text('show', { mode: 'json' }).$type<ShowDetails>(),
+	fetchedAt: integer('fetched_at', { mode: 'timestamp' }).notNull()
+});
 
 // One row per watched episode. Anime use season 1.
 export const watchedEpisodes = sqliteTable(

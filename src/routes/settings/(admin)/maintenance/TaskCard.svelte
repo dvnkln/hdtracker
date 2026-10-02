@@ -96,8 +96,8 @@
 			{#if task.used}
 				{@const size = formatFileSize(task.used.bytes)}
 				<p class="text-zinc-500">
-					{task.used.kind === 'images'
-						? m.maintenance.stored.images(size, task.used.count)
+					{task.used.kind === 'images' || task.used.kind === 'metadata'
+						? m.maintenance.stored[task.used.kind](size, task.used.count)
 						: m.maintenance.stored[task.used.kind](size)}
 				</p>
 			{/if}
