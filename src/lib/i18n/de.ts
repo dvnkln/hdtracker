@@ -331,6 +331,17 @@ export const de = {
 		restoreLink: 'Backups and restore'
 	},
 
+	exportData: {
+		title: 'Export',
+		intro:
+			'Lädt deine ganze Bibliothek als CSV-Datei herunter: Status, gesehene Folgen und Anime-Fortschritt. Die Datei hat das Format von Yamtrack und lässt sich dort – und hier – wieder importieren.',
+		download: 'Bibliothek herunterladen',
+		animeLoading: (n: number) =>
+			`${n} Anime ${n === 1 ? 'wird' : 'werden'} noch geladen und ${n === 1 ? 'fehlt' : 'fehlen'} bis dahin in der Datei.`,
+		animeUnknown: (n: number) =>
+			`${n} Anime ${n === 1 ? 'hat' : 'haben'} keinen Eintrag bei MyAnimeList und ${n === 1 ? 'fehlt' : 'fehlen'} deshalb in der Datei (Yamtrack kennt Anime nur darüber).`
+	},
+
 	importData: {
 		title: 'Import',
 		intro:

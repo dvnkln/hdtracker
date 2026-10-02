@@ -188,6 +188,7 @@ export async function importYamtrack(
 					year: null,
 					releaseDate: null,
 					earlyAccess: false,
+					malId: null,
 					posterUrl: row.image?.startsWith('https://') ? row.image : null,
 					overview: null
 				};

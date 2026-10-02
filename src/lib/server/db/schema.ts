@@ -41,6 +41,8 @@ export const libraryItems = sqliteTable(
 		releaseDate: text('release_date'),
 		// Games: currently only available in early access
 		earlyAccess: integer('early_access', { mode: 'boolean' }).notNull().default(false),
+		// Anime: ID at MyAnimeList (the export for Yamtrack needs it)
+		malId: integer('mal_id'),
 		posterUrl: text('poster_url'),
 		overview: text('overview'),
 		status: text('status').$type<Status>().notNull(),

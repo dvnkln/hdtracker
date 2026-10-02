@@ -12,7 +12,15 @@
 		BUTTON_SECONDARY
 	} from '$lib/components/SubmitButton.svelte';
 	import Notice from '$lib/components/Notice.svelte';
-	import { CircleCheck, FileUp, LoaderCircle, TriangleAlert, Upload } from '@lucide/svelte';
+	import {
+		CircleCheck,
+		Download,
+		FileDown,
+		FileUp,
+		LoaderCircle,
+		TriangleAlert,
+		Upload
+	} from '@lucide/svelte';
 
 	let { data, form } = $props();
 
@@ -177,6 +185,28 @@
 		{/if}
 	</section>
 {/if}
+
+<!-- Export: a plain download, nothing is asked from any API -->
+<section class={card}>
+	<h3 class={heading}><FileDown size={20} class="text-zinc-400" />{m.exportData.title}</h3>
+	<p class="mt-1 {hint}">{m.exportData.intro}</p>
+	<div class="mt-4 {actions}">
+		<a
+			href="/settings/data/export"
+			download
+			class="{BUTTON_SECONDARY} inline-flex items-center gap-2"
+		>
+			<Download size={18} />
+			{m.exportData.download}
+		</a>
+	</div>
+	{#if data.exportGaps.loading}
+		<p class="mt-3 {hint}">{m.exportData.animeLoading(data.exportGaps.loading)}</p>
+	{/if}
+	{#if data.exportGaps.unknown}
+		<p class="mt-3 {hint}">{m.exportData.animeUnknown(data.exportGaps.unknown)}</p>
+	{/if}
+</section>
 
 <!-- Danger zone -->
 <section class="{card} border-red-900/70">

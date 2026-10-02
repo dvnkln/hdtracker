@@ -171,6 +171,7 @@ function gameToResult(g: IgdbGame): SearchResult {
 		year: yearOf(state.current),
 		releaseDate: state.playable,
 		earlyAccess: state.earlyAccess,
+		malId: null,
 		posterUrl: g.cover ? `${COVER}${g.cover.image_id}.jpg` : null,
 		overview: g.summary ?? null
 	};

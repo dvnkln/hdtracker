@@ -29,6 +29,7 @@ The guides live in the **[wiki](https://github.com/dvnkln/hdtracker/wiki)**:
 - ⬆️ [Updating](https://github.com/dvnkln/hdtracker/wiki/Updating)
 - 💾 [Backups and restore](https://github.com/dvnkln/hdtracker/wiki/Backups-and-restore)
 - 📥 [Import from Yamtrack](https://github.com/dvnkln/hdtracker/wiki/Import-from-Yamtrack)
+- 📤 [Export](https://github.com/dvnkln/hdtracker/wiki/Export) – your library as a file, compatible with Yamtrack
 - 🛡️ [Privacy and security](https://github.com/dvnkln/hdtracker/wiki/Privacy-and-security) – what is sent where, how your data is stored
 - 🔑 [Reset your password](https://github.com/dvnkln/hdtracker/wiki/Reset-your-password)
 - 💻 [Development](https://github.com/dvnkln/hdtracker/wiki/Development) – running hdtracker from source
@@ -44,7 +45,7 @@ What changed in each version: [Changelog](CHANGELOG.md). What's planned: [Roadma
 - 🍿 **Where to watch** – streaming, rent and buy offers for your region (via JustWatch), with direct links where possible.
 - 🔎 **Quick search** – always at the top of the screen; on a computer, press <kbd>/</kbd> to start typing.
 - 📄 **Detail pages** – runtime, genres, rating, release dates and similar titles.
-- 📥 **Import from Yamtrack** – take over your library including statuses, watched episodes and anime progress.
+- 📥 **Import and export** – take over your library from Yamtrack including statuses, watched episodes and anime progress, and download it again as a file Yamtrack can read.
 - 🛠️ **Maintenance built in** – release dates refresh nightly; optional scheduled database backups you can download.
 - 🔒 **Private** – runs on your own server, single account, all data in one SQLite file. No tracking, no cloud – [what is sent where](https://github.com/dvnkln/hdtracker/wiki/Privacy-and-security) is documented.
 

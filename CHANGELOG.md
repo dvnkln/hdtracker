@@ -9,6 +9,10 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 
 ## Upcoming release
 
+### ✨ New
+
+- **Export your library** (Settings → Data): downloads everything as a CSV file – statuses, watched episodes and anime progress. The file has the format of Yamtrack and can be imported there or into hdtracker again
+
 ### 🔧 Improved
 
 - **Titles in your library open instantly**: details and images of a title are loaded in the background as soon as you add it and refreshed every night, so detail pages no longer wait for TMDB, IGDB or AniList

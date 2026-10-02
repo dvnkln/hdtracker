@@ -313,6 +313,17 @@ export const en: Messages = {
 		restoreLink: 'Backups and restore'
 	},
 
+	exportData: {
+		title: 'Export',
+		intro:
+			'Downloads your whole library as a CSV file: statuses, watched episodes and anime progress. The file has the format of Yamtrack and can be imported there – and here – again.',
+		download: 'Download library',
+		animeLoading: (n) =>
+			`${n} anime ${n === 1 ? 'is' : 'are'} still loading and ${n === 1 ? 'is' : 'are'} missing from the file until then.`,
+		animeUnknown: (n) =>
+			`${n} anime ${n === 1 ? 'has' : 'have'} no entry at MyAnimeList and ${n === 1 ? 'is' : 'are'} therefore missing from the file (Yamtrack only knows anime through it).`
+	},
+
 	importData: {
 		title: 'Import',
 		intro:

@@ -17,6 +17,7 @@ query ($search: String) {
   Page(perPage: 30) {
     media(search: $search, type: ANIME, sort: SEARCH_MATCH, isAdult: false) {
       id
+      idMal
       title { romaji english }
       startDate { year month day }
       status
@@ -29,6 +30,7 @@ query ($search: String) {
 type AniListDate = { year: number | null; month: number | null; day: number | null };
 type AniListMedia = {
 	id: number;
+	idMal: number | null;
 	title: { romaji: string; english: string | null };
 	startDate: AniListDate;
 	status: 'FINISHED' | 'RELEASING' | 'NOT_YET_RELEASED' | 'CANCELLED' | 'HIATUS' | null;
@@ -79,6 +81,7 @@ function toSearchResult(m: AniListMedia): SearchResult {
 		year: m.startDate.year,
 		releaseDate: releaseDateOf(m),
 		earlyAccess: false,
+		malId: m.idMal,
 		posterUrl: m.coverImage.large,
 		overview: stripHtml(m.description)
 	};
@@ -92,6 +95,7 @@ const ANIME_QUERY = `
 query ($id: Int, $since: Int) {
   Media(id: $id, type: ANIME) {
     id
+    idMal
     title { romaji english }
     startDate { year month day }
     status
@@ -112,6 +116,7 @@ query ($id: Int, $since: Int) {
       nodes {
         mediaRecommendation {
           id
+          idMal
           type
           title { romaji english }
           startDate { year month day }

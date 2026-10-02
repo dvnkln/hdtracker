@@ -63,6 +63,7 @@ function movieToResult(m: TmdbMovie): SearchResult {
 		year: yearOf(m.release_date),
 		releaseDate: m.release_date || null,
 		earlyAccess: false,
+		malId: null,
 		posterUrl: poster(m.poster_path),
 		overview: m.overview || null
 	};
@@ -77,6 +78,7 @@ function tvToResult(s: TmdbTv): SearchResult {
 		year: yearOf(s.first_air_date),
 		releaseDate: s.first_air_date || null,
 		earlyAccess: false,
+		malId: null,
 		posterUrl: poster(s.poster_path),
 		overview: s.overview || null
 	};

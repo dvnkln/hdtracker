@@ -8,12 +8,14 @@ import {
 	importYamtrack,
 	type HiddenChoice
 } from '$lib/server/import/yamtrack';
+import { animeWithoutMalId } from '$lib/server/export/yamtrack';
 import { pendingStatus } from '$lib/server/releases';
 import type { Actions, PageServerLoad } from './$types';
 
-// Import, (later) export and deleting your own data.
-// How many titles still wait for their details (shown after an import).
-export const load: PageServerLoad = () => pendingStatus();
+// Import, export and deleting your own data.
+// How many titles still wait for their details (shown after an import), and how many anime the
+// export has to leave out.
+export const load: PageServerLoad = () => ({ ...pendingStatus(), exportGaps: animeWithoutMalId() });
 
 export const actions: Actions = {
 	// Deletes all entries of one area (or all), including watched episodes.

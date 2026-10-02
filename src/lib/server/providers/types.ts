@@ -15,6 +15,8 @@ export type SearchResult = {
 	releaseDate: string | null;
 	// Games: currently only available in early access (no full release yet)
 	earlyAccess: boolean;
+	// Anime: ID of the same title at MyAnimeList, if there is one (needed for the export)
+	malId: number | null;
 	posterUrl: string | null;
 	overview: string | null;
 };

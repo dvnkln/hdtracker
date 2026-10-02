@@ -124,6 +124,9 @@ export function parseItem(category: Category, json: string): SearchResult {
 	if (releaseDate && !/^\d{4}-\d{2}-\d{2}$/.test(releaseDate))
 		throw new Error('invalid releaseDate');
 
+	const malId = raw.malId === null || raw.malId === undefined ? null : Number(raw.malId);
+	if (malId !== null && !(Number.isInteger(malId) && malId > 0)) throw new Error('invalid malId');
+
 	const posterUrl = optionalString(raw.posterUrl, 1000);
 	if (posterUrl && !posterUrl.startsWith('https://')) throw new Error('invalid posterUrl');
 
@@ -135,6 +138,7 @@ export function parseItem(category: Category, json: string): SearchResult {
 		year,
 		releaseDate,
 		earlyAccess: raw.earlyAccess === true,
+		malId,
 		posterUrl,
 		overview: optionalString(raw.overview, 5000)
 	};
