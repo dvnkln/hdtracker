@@ -62,9 +62,17 @@ What changed in each version: [Changelog](CHANGELOG.md). What's planned: [Roadma
 
 ### 🎨 Themes
 
-<p align="center">
-  <img src="docs/screenshots/themes.jpg" alt="The same library in nine themes: Dark, Light, Tokyo Night, Dracula, SynthWave '84, Cyberpunk, Retro 95, Terminal and Breadbin" />
-</p>
+|                                    Dark                                    |                                    Light                                     |                                       Tokyo Night                                       |
+| :------------------------------------------------------------------------: | :--------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------: |
+| <img src="docs/screenshots/theme-dark.jpg" alt="Dark theme" width="260" /> | <img src="docs/screenshots/theme-light.jpg" alt="Light theme" width="260" /> | <img src="docs/screenshots/theme-tokyonight.jpg" alt="Tokyo Night theme" width="260" /> |
+
+|                                     Dracula                                      |                                      SynthWave '84                                       |                                      Cyberpunk                                       |
+| :------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------: |
+| <img src="docs/screenshots/theme-dracula.jpg" alt="Dracula theme" width="260" /> | <img src="docs/screenshots/theme-synthwave.jpg" alt="SynthWave '84 theme" width="260" /> | <img src="docs/screenshots/theme-cyberpunk.jpg" alt="Cyberpunk theme" width="260" /> |
+
+|                                     Retro 95                                      |                                      Terminal                                      |                                   Breadbin                                    |
+| :-------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------: | :---------------------------------------------------------------------------: |
+| <img src="docs/screenshots/theme-retro95.jpg" alt="Retro 95 theme" width="260" /> | <img src="docs/screenshots/theme-terminal.jpg" alt="Terminal theme" width="260" /> | <img src="docs/screenshots/theme-c64.jpg" alt="Breadbin theme" width="260" /> |
 
 <p align="center"><sub>Screenshots with a demo library. Posters and data from TMDB, AniList and IGDB.</sub></p>
 

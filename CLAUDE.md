@@ -110,7 +110,7 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
 ## Roadmap
 
 - Was bis v1.0.0 geplant ist, steht öffentlich in `ROADMAP.md` (Englisch, Checkliste, aus Nutzersicht). Auf „was steht noch an?“ daraus antworten.
-- Pflege: neue Idee des Users für später → dort eintragen; umgesetzt → abhaken (`- [x]`); beim Release abgehakte Punkte entfernen (sie stehen dann im Changelog). Kein GitHub-Milestone – bewusst, damit der User nichts von Hand pflegen muss.
+- Pflege: neue Idee des Users für später → dort eintragen; umgesetzt → abhaken (`- [x]`); abgehakte Punkte bleiben bis zum Release von v1.0.0 stehen (erst dann entfernen, nicht bei Zwischen-Releases). Kein GitHub-Milestone – bewusst, damit der User nichts von Hand pflegen muss.
 - Technische Notizen zu den Punkten (nicht in der Roadmap):
   - Benachrichtigungen (Pushover): persönlicher Bereich „Benachrichtigungen“ in den Einstellungen.
   - Streaming-Übersicht: Anbieter ohne Treffer ausblenden. Offen: eigener Menüpunkt oder Teil des Dashboards.

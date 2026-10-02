@@ -7,24 +7,33 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
-## Upcoming release
+## 0.5.0 – 2026-10-02
+
+Themes, an export, and a library that opens without waiting.
 
 ### ✨ New
 
 - **Themes** (Settings → Appearance): choose how hdtracker looks – “System” follows your device (the new default), or pick dark (as before) or light; the well-known palettes Tokyo Night, Dracula and SynthWave '84; and the character themes Cyberpunk, Retro 95, Terminal and Breadbin. A small preview shows each theme; the login page follows the theme last used on the device
-- **Dashboard order**: both lists can be reversed with one tap on the calendar button next to their heading (newest or oldest first, next or latest first); your choice is remembered on all your devices
 - **Export your library** (Settings → Data): downloads everything as a CSV file – statuses, watched episodes and anime progress. The file has the format of Yamtrack and can be imported there or into hdtracker again
+- **Dashboard order**: both lists can be reversed with one tap on the calendar button next to their heading (newest or oldest first, next or latest first); your choice is remembered on all your devices
 
 ### 🔧 Improved
 
 - **Titles in your library open instantly**: details and images of a title are loaded in the background as soon as you add it and refreshed every night, so detail pages no longer wait for TMDB, IGDB or AniList
 - The nightly refresh is much gentler on the data sources: one request per title instead of two or three; watched movies and anime and completed games are refreshed once a week, dropped titles once a month (they were never refreshed before); direct streaming links (Wikidata) are only looked up once a month
-- Settings → About lists Wikidata as a data source
 - Maintenance shows how many titles are preloaded; a long “Run now” keeps running in the background instead of blocking the page
+- Settings → About lists Wikidata as a data source
 
 ### 🐛 Fixed
 
 - Anime that have not started yet and have no exact start date were treated as already released: they were missing on the dashboard and their statuses were not locked
+
+### ⬆️ Updating
+
+Just pull the new image – the database is updated automatically on start, your library stays as it is. Two things you will notice:
+
+- **The look may change:** hdtracker now follows the light/dark setting of your device. If your device is set to light and you prefer the old look, choose “Dark” under Settings → Appearance.
+- **After the first start,** hdtracker loads details and images for your whole library once in the background. This takes a few minutes for large libraries (anime take the longest); you can keep using the app meanwhile.
 
 ## 0.4.0 – 2026-10-02
 
