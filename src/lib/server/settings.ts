@@ -13,6 +13,11 @@ const DEFAULTS = {
 	autoStatus: 'on', // change the status automatically when episodes are ticked: 'on' | 'off'
 	backupKeep: '7', // how many backup files to keep
 	categories: 'movies,series,anime,games', // areas shown in the app (comma-separated)
+	// Reverse proxies whose X-Forwarded-For header is believed (see proxy.ts): addresses or
+	// ranges, comma-separated. Empty = none.
+	trustedProxies: '',
+	// Secret a reverse proxy sends to prove itself where addresses do not help (see proxy.ts)
+	proxyKey: '',
 	// Order of the dashboard lists: 'asc' | 'desc'. Personal, like uiLanguage or animeTitle:
 	// with several users these move to the user.
 	theme: 'system', // colour theme, see $lib/themes ('system' follows the device)

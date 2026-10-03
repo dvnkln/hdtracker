@@ -1,10 +1,21 @@
 import { createHmac, randomBytes, scrypt, timingSafeEqual } from 'node:crypto';
 import { promisify } from 'node:util';
-import { error, type Cookies } from '@sveltejs/kit';
+import { error, type Cookies, type RequestEvent } from '@sveltejs/kit';
 import { and, count, eq, lt, ne } from 'drizzle-orm';
 import { env } from '$env/dynamic/private';
 import { getDb } from './db';
 import { sessions, users } from './db/schema';
+import {
+	PROXY_KEY_HEADER,
+	addressFrom,
+	defaultGateway,
+	forwardedAddress,
+	isTrusted,
+	keyMatches,
+	normalizeAddress,
+	parseProxies
+} from './proxy';
+import { getSetting } from './settings';
 
 const scryptAsync = promisify(scrypt) as (pw: string, salt: Buffer, len: number) => Promise<Buffer>;
 
@@ -140,11 +151,48 @@ export function clearSessionCookie(cookies: Cookies) {
 	cookies.delete(SESSION_COOKIE, { path: '/' });
 }
 
-// ---- Brute-force protection (in memory, per IP) ----
+// ---- Brute-force protection (in memory, per address) ----
+
+// What we know about where a request comes from: the other end of the connection, the
+// address a proxy passed along (if any) and the address that counts (see proxy.ts).
+export function connectionOf(event: RequestEvent) {
+	let peer = (event.platform as { req?: { socket?: { remoteAddress?: string } } } | undefined)?.req
+		?.socket?.remoteAddress;
+	if (!peer) {
+		// Dev server: no direct access to the connection
+		try {
+			peer = event.getClientAddress();
+		} catch {
+			peer = 'unknown';
+		}
+	}
+	const header = event.request.headers.get('x-forwarded-for');
+	const proxies = parseProxies(getSetting('trustedProxies')).entries;
+	const byKey = keyMatches(event.request.headers.get(PROXY_KEY_HEADER), getSetting('proxyKey'));
+	const via: 'key' | 'address' | null = byKey ? 'key' : isTrusted(peer, proxies) ? 'address' : null;
+	return {
+		peer: normalizeAddress(peer),
+		// What the proxy in front of us says the visitor's address is (believed or not)
+		forwarded: forwardedAddress(header),
+		// How the proxy has proven itself, if it has
+		via,
+		// Docker forwards the connection itself: the real address of the other end is not visible
+		hidden: normalizeAddress(peer) === defaultGateway(),
+		address: addressFrom(peer, header, proxies, byKey)
+	};
+}
+
+// The address wrong passwords are counted for. Always use this, never getClientAddress().
+export function clientAddress(event: RequestEvent) {
+	return connectionOf(event).address;
+}
 
 const MAX_FAILURES = 5;
-const LOCK_MS = 60 * 1000;
-const failures = new Map<string, { count: number; lockedUntil: number }>();
+// Every 5 wrong passwords lock the address: first for 1 minute, then 5, then 15 each time.
+const LOCK_MINUTES = [1, 5, 15];
+const FORGET_MS = DAY;
+type Failures = { count: number; locks: number; lockedUntil: number; lastFailure: number };
+const failures = new Map<string, Failures>();
 
 // Returns remaining lock time in seconds, or 0 if login attempts are allowed.
 export function loginLockedFor(ip: string) {
@@ -154,17 +202,29 @@ export function loginLockedFor(ip: string) {
 }
 
 export function recordLoginFailure(ip: string) {
-	const entry = failures.get(ip) ?? { count: 0, lockedUntil: 0 };
+	const entry = failures.get(ip) ?? { count: 0, locks: 0, lockedUntil: 0, lastFailure: 0 };
 	entry.count++;
+	entry.lastFailure = Date.now();
 	if (entry.count >= MAX_FAILURES) {
+		const minutes = LOCK_MINUTES[Math.min(entry.locks, LOCK_MINUTES.length - 1)];
 		entry.count = 0;
-		entry.lockedUntil = Date.now() + LOCK_MS;
+		entry.locks++;
+		entry.lockedUntil = Date.now() + minutes * 60 * 1000;
 	}
 	failures.set(ip, entry);
 }
 
 export function clearLoginFailures(ip: string) {
 	failures.delete(ip);
+}
+
+// Forgets addresses without a wrong password for a day (hourly task "cache").
+export function pruneLoginFailures() {
+	for (const [ip, entry] of failures) {
+		if (entry.lastFailure < Date.now() - FORGET_MS && entry.lockedUntil < Date.now()) {
+			failures.delete(ip);
+		}
+	}
 }
 
 // ---- Permissions ----

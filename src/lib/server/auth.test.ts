@@ -6,6 +6,7 @@ import {
 	deleteOtherSessions,
 	hashPassword,
 	loginLockedFor,
+	pruneLoginFailures,
 	recordLoginFailure,
 	validateSession,
 	verifyPassword
@@ -80,6 +81,28 @@ describe('login protection', () => {
 		expect(loginLockedFor('203.0.113.6')).toBe(0);
 		vi.advanceTimersByTime(61_000);
 		expect(loginLockedFor(ip)).toBe(0);
+	});
+	it('locks longer each time: 1, 5, then 15 minutes', () => {
+		vi.useFakeTimers();
+		const ip = '203.0.113.8';
+		const failFiveTimes = () => {
+			for (let i = 0; i < 5; i++) recordLoginFailure(ip);
+			const seconds = loginLockedFor(ip);
+			vi.advanceTimersByTime(seconds * 1000 + 1000);
+			return seconds;
+		};
+		expect([failFiveTimes(), failFiveTimes(), failFiveTimes(), failFiveTimes()]).toEqual([
+			60, 300, 900, 900
+		]);
+	});
+	it('forgets an address after a day without wrong passwords', () => {
+		vi.useFakeTimers();
+		const ip = '203.0.113.9';
+		for (let i = 0; i < 5; i++) recordLoginFailure(ip);
+		vi.advanceTimersByTime(25 * 60 * 60 * 1000);
+		pruneLoginFailures();
+		for (let i = 0; i < 5; i++) recordLoginFailure(ip);
+		expect(loginLockedFor(ip)).toBe(60); // starts again with one minute
 	});
 	it('a successful login clears the count', () => {
 		const ip = '203.0.113.7';

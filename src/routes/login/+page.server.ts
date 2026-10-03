@@ -5,6 +5,7 @@ import { getDb } from '$lib/server/db';
 import { users } from '$lib/server/db/schema';
 import {
 	clearLoginFailures,
+	clientAddress,
 	createSession,
 	loginLockedFor,
 	recordLoginFailure,
@@ -17,8 +18,9 @@ import { rememberTheme } from '$lib/server/theme';
 import type { Actions } from './$types';
 
 export const actions: Actions = {
-	default: async ({ request, cookies, url, getClientAddress }) => {
-		const ip = getClientAddress();
+	default: async (event) => {
+		const { request, cookies, url } = event;
+		const ip = clientAddress(event);
 		const data = await request.formData();
 		const username = String(data.get('username') ?? '').trim();
 		const password = String(data.get('password') ?? '');

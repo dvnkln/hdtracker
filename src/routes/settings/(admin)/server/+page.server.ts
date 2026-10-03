@@ -1,5 +1,7 @@
 import { fail } from '@sveltejs/kit';
-import { requireAdmin } from '$lib/server/auth';
+import { connectionOf, requireAdmin } from '$lib/server/auth';
+import { randomBytes } from 'node:crypto';
+import { PROXY_KEY_HEADER, parseProxies } from '$lib/server/proxy';
 import { getDb } from '$lib/server/db';
 import { libraryItems } from '$lib/server/db/schema';
 import { serverMessages } from '$lib/server/i18n';
@@ -12,7 +14,7 @@ const LANGUAGE_PATTERN = /^[a-z]{2,3}-[A-Z]{2}$/; // e.g. "de-DE"
 const REGION_PATTERN = /^[A-Z]{2}$/; // e.g. "DE"
 
 // Settings for the whole installation: titles, dates and streaming offers are stored once.
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async (event) => {
 	const values = { language: getSetting('language'), region: getSetting('region') };
 
 	// Choices come from TMDB. If it is not reachable, only the current value can be kept.
@@ -29,7 +31,12 @@ export const load: PageServerLoad = async () => {
 			languages.status === 'fulfilled' ? languages.value : [],
 			values.language
 		),
-		listsFailed
+		listsFailed,
+		// Reverse proxy: what hdtracker sees of this request, and the proxies entered so far.
+		connection: connectionOf(event),
+		trustedProxies: parseProxies(getSetting('trustedProxies')).entries.join(', '),
+		proxyKey: getSetting('proxyKey'),
+		proxyKeyHeader: PROXY_KEY_HEADER
 	};
 };
 
@@ -50,5 +57,30 @@ export const actions: Actions = {
 			refreshPending();
 		}
 		return { section: 'content', message: serverMessages().settings.saved };
+	},
+
+	// Reverse proxies whose forwarded visitor address is believed (see $lib/server/proxy.ts).
+	proxies: async ({ request, locals }) => {
+		requireAdmin(locals.user);
+		const t = serverMessages();
+		const text = String((await request.formData()).get('proxies') ?? '');
+		const { entries, invalid } = parseProxies(text);
+		if (invalid.length || entries.length > 20) {
+			return fail(400, {
+				section: 'proxies',
+				proxies: text,
+				error: invalid.length ? t.settings.proxiesInvalid(invalid.join(', ')) : t.common.invalidData
+			});
+		}
+		setSettings({ trustedProxies: entries.join(',') });
+		return { section: 'proxies', message: t.settings.saved };
+	},
+
+	// The secret a reverse proxy sends to prove itself: create (or replace) it, or remove it.
+	proxyKey: async ({ request, locals }) => {
+		requireAdmin(locals.user);
+		const remove = (await request.formData()).get('remove') === '1';
+		setSettings({ proxyKey: remove ? '' : randomBytes(32).toString('base64url') });
+		return { section: 'proxyKey', message: serverMessages().settings.saved };
 	}
 };

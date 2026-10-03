@@ -4,6 +4,7 @@ import { MIN_PASSWORD_LENGTH as MIN_PASSWORD, USERNAME_PATTERN } from '$lib/limi
 import {
 	SESSION_COOKIE,
 	clearLoginFailures,
+	clientAddress,
 	deleteOtherSessions,
 	hashPassword,
 	loginLockedFor,
@@ -19,7 +20,7 @@ import type { Actions } from './$types';
 // Returns an error text, or null if the password is right.
 async function checkCurrentPassword(event: RequestEvent, password: string) {
 	const t = serverMessages();
-	const ip = event.getClientAddress();
+	const ip = clientAddress(event);
 	const locked = loginLockedFor(ip);
 	if (locked > 0) return t.auth.tooManyAttempts(locked);
 	const row = getDb().select().from(users).where(eq(users.id, event.locals.user!.id)).get();

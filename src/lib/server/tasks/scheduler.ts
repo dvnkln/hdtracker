@@ -1,6 +1,6 @@
 import { existsSync, statSync } from 'node:fs';
 import { eq } from 'drizzle-orm';
-import { deleteExpiredSessions } from '../auth';
+import { deleteExpiredSessions, pruneLoginFailures } from '../auth';
 import { pruneCache } from '../cache';
 import { DB_PATH } from '../config';
 import { getDb } from '../db';
@@ -37,6 +37,7 @@ export const TASKS = {
 		run: () => {
 			pruneCache();
 			pruneWikidataLinks();
+			pruneLoginFailures();
 		},
 		usesApi: false,
 		defaults: { enabled: true, frequency: 'hourly', time: '00:00', weekday: 0 }
