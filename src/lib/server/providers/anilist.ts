@@ -1,6 +1,6 @@
 import { cached, remember } from '../cache';
 import { serverMessages } from '../i18n';
-import { animeTextsFor } from './animeEpisodes';
+import { animeTextsFor, warmUpAnimeTexts } from './animeEpisodes';
 import {
 	ProviderError,
 	fetchJson,
@@ -239,6 +239,7 @@ function episodeCounts(m: AniListAnime) {
 // The anime as AniList has it, plus what TMDB knows about its episodes (titles, texts, images)
 // where they can be matched (see animeEpisodes.ts).
 async function loadAnimeWithTexts(id: string) {
+	warmUpAnimeTexts(id);
 	const anime = await loadAnime(id);
 	const { total } = episodeCounts(anime.m);
 	const texts = await animeTextsFor(id, fullDate(anime.m.startDate), total);

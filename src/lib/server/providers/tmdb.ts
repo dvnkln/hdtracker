@@ -377,37 +377,43 @@ type TmdbTvSeasons = TmdbTv & {
 };
 export type TvSeason = { episodes: Episode[]; watch: TmdbWatch | null };
 
-// What anime take from TMDB (see animeEpisodes.ts): the episodes of the given seasons and
-// where each of these seasons can be streamed – TMDB knows that per season, and seasons of
-// one show are often on different services. One request for up to 9 seasons (two parts per
-// season); seasons TMDB does not have are simply missing in the answer.
-export function getTvSeasons(id: string, seasons: number[], language: string) {
-	const wanted = [...new Set(seasons)].sort((a, b) => a - b);
-	return cached(`tmdb:tvseasons:${id}:${wanted.join('.')}:${language}`, CACHE_MS, async () => {
-		const found = new Map<number, TvSeason>();
+// What anime take from TMDB (see animeEpisodes.ts): the episodes of the given seasons and,
+// for the seasons in `offersFor`, where they can be streamed – TMDB knows that per season, and
+// seasons of one show are often on different services. Everything is asked for with as few
+// requests as TMDB's limit of 20 parts allows: one for almost every anime. Seasons TMDB does
+// not have are simply missing in the answer.
+export function getTvSeasons(id: string, seasons: number[], offersFor: number[], language: string) {
+	const sorted = (numbers: number[]) => [...new Set(numbers)].sort((a, b) => a - b);
+	const wanted = sorted(seasons);
+	const offers = sorted(offersFor).filter((n) => wanted.includes(n));
+	const key = `tmdb:tvseasons:${id}:${wanted.join('.')}:${offers.join('.')}:${language}`;
+	return cached(key, CACHE_MS, async () => {
+		const parts = [
+			'external_ids',
+			...wanted.map((n) => `season/${n}`),
+			...offers.map((n) => `season/${n}/watch/providers`)
+		];
+		const answer: Partial<TmdbTvSeasons> = {};
+		for (let i = 0; i < parts.length; i += PARTS_PER_REQUEST) {
+			const append_to_response = parts.slice(i, i + PARTS_PER_REQUEST).join(',');
+			Object.assign(
+				answer,
+				await tmdb<TmdbTvSeasons>(`/tv/${id}`, { language, append_to_response })
+			);
+		}
 		const now = today();
-		const perRequest = Math.floor((PARTS_PER_REQUEST - 1) / 2);
-		let show: TmdbTvSeasons | undefined;
-		for (let i = 0; i < wanted.length; i += perRequest) {
-			const batch = wanted.slice(i, i + perRequest);
-			const parts = batch.flatMap((n) => [`season/${n}`, `season/${n}/watch/providers`]);
-			const data = await tmdb<TmdbTvSeasons>(`/tv/${id}`, {
-				language,
-				append_to_response: ['external_ids', ...parts].join(',')
+		const found = new Map<number, TvSeason>();
+		for (const n of wanted) {
+			const season = answer[`season/${n}`];
+			if (!season) continue;
+			found.set(n, {
+				episodes: season.episodes.map((e) => toEpisode(e, now)),
+				watch: answer[`season/${n}/watch/providers`] ?? null
 			});
-			show ??= data;
-			for (const n of batch) {
-				const season = data[`season/${n}`];
-				if (!season) continue;
-				found.set(n, {
-					episodes: season.episodes.map((e) => toEpisode(e, now)),
-					watch: data[`season/${n}/watch/providers`] ?? null
-				});
-			}
 		}
 		return {
-			name: show?.name ?? '',
-			wikidataId: show?.external_ids?.wikidata_id ?? null,
+			name: answer.name ?? '',
+			wikidataId: answer.external_ids?.wikidata_id ?? null,
 			seasons: found
 		};
 	});

@@ -167,6 +167,25 @@ describe('animeTextsFor', () => {
 		expect(texts?.episodes.has(7)).toBe(false);
 	});
 
+	it('needs two requests for an anime spread over 22 TMDB seasons', async () => {
+		// TMDB allows 20 parts per request: 22 seasons, one offer (first season), external ids
+		const seasons: Record<number, [number, number, string]> = {};
+		const rows: [number, number, string, string][] = [];
+		for (let n = 1; n <= 22; n++) {
+			const first = (n - 1) * 3 + 1;
+			seasons[n] = [first, 3, `${1999 + n}-10-20`];
+			rows.push([515, n, `${first}-${first + 2}`, `${first}-${first + 2}`]);
+		}
+		const calls = mockFetch({ '/tv/515': tmdbShow(515, seasons, { 1: ['Crunchyroll'] }) });
+		const texts = await animeTextsFor(mapped(rows), '2000-10-20', 66);
+		expect(texts?.episodes.size).toBe(66);
+		expect(texts?.watch?.flatrate).toHaveLength(1);
+		expect(calls).toHaveLength(2);
+		const asked = decodeURIComponent(calls.join(' '));
+		expect(asked).toContain('season/1/watch/providers');
+		expect(asked).not.toContain('season/2/watch/providers');
+	});
+
 	it('is nothing without mapping, with unsupported ranges or when TMDB fails', async () => {
 		const calls = mockFetch({});
 		expect(await animeTextsFor('999999', '2020-10-03', 12)).toBeNull();

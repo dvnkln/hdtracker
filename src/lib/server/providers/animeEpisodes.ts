@@ -32,6 +32,33 @@ const daysApart = (a: string, b: string) => Math.abs(Date.parse(a) - Date.parse(
 type Show = Awaited<ReturnType<typeof getTvSeasons>>;
 type Part = { row: MapRow; from: number; to: number | null; target: number };
 
+// What the list says about an anime: the ranges it understands, those naming a place for
+// episode 1 (only there the start date can be compared) and the TMDB shows to ask for them.
+function planFor(anilistId: string) {
+	const parts = mappingFor(anilistId).flatMap((row): Part[] => {
+		const source = parseRange(row.sourceRange);
+		const target = parseRange(row.targetRange);
+		return source && target ? [{ row, from: source.from, to: source.to, target: target.from }] : [];
+	});
+	const anchors = parts.filter((p) => p.from === 1);
+	const load = [...new Set(anchors.map((p) => p.row.tmdbId))].slice(0, MAX_SHOWS).map((tmdbId) => {
+		// Only the seasons the list names for this anime, in one request. Streaming offers are
+		// needed for the season the anime starts in – one of those named for episode 1.
+		const seasonsOf = (list: Part[]) =>
+			list.filter((p) => p.row.tmdbId === tmdbId).map((p) => p.row.season);
+		const show = () => getTvSeasons(String(tmdbId), seasonsOf(parts), seasonsOf(anchors), LANGUAGE);
+		return { tmdbId, show };
+	});
+	return { parts, anchors, load };
+}
+
+// Asks TMDB already while AniList is still answering: which show to ask only depends on the
+// list, not on what AniList says. animeTextsFor() then finds the answer in the cache.
+export function warmUpAnimeTexts(anilistId: string) {
+	if (!animeTitlesEnabled()) return;
+	for (const { show } of planFor(anilistId).load) show().catch(() => {});
+}
+
 // TMDB texts for an anime, or null if there is no mapping that passes the check. Never throws:
 // without TMDB the anime simply has no episode titles.
 export async function animeTextsFor(
@@ -40,21 +67,13 @@ export async function animeTextsFor(
 	episodeCount: number
 ): Promise<AnimeTexts | null> {
 	if (!animeTitlesEnabled()) return null;
-	const parts = mappingFor(anilistId).flatMap((row): Part[] => {
-		const source = parseRange(row.sourceRange);
-		const target = parseRange(row.targetRange);
-		return source && target ? [{ row, from: source.from, to: source.to, target: target.from }] : [];
-	});
-	// The start date can only be compared with the place the list names for episode 1.
-	const anchors = parts.filter((p) => p.from === 1);
+	const { parts, anchors, load } = planFor(anilistId);
 	if (anchors.length === 0) return null;
 
 	const shows = new Map<number, Show>();
-	for (const tmdbId of [...new Set(anchors.map((p) => p.row.tmdbId))].slice(0, MAX_SHOWS)) {
-		// Only the seasons the list names for this anime, in one request
-		const seasons = parts.filter((p) => p.row.tmdbId === tmdbId).map((p) => p.row.season);
+	for (const { tmdbId, show } of load) {
 		try {
-			shows.set(tmdbId, await getTvSeasons(String(tmdbId), seasons, LANGUAGE));
+			shows.set(tmdbId, await show());
 		} catch {
 			// Not reachable, no key, unknown show: fetchJson has logged it; go on without.
 		}
