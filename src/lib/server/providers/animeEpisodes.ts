@@ -1,11 +1,12 @@
 import { animeTitlesEnabled, mappingFor, parseRange, type MapRow } from '../animeMapping';
 import { getSetting } from '../settings';
-import { getTvSeasons, watchFor } from './tmdb';
+import { getTvSeasons, hasOffers, preloadTvSeasons, watchFor } from './tmdb';
+import { preloadStreamingLinks } from './wikidata';
 import type { Details, Episode } from './types';
 
 // AniList knows no episode titles. TMDB has titles, texts and images per episode – but as one
-// show with seasons, where AniList has one entry per season. The list in animeMapping.ts says which TMDB episodes belong to an
-// AniList entry. It is a community list and sometimes names several or wrong places, so every
+// show with seasons, where AniList has one entry per season. The list in animeMapping.ts says
+// which TMDB episodes belong to an AniList entry. It is a community list and sometimes names several or wrong places, so every
 // mapping is checked here before it is used; in doubt the anime stays as AniList has it.
 
 export type AnimeTexts = {
@@ -46,8 +47,9 @@ function planFor(anilistId: string) {
 		// needed for the season the anime starts in – one of those named for episode 1.
 		const seasonsOf = (list: Part[]) =>
 			list.filter((p) => p.row.tmdbId === tmdbId).map((p) => p.row.season);
-		const show = () => getTvSeasons(String(tmdbId), seasonsOf(parts), seasonsOf(anchors), LANGUAGE);
-		return { tmdbId, show };
+		const request = { seasons: seasonsOf(parts), offersFor: seasonsOf(anchors) };
+		const show = () => getTvSeasons(String(tmdbId), request.seasons, request.offersFor, LANGUAGE);
+		return { tmdbId, request, show };
 	});
 	return { parts, anchors, load };
 }
@@ -57,6 +59,33 @@ function planFor(anilistId: string) {
 export function warmUpAnimeTexts(anilistId: string) {
 	if (!animeTitlesEnabled()) return;
 	for (const { show } of planFor(anilistId).load) show().catch(() => {});
+}
+
+// Background refresh: asks TMDB once per show for all the given anime (several of them are
+// often seasons of the same show) and looks up the direct links to streaming services for all
+// of them with one request to Wikidata. animeTextsFor() then needs no request. Never throws.
+export async function preloadAnimeTexts(anilistIds: string[]) {
+	if (!animeTitlesEnabled()) return;
+	const perShow = new Map<number, { seasons: number[]; offersFor: number[] }[]>();
+	for (const id of anilistIds) {
+		for (const { tmdbId, request } of planFor(id).load) {
+			perShow.set(tmdbId, [...(perShow.get(tmdbId) ?? []), request]);
+		}
+	}
+	const region = getSetting('region');
+	const wikidataIds: (string | null)[] = [];
+	for (const [tmdbId, requests] of perShow) {
+		try {
+			const show = await preloadTvSeasons(String(tmdbId), requests, LANGUAGE);
+			const offered = [...show.seasons.values()].some((s) => hasOffers(s.watch, region));
+			if (offered) wikidataIds.push(show.wikidataId);
+		} catch {
+			// The anime of this show ask for themselves later (and go on without, if that fails).
+		}
+	}
+	await preloadStreamingLinks(wikidataIds).catch((err) =>
+		console.error('Looking up streaming links at once failed', err)
+	);
 }
 
 // TMDB texts for an anime, or null if there is no mapping that passes the check. Never throws:

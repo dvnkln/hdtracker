@@ -139,3 +139,62 @@ describe('refreshBatch', () => {
 		expect(result.failed).toHaveLength(2);
 	});
 });
+
+// What TMDB answers for a movie with a streaming offer in the US (only what the app reads).
+const movie = (id: number) => ({
+	id,
+	title: `Movie ${id}`,
+	original_title: `Movie ${id}`,
+	release_date: '2020-01-05',
+	poster_path: null,
+	overview: '',
+	genres: [],
+	vote_average: 0,
+	vote_count: 0,
+	backdrop_path: null,
+	runtime: 100,
+	release_dates: { results: [] },
+	recommendations: { results: [] },
+	external_ids: { wikidata_id: `Q${id}` },
+	'watch/providers': {
+		results: {
+			US: { flatrate: [{ provider_name: 'Netflix', logo_path: '/n.jpg', display_priority: 1 }] }
+		}
+	}
+});
+
+describe('refreshBatch for TMDB', () => {
+	it('looks up the direct links of all titles with one request to Wikidata', async () => {
+		const items = [901, 902, 903].map((id) => addItem({ externalId: String(id) }));
+		const calls = mockFetch({
+			'api.themoviedb.org': (url: string) => movie(Number(/movie\/(\d+)/.exec(url)![1])),
+			'query.wikidata.org': {
+				results: {
+					bindings: [
+						{
+							item: { value: 'http://www.wikidata.org/entity/Q902' },
+							p: { value: 'http://www.wikidata.org/prop/direct/P1874' },
+							v: { value: '80902' }
+						}
+					]
+				}
+			},
+			'image.tmdb.org': () => {
+				throw new Error('no images in this test');
+			}
+		});
+		const result = await refreshBatch('tmdb', items);
+		expect(result.failed).toEqual([]);
+		// One request per movie – TMDB has no other way – and one for all the links
+		expect(calls.filter((url) => url.includes('api.themoviedb.org'))).toHaveLength(3);
+		expect(calls.filter((url) => url.includes('wikidata'))).toEqual([
+			'https://query.wikidata.org/sparql'
+		]);
+		const stored = getDb()
+			.select()
+			.from(itemDetails)
+			.where(eq(itemDetails.itemId, items[1].id))
+			.get();
+		expect(stored?.info.watch?.flatrate[0].url).toBe('https://www.netflix.com/title/80902');
+	});
+});

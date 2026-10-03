@@ -81,6 +81,17 @@ globalThis.fetch = async (input, init) => {
 	if (url.href.startsWith('https://github.com/anibridge/anibridge-mappings/releases/')) {
 		return new Response(zstdCompressSync(JSON.stringify(ANIME_MAPPING)));
 	}
+	if (url.host === 'query.wikidata.org') {
+		// The same for many titles at once (background refresh)
+		const row = {
+			item: { value: 'http://www.wikidata.org/entity/Q101' },
+			p: { value: 'http://www.wikidata.org/prop/direct/P1874' },
+			v: { value: '80000101' }
+		};
+		return json({
+			results: { bindings: decodeURIComponent(body).includes('wd:Q101') ? [row] : [] }
+		});
+	}
 	if (url.host === 'www.wikidata.org') {
 		// The movie with a streaming offer has a Netflix ID at "Wikidata"
 		return json({

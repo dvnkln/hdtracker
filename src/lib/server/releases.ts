@@ -11,7 +11,8 @@ import type { LibraryItem } from './library';
 import { MAPPING_VERSION, animeTitlesEnabled, ensureAnimeMapping } from './animeMapping';
 import { ANIME_PER_REQUEST, getAnimeReleases, preloadAnime } from './providers/anilist';
 import { GAMES_PER_REQUEST, getGameReleases, preloadGames } from './providers/igdb';
-import { getMovieReleases, getTvDetails } from './providers/tmdb';
+import { preloadAnimeTexts } from './providers/animeEpisodes';
+import { getMovieReleases, getTvDetails, preloadTmdb } from './providers/tmdb';
 import {
 	ProviderError,
 	runInBackground,
@@ -200,11 +201,23 @@ async function tickAllEpisodesIfImported(item: LibraryItem) {
 
 // AniList and IGDB answer for many titles at once: the background refresh asks for a whole
 // batch with one request, the items are then refreshed from that answer. TMDB has no such
-// request, its items are loaded one by one.
-const BATCH: Record<Source, { size: number; preload?: (ids: string[]) => Promise<void> }> = {
-	tmdb: { size: 25 },
-	igdb: { size: GAMES_PER_REQUEST, preload: preloadGames },
-	anilist: { size: ANIME_PER_REQUEST, preload: preloadAnime }
+// request, its items are loaded one by one – but their direct links to streaming services
+// (Wikidata) are looked up for the whole batch at once.
+const idsOf = (items: LibraryItem[]) => items.map((item) => item.externalId);
+const BATCH: Record<Source, { size: number; preload: (items: LibraryItem[]) => Promise<void> }> = {
+	tmdb: {
+		size: 25,
+		preload: (items) => preloadTmdb(items, getSetting('language'), getSetting('region'))
+	},
+	igdb: { size: GAMES_PER_REQUEST, preload: (items) => preloadGames(idsOf(items)) },
+	// The anime from AniList, then what TMDB knows about their episodes: one request per show
+	anilist: {
+		size: ANIME_PER_REQUEST,
+		preload: async (items) => {
+			await preloadAnime(idsOf(items));
+			await preloadAnimeTexts(idsOf(items));
+		}
+	}
 };
 
 // Refreshes a batch of items of one service. Returns the items that failed; `stopped` means
@@ -214,7 +227,7 @@ export async function refreshBatch(source: Source, batch: LibraryItem[]) {
 	// Anime take their episode titles from TMDB; the list that says where must be there first.
 	if (source === 'anilist') await ensureAnimeMapping();
 	try {
-		await BATCH[source].preload?.(batch.map((item) => item.externalId));
+		await BATCH[source].preload(batch);
 	} catch (err) {
 		if (isRateLimited(err)) return { failed: batch, stopped: true };
 		// Otherwise every item simply asks for itself below.

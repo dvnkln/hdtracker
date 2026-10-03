@@ -3,7 +3,7 @@ import { mockFetch } from '../../../tests/helpers';
 import { getDb } from '../db';
 import { animeTmdbMap } from '../db/schema';
 import { setSettings } from '../settings';
-import { animeTextsFor } from './animeEpisodes';
+import { animeTextsFor, preloadAnimeTexts } from './animeEpisodes';
 import { getAnimeDetails, getAnimeInfo } from './anilist';
 
 // What TMDB answers for a show: seasons as { number: [first episode, count, first air date] },
@@ -184,6 +184,42 @@ describe('animeTextsFor', () => {
 		const asked = decodeURIComponent(calls.join(' '));
 		expect(asked).toContain('season/1/watch/providers');
 		expect(asked).not.toContain('season/2/watch/providers');
+	});
+
+	it('in the background, seasons of the same show share one TMDB request', async () => {
+		const calls = mockFetch({
+			'/tv/516': {
+				...tmdbShow(
+					516,
+					{ 1: [1, 12, '2020-10-03'], 2: [1, 12, '2021-10-02'] },
+					{ 1: ['Netflix'], 2: ['Netflix'] }
+				),
+				external_ids: { wikidata_id: 'Q516' }
+			},
+			'/tv/517': tmdbShow(517, { 1: [1, 12, '2022-01-08'] }),
+			// One request to Wikidata for all shows with offers
+			'query.wikidata.org': { results: { bindings: [] } }
+		});
+		const first = mapped([[516, 1, '1-12', '1-12']]);
+		const second = mapped([[516, 2, '1-12', '1-12']]);
+		const other = mapped([[517, 1, '1-12', '1-12']]);
+		await preloadAnimeTexts([first, second, other]);
+		expect(calls.filter((url) => url.includes('/tv/516'))).toHaveLength(1);
+		expect(decodeURIComponent(calls[0])).toContain(
+			'season/1,season/2,season/1/watch/providers,season/2/watch/providers'
+		);
+		expect(calls.filter((url) => url.includes('wikidata'))).toHaveLength(1);
+		expect(calls).toHaveLength(3);
+
+		// The anime themselves need no further request
+		expect((await animeTextsFor(first, '2020-10-03', 12))?.episodes.get(1)?.title).toBe(
+			'S1 Folge 1'
+		);
+		const texts = await animeTextsFor(second, '2021-10-02', 12);
+		expect(texts?.episodes.get(1)?.title).toBe('S2 Folge 1');
+		expect(texts?.watch?.flatrate.map((p) => p.name)).toEqual(['Netflix']);
+		expect(await animeTextsFor(other, '2022-01-08', 12)).not.toBeNull();
+		expect(calls).toHaveLength(3);
 	});
 
 	it('is nothing without mapping, with unsupported ranges or when TMDB fails', async () => {

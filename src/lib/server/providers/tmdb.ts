@@ -1,8 +1,9 @@
 import { env } from '$env/dynamic/private';
-import { cached } from '../cache';
-import { getStreamingLinks, type StreamingLinks } from './wikidata';
+import { cached, remember } from '../cache';
+import { getStreamingLinks, preloadStreamingLinks, type StreamingLinks } from './wikidata';
 import { serverMessages } from '../i18n';
 import {
+	ProviderError,
 	fetchJson,
 	missingKey,
 	today,
@@ -154,6 +155,11 @@ function providerUrl(name: string, title: string, links: StreamingLinks, fallbac
 	return fallback;
 }
 
+export function hasOffers(data: TmdbWatch | null | undefined, region: string) {
+	const r = data?.results[region] ?? {};
+	return !!(r.flatrate?.length || r.rent?.length || r.buy?.length);
+}
+
 // Streaming offers for one region, sorted like on JustWatch.
 export async function watchFor(
 	data: TmdbWatch,
@@ -162,8 +168,7 @@ export async function watchFor(
 	wikidataId: string | null
 ): Promise<Details['watch']> {
 	const r = data.results[region] ?? {};
-	const hasOffers = !!(r.flatrate?.length || r.rent?.length || r.buy?.length);
-	const links = hasOffers ? await getStreamingLinks(wikidataId) : {};
+	const links = hasOffers(data, region) ? await getStreamingLinks(wikidataId) : {};
 	const fallback = r.link ?? 'https://www.justwatch.com';
 	const list = (providers?: TmdbProvider[]) =>
 		[...(providers ?? [])]
@@ -382,41 +387,91 @@ export type TvSeason = { episodes: Episode[]; watch: TmdbWatch | null };
 // seasons of one show are often on different services. Everything is asked for with as few
 // requests as TMDB's limit of 20 parts allows: one for almost every anime. Seasons TMDB does
 // not have are simply missing in the answer.
-export function getTvSeasons(id: string, seasons: number[], offersFor: number[], language: string) {
-	const sorted = (numbers: number[]) => [...new Set(numbers)].sort((a, b) => a - b);
-	const wanted = sorted(seasons);
-	const offers = sorted(offersFor).filter((n) => wanted.includes(n));
+type SeasonRequest = { seasons: number[]; offersFor: number[] };
+const sortedNumbers = (numbers: number[]) => [...new Set(numbers)].sort((a, b) => a - b);
+function seasonRequest(id: string, request: SeasonRequest, language: string) {
+	const wanted = sortedNumbers(request.seasons);
+	const offers = sortedNumbers(request.offersFor).filter((n) => wanted.includes(n));
 	const key = `tmdb:tvseasons:${id}:${wanted.join('.')}:${offers.join('.')}:${language}`;
-	return cached(key, CACHE_MS, async () => {
-		const parts = [
-			'external_ids',
-			...wanted.map((n) => `season/${n}`),
-			...offers.map((n) => `season/${n}/watch/providers`)
-		];
-		const answer: Partial<TmdbTvSeasons> = {};
-		for (let i = 0; i < parts.length; i += PARTS_PER_REQUEST) {
-			const append_to_response = parts.slice(i, i + PARTS_PER_REQUEST).join(',');
-			Object.assign(
-				answer,
-				await tmdb<TmdbTvSeasons>(`/tv/${id}`, { language, append_to_response })
-			);
+	return { wanted, offers, key };
+}
+
+async function fetchTvSeasons(id: string, wanted: number[], offers: number[], language: string) {
+	const parts = [
+		'external_ids',
+		...wanted.map((n) => `season/${n}`),
+		...offers.map((n) => `season/${n}/watch/providers`)
+	];
+	const answer: Partial<TmdbTvSeasons> = {};
+	for (let i = 0; i < parts.length; i += PARTS_PER_REQUEST) {
+		const append_to_response = parts.slice(i, i + PARTS_PER_REQUEST).join(',');
+		Object.assign(answer, await tmdb<TmdbTvSeasons>(`/tv/${id}`, { language, append_to_response }));
+	}
+	const now = today();
+	const found = new Map<number, TvSeason>();
+	for (const n of wanted) {
+		const season = answer[`season/${n}`];
+		if (!season) continue;
+		found.set(n, {
+			episodes: season.episodes.map((e) => toEpisode(e, now)),
+			watch: answer[`season/${n}/watch/providers`] ?? null
+		});
+	}
+	return {
+		name: answer.name ?? '',
+		wikidataId: answer.external_ids?.wikidata_id ?? null,
+		seasons: found
+	};
+}
+
+export function getTvSeasons(id: string, seasons: number[], offersFor: number[], language: string) {
+	const { wanted, offers, key } = seasonRequest(id, { seasons, offersFor }, language);
+	return cached(key, CACHE_MS, () => fetchTvSeasons(id, wanted, offers, language));
+}
+
+// Background refresh: several anime that are seasons of the same show (see animeEpisodes.ts)
+// are served by one request for all their seasons; each of their getTvSeasons() calls then
+// finds the answer in the cache.
+export async function preloadTvSeasons(id: string, requests: SeasonRequest[], language: string) {
+	const all = seasonRequest(
+		id,
+		{
+			seasons: requests.flatMap((r) => r.seasons),
+			offersFor: requests.flatMap((r) => r.offersFor)
+		},
+		language
+	);
+	const show = await fetchTvSeasons(id, all.wanted, all.offers, language);
+	for (const request of requests) {
+		remember(seasonRequest(id, request, language).key, CACHE_MS, show);
+	}
+	return show;
+}
+
+// Background refresh: loads the given movies and series (one request each – TMDB has no
+// request for several titles) and then looks up the direct links to streaming services for all
+// of them with a single request to Wikidata. The following get…() calls for these titles are
+// answered from the cache. Titles that cannot be loaded are left to fail on their own, except
+// for "too many requests", which stops the batch.
+export async function preloadTmdb(
+	titles: { category: string; externalId: string }[],
+	language: string,
+	region: string
+) {
+	const wikidataIds: (string | null)[] = [];
+	for (const { category, externalId } of titles) {
+		try {
+			const data =
+				category === 'movies'
+					? await loadMovie(externalId, language)
+					: (await loadTv(externalId, language)).show;
+			if (hasOffers(data['watch/providers'], region))
+				wikidataIds.push(data.external_ids.wikidata_id);
+		} catch (err) {
+			if (err instanceof ProviderError && err.status === 429) throw err;
 		}
-		const now = today();
-		const found = new Map<number, TvSeason>();
-		for (const n of wanted) {
-			const season = answer[`season/${n}`];
-			if (!season) continue;
-			found.set(n, {
-				episodes: season.episodes.map((e) => toEpisode(e, now)),
-				watch: answer[`season/${n}/watch/providers`] ?? null
-			});
-		}
-		return {
-			name: answer.name ?? '',
-			wikidataId: answer.external_ids?.wikidata_id ?? null,
-			seasons: found
-		};
-	});
+	}
+	await preloadStreamingLinks(wikidataIds);
 }
 
 // ---- Choices for the settings page ----
