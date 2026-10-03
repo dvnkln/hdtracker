@@ -9,7 +9,12 @@ permissions:
   packages: write
 
 jobs:
+  # No release with failing checks or tests
+  check:
+    uses: ./.github/workflows/check.yml
+
   docker:
+    needs: check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

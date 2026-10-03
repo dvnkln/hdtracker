@@ -140,6 +140,8 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
 
 - `npm run dev` – Dev-Server (http://localhost:5173)
 - `npm run check` – Typprüfung
+- `npm test` – automatische Tests (vitest). Jede Testdatei bekommt eine leere, echte Datenbank in einem Temp-Ordner und **kein Netz** (`src/tests/setup.ts`); API-Antworten gibt ein Test mit `mockFetch()` vor, Titel legt `addItem()` an (`src/tests/helpers.ts`). Tests liegen neben dem Code (`*.test.ts`). **Neue oder geänderte Regel-Logik (Status, Termine, Rhythmus, Import/Export, Login, erlaubte Quellen) bekommt einen Test.**
+- `npm run lint` – Formatprüfung (Prettier). GitHub prüft bei jedem Push auf `main` und vor jedem Release: `check`, `lint`, `test` (`.github/workflows/check.yml`).
 - `npm run build` / `npm start` – Production-Build starten
 - `npm run db:generate` – nach Schema-Änderung neue Migration in `drizzle/` erzeugen (mit committen!)
 - `docker compose up -d` – veröffentlichtes Image von GHCR starten (wie auf einem Server)

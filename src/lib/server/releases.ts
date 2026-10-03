@@ -181,7 +181,7 @@ const BATCH: Record<Source, { size: number; preload?: (ids: string[]) => Promise
 
 // Refreshes a batch of items of one service. Returns the items that failed; `stopped` means
 // the service still answered "too many requests" after waiting, so the rest was not tried.
-async function refreshBatch(source: Source, batch: LibraryItem[]) {
+export async function refreshBatch(source: Source, batch: LibraryItem[]) {
 	const failed: LibraryItem[] = [];
 	try {
 		await BATCH[source].preload?.(batch.map((item) => item.externalId));
@@ -270,7 +270,7 @@ export function pendingStatus() {
 // months TMDB allows.
 const HOUR = 60 * 60 * 1000;
 const WEEKLY: Category[] = ['movies', 'games', 'anime'];
-function isDue(item: LibraryItem, ended: boolean, now: number) {
+export function isDue(item: LibraryItem, ended: boolean, now: number) {
 	if (!item.metadataUpdatedAt) return true;
 	const age = now - item.metadataUpdatedAt.getTime();
 	if (item.status === 'dropped') return age >= 30 * 24 * HOUR;

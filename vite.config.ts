@@ -1,9 +1,11 @@
 import tailwindcss from '@tailwindcss/vite';
 import adapter from '@sveltejs/adapter-node';
 import { sveltekit } from '@sveltejs/kit/vite';
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+	// npm test: every test file gets its own empty database, no network (see src/tests/setup.ts)
+	test: { environment: 'node', include: ['src/**/*.test.ts'], setupFiles: ['src/tests/setup.ts'] },
 	plugins: [
 		tailwindcss(),
 		sveltekit({

@@ -11,6 +11,7 @@
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"test": "vitest run",
 		"lint": "prettier --check .",
 		"format": "prettier --write .",
 		"db:generate": "drizzle-kit generate",
@@ -36,7 +37,8 @@
 		"svelte-check": "^4.6.0",
 		"tailwindcss": "^4.3.0",
 		"typescript": "^6.0.3",
-		"vite": "^8.0.16"
+		"vite": "^8.0.16",
+		"vitest": "^5.0.3"
 	},
 	"dependencies": {
 		"better-sqlite3": "^12.11.1",

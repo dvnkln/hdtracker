@@ -130,7 +130,7 @@ function dateOf(seconds: number | undefined) {
 
 // Where a game stands, from its release dates. Only the current state counts: once the full
 // version is out, an earlier early access no longer matters.
-function releaseState(g: IgdbGame) {
+export function releaseState(g: IgdbGame) {
 	const dates = g.release_dates ?? [];
 	const earliest = (list: typeof dates) =>
 		list
