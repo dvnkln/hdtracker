@@ -15,3 +15,7 @@ docs
 # does not invalidate the Docker build cache
 *.md
 LICENSE
+e2e
+playwright.config.ts
+playwright-report
+test-results

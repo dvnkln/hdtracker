@@ -23,3 +23,7 @@ vite.config.ts.timestamp-*
 
 # Claude Code: personal local settings
 .claude/settings.local.json
+
+# Browser tests
+/playwright-report
+/test-results
