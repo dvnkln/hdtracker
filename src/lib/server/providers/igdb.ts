@@ -1,5 +1,5 @@
 import { env } from '$env/dynamic/private';
-import { cached } from '../cache';
+import { cached, remember } from '../cache';
 import { serverMessages } from '../i18n';
 import {
 	ProviderError,
@@ -206,16 +206,29 @@ const FULL_FIELDS = [
 	...GAME_FIELDS.map((f) => `similar_games.${f}`)
 ];
 
-// Release dates and the detail page come from a single request per game.
+// So many games are loaded with one request by the background refresh.
+export const GAMES_PER_REQUEST = 50;
+
+// Release dates and the detail page come from a single request – for one game or for many.
+function fetchGames(ids: string[]) {
+	return igdb<IgdbGameFull[]>(
+		'games',
+		`fields ${FULL_FIELDS.join(',')}; where id = (${ids.map(Number).join(',')}); limit ${ids.length};`
+	);
+}
+
 function loadGame(id: string) {
 	return cached(`igdb:${id}`, CACHE_MS, async () => {
-		const [g] = await igdb<IgdbGameFull[]>(
-			'games',
-			`fields ${FULL_FIELDS.join(',')}; where id = ${Number(id)};`
-		);
+		const [g] = await fetchGames([id]);
 		if (!g) throw new ProviderError(serverMessages().errors.gameNotFound, 404);
 		return g;
 	});
+}
+
+// Background refresh: loads many games with one request and keeps the answers ready, so the
+// following getGame…() calls for them need no request of their own.
+export async function preloadGames(ids: string[]) {
+	for (const g of await fetchGames(ids)) remember(`igdb:${g.id}`, CACHE_MS, g);
 }
 
 // ---- Release date (dashboard) ----

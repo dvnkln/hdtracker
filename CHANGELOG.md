@@ -7,6 +7,12 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
+## Upcoming release
+
+### 🔧 Improved
+
+- Even fewer requests to the data sources: anime and games are now loaded in batches (up to 25 anime or 50 games with a single request) – after an import, a large anime library is ready in seconds instead of minutes. Watched series that have ended are only checked once a week instead of every night
+
 ## 0.5.0 – 2026-10-02
 
 Themes, an export, and a library that opens without waiting.

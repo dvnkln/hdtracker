@@ -76,6 +76,16 @@ export function deleteDetailsOfHiddenAreas() {
 	}
 }
 
+// Items whose series or anime is over according to the stored details (ended or cancelled).
+export function endedShowIds() {
+	const rows = getDb()
+		.select({ id: itemDetails.itemId })
+		.from(itemDetails)
+		.where(sql`json_extract(${itemDetails.show}, '$.ended') = 1`)
+		.all();
+	return new Set(rows.map((r) => r.id));
+}
+
 // How many titles have stored details and how much space they take.
 export function detailsStats() {
 	const row = getDb()

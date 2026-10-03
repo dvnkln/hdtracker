@@ -2,14 +2,14 @@ import { and, count, eq, inArray, isNull, notInArray } from 'drizzle-orm';
 import { hasEpisodes, type Category } from '$lib/status';
 import { getDb } from './db';
 import { getImage } from './images';
-import { deleteDetailsOfHiddenAreas, saveDetails } from './itemDetails';
+import { deleteDetailsOfHiddenAreas, endedShowIds, saveDetails } from './itemDetails';
 import { libraryItems, releases, watchedEpisodes } from './db/schema';
 import { getDetails } from './details';
 import { airedEpisodes, getShowDetails } from './episodes';
 import { serverMessages } from './i18n';
 import type { LibraryItem } from './library';
-import { getAnimeReleases } from './providers/anilist';
-import { getGameReleases } from './providers/igdb';
+import { ANIME_PER_REQUEST, getAnimeReleases, preloadAnime } from './providers/anilist';
+import { GAMES_PER_REQUEST, getGameReleases, preloadGames } from './providers/igdb';
 import { getMovieReleases, getTvDetails } from './providers/tmdb';
 import {
 	ProviderError,
@@ -170,6 +170,39 @@ async function tickAllEpisodesIfImported(item: LibraryItem) {
 	}
 }
 
+// AniList and IGDB answer for many titles at once: the background refresh asks for a whole
+// batch with one request, the items are then refreshed from that answer. TMDB has no such
+// request, its items are loaded one by one.
+const BATCH: Record<Source, { size: number; preload?: (ids: string[]) => Promise<void> }> = {
+	tmdb: { size: 25 },
+	igdb: { size: GAMES_PER_REQUEST, preload: preloadGames },
+	anilist: { size: ANIME_PER_REQUEST, preload: preloadAnime }
+};
+
+// Refreshes a batch of items of one service. Returns the items that failed; `stopped` means
+// the service still answered "too many requests" after waiting, so the rest was not tried.
+async function refreshBatch(source: Source, batch: LibraryItem[]) {
+	const failed: LibraryItem[] = [];
+	try {
+		await BATCH[source].preload?.(batch.map((item) => item.externalId));
+	} catch (err) {
+		if (isRateLimited(err)) return { failed: batch, stopped: true };
+		// Otherwise every item simply asks for itself below.
+		console.error(`Loading ${batch.length} ${source} items at once failed`, err);
+	}
+	for (const [index, item] of batch.entries()) {
+		try {
+			if (!item.metadataUpdatedAt) await tickAllEpisodesIfImported(item);
+			await refreshItem(item);
+		} catch (err) {
+			console.error(`Refreshing ${item.category}/${item.externalId} failed`, err);
+			if (isRateLimited(err)) return { failed: [...failed, ...batch.slice(index)], stopped: true };
+			failed.push(item);
+		}
+	}
+	return { failed, stopped: false };
+}
+
 // ---- Queue: items whose details were never loaded (just added or imported) ----
 
 const queued: Record<Source, boolean> = { tmdb: false, igdb: false, anilist: false };
@@ -185,7 +218,7 @@ export function refreshPending() {
 			queued[source] = false;
 			const failed: number[] = [];
 			for (;;) {
-				const item = getDb()
+				const batch = getDb()
 					.select()
 					.from(libraryItems)
 					.where(
@@ -197,17 +230,13 @@ export function refreshPending() {
 						)
 					)
 					.orderBy(libraryItems.id)
-					.get();
-				if (!item) break;
-				try {
-					await tickAllEpisodesIfImported(item);
-					await refreshItem(item);
-				} catch (err) {
-					failed.push(item.id);
-					console.error(`Loading ${item.category}/${item.externalId} failed`, err);
-					// Still too many requests after waiting: pause, continue with the next trigger.
-					if (isRateLimited(err)) break;
-				}
+					.limit(BATCH[source].size)
+					.all();
+				if (batch.length === 0) break;
+				const result = await refreshBatch(source, batch);
+				failed.push(...result.failed.map((item) => item.id));
+				// Still too many requests after waiting: pause, continue with the next trigger.
+				if (result.stopped) break;
 			}
 		}).catch((err) => console.error(`Loading details (${source}) failed`, err));
 	}
@@ -226,7 +255,7 @@ export function pendingStatus() {
 		)
 		.groupBy(libraryItems.source)
 		.all();
-	const perItem: Record<LibraryItem['source'], number> = { tmdb: 0.6, igdb: 0.8, anilist: 3.2 };
+	const perItem: Record<LibraryItem['source'], number> = { tmdb: 0.6, igdb: 0.4, anilist: 0.6 };
 	return {
 		pending: rows.reduce((sum, r) => sum + r.n, 0),
 		// The services load in parallel, so the slowest one decides.
@@ -235,45 +264,43 @@ export function pendingStatus() {
 }
 
 // How often the nightly task refreshes an item. Whatever is finished hardly changes, so the
-// data sources are asked less often for it; a series may get a new season, so it stays nightly.
+// data sources are asked less often for it. A watched series may get a new season, so it
+// stays nightly – unless it has ended or was cancelled, then a weekly look is enough.
 // Dropped items are still refreshed once a month: nothing stored may get older than the six
 // months TMDB allows.
 const HOUR = 60 * 60 * 1000;
 const WEEKLY: Category[] = ['movies', 'games', 'anime'];
-function isDue(item: LibraryItem, now: number) {
+function isDue(item: LibraryItem, ended: boolean, now: number) {
 	if (!item.metadataUpdatedAt) return true;
 	const age = now - item.metadataUpdatedAt.getTime();
 	if (item.status === 'dropped') return age >= 30 * 24 * HOUR;
 	// A few hours short of a week, so a run at the same time of day counts as "a week later".
-	if (item.status === 'completed' && WEEKLY.includes(item.category))
+	if (item.status === 'completed' && (ended || WEEKLY.includes(item.category)))
 		return age >= 7 * 24 * HOUR - 6 * HOUR;
 	return true;
 }
 
 // Background task "metadata": refreshes the items of all shown areas that are due (see isDue);
-// one after another per service, the services in parallel.
+// batch after batch per service, the services in parallel.
 export async function refreshAll() {
 	deleteDetailsOfHiddenAreas();
 	const now = Date.now();
+	const ended = endedShowIds();
 	const items = getDb()
 		.select()
 		.from(libraryItems)
 		.where(inArray(libraryItems.category, enabledCategories()))
 		.all()
-		.filter((item) => isDue(item, now));
+		.filter((item) => isDue(item, ended.has(item.id), now));
 	const failedPerSource = await Promise.all(
 		SOURCES.map((source) =>
 			exclusive(source, async () => {
 				const mine = items.filter((i) => i.source === source);
 				let failed = 0;
-				for (const [index, item] of mine.entries()) {
-					try {
-						await refreshItem(item);
-					} catch (err) {
-						failed++;
-						console.error(`Refreshing ${item.category}/${item.externalId} failed`, err);
-						if (isRateLimited(err)) return failed + mine.length - index - 1;
-					}
+				for (let i = 0; i < mine.length; i += BATCH[source].size) {
+					const result = await refreshBatch(source, mine.slice(i, i + BATCH[source].size));
+					failed += result.failed.length;
+					if (result.stopped) return failed + Math.max(0, mine.length - i - BATCH[source].size);
 				}
 				return failed;
 			})

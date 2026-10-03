@@ -1,4 +1,4 @@
-import { cached } from '../cache';
+import { cached, remember } from '../cache';
 import { serverMessages } from '../i18n';
 import {
 	ProviderError,
@@ -89,46 +89,67 @@ function toSearchResult(m: AniListMedia): SearchResult {
 
 // ---- One anime with everything the app needs ----
 
-// Episodes, air dates and the detail page come from a single request per anime (AniList allows
-// only about 30 requests per minute).
+// Episodes, air dates and the detail page come from a single request – for one anime or for
+// many at once (AniList allows only about 30 requests per minute). "past" holds the episodes
+// aired since $since; the upcoming ones are part of each anime (at most 25).
 const ANIME_QUERY = `
-query ($id: Int, $since: Int) {
-  Media(id: $id, type: ANIME) {
-    id
-    idMal
-    title { romaji english }
-    startDate { year month day }
-    status
-    coverImage { large }
-    bannerImage
-    description(asHtml: false)
-    genres
-    averageScore
-    format
-    episodes
-    duration
-    siteUrl
-    nextAiringEpisode { episode airingAt }
-    airingSchedule(notYetAired: true, perPage: 50) { nodes { episode airingAt } }
-    studios(isMain: true) { nodes { name } }
-    externalLinks { site url type }
-    recommendations(perPage: 12, sort: RATING_DESC) {
-      nodes {
-        mediaRecommendation {
-          id
-          idMal
-          type
-          title { romaji english }
-          startDate { year month day }
-          status
-          coverImage { large }
-          description(asHtml: false)
+query ($ids: [Int], $since: Int, $now: Int, $page: Int) {
+  Page(perPage: 50) {
+    media(id_in: $ids, type: ANIME) {
+      id
+      idMal
+      title { romaji english }
+      startDate { year month day }
+      status
+      coverImage { large }
+      bannerImage
+      description(asHtml: false)
+      genres
+      averageScore
+      format
+      episodes
+      duration
+      siteUrl
+      nextAiringEpisode { episode airingAt }
+      airingSchedule(notYetAired: true, perPage: 25) { nodes { episode airingAt } }
+      studios(isMain: true) { nodes { name } }
+      externalLinks { site url type }
+      recommendations(perPage: 12, sort: RATING_DESC) {
+        nodes {
+          mediaRecommendation {
+            id
+            idMal
+            type
+            title { romaji english }
+            startDate { year month day }
+            status
+            coverImage { large }
+            description(asHtml: false)
+          }
         }
       }
     }
   }
-  Page(perPage: 50) {
-    airingSchedules(mediaId: $id, airingAt_greater: $since, sort: TIME) { episode airingAt }
+  past: Page(page: $page, perPage: 50) {
+    pageInfo { hasNextPage }
+    airingSchedules(mediaId_in: $ids, airingAt_greater: $since, airingAt_lesser: $now, sort: TIME) {
+      mediaId
+      episode
+      airingAt
+    }
+  }
+}`;
+
+// Further pages of "past", needed when many of the anime are currently airing.
+const PAST_QUERY = `
+query ($ids: [Int], $since: Int, $now: Int, $page: Int) {
+  past: Page(page: $page, perPage: 50) {
+    pageInfo { hasNextPage }
+    airingSchedules(mediaId_in: $ids, airingAt_greater: $since, airingAt_lesser: $now, sort: TIME) {
+      mediaId
+      episode
+      airingAt
+    }
   }
 }`;
 
@@ -147,25 +168,59 @@ type AniListAnime = AniListMedia & {
 	externalLinks: { site: string; url: string; type: string }[];
 	recommendations: { nodes: { mediaRecommendation: (AniListMedia & { type: string }) | null }[] };
 };
+type PastPage = {
+	pageInfo: { hasNextPage: boolean };
+	airingSchedules: (Airing & { mediaId: number })[];
+};
+type LoadedAnime = { m: AniListAnime; airings: Airing[] };
 
 const CACHE_MS = 10 * 60 * 1000;
 // Air dates are loaded from this many days ago on (the dashboard shows the last 4 weeks).
 const KEEP_DAYS = 60;
+// So many anime fit into one request without the answer getting too large.
+export const ANIME_PER_REQUEST = 25;
+
+// Loads up to ANIME_PER_REQUEST anime with one request. Anime AniList does not know are
+// missing in the result.
+async function fetchAnime(ids: string[]) {
+	const now = Math.floor(Date.now() / 1000);
+	const variables = { ids: ids.map(Number), since: now - KEEP_DAYS * 24 * 60 * 60, now };
+	const ask = <T>(query: string, page: number) =>
+		fetchJson<{ data: T }>('AniList', 'https://graphql.anilist.co', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+			body: JSON.stringify({ query, variables: { ...variables, page } })
+		});
+
+	const first = await ask<{ Page: { media: AniListAnime[] }; past: PastPage }>(ANIME_QUERY, 1);
+	const past = first.data.past.airingSchedules;
+	let more = first.data.past.pageInfo.hasNextPage;
+	for (let page = 2; more; page++) {
+		const next = (await ask<{ past: PastPage }>(PAST_QUERY, page)).data.past;
+		past.push(...next.airingSchedules);
+		more = next.pageInfo.hasNextPage;
+	}
+
+	const found = new Map<string, LoadedAnime>();
+	for (const m of first.data.Page.media) {
+		const airings = [...past.filter((a) => a.mediaId === m.id), ...m.airingSchedule.nodes];
+		found.set(String(m.id), { m, airings });
+	}
+	return found;
+}
 
 function loadAnime(id: string) {
 	return cached(`anilist:${id}`, CACHE_MS, async () => {
-		const since = Math.floor(Date.now() / 1000) - KEEP_DAYS * 24 * 60 * 60;
-		const data = await fetchJson<{
-			data: { Media: AniListAnime | null; Page: { airingSchedules: Airing[] } };
-		}>('AniList', 'https://graphql.anilist.co', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-			body: JSON.stringify({ query: ANIME_QUERY, variables: { id: Number(id), since } })
-		});
-		const m = data.data.Media;
-		if (!m) throw new ProviderError(serverMessages().errors.animeNotFound, 404);
-		return { m, airings: data.data.Page.airingSchedules };
+		const anime = (await fetchAnime([id])).get(id);
+		if (!anime) throw new ProviderError(serverMessages().errors.animeNotFound, 404);
+		return anime;
 	});
+}
+
+// Background refresh: loads many anime with one request and keeps the answers ready, so the
+// following getAnime…() calls for them need no request of their own.
+export async function preloadAnime(ids: string[]) {
+	for (const [id, anime] of await fetchAnime(ids)) remember(`anilist:${id}`, CACHE_MS, anime);
 }
 
 const dayOf = (airing: Airing) => new Date(airing.airingAt * 1000).toLocaleDateString('sv-SE');

@@ -12,6 +12,11 @@ export function cached<T>(key: string, ttlMs: number, load: () => Promise<T>): P
 	return value;
 }
 
+// Stores a value that was loaded another way (e.g. many titles in one request).
+export function remember<T>(key: string, ttlMs: number, value: T) {
+	entries.set(key, { expires: Date.now() + ttlMs, value: Promise.resolve(value) });
+}
+
 // Removes expired entries. Returns how many were removed.
 export function pruneCache() {
 	let removed = 0;
