@@ -47,7 +47,8 @@ export default defineConfig({
 			},
 			typescript: {
 				config: (config) => {
-					config.include.push('../drizzle.config.ts');
+					// Also type-check the migration config and the browser tests
+					config.include.push('../drizzle.config.ts', '../playwright.config.ts', '../e2e/**/*.ts');
 				}
 			}
 		})

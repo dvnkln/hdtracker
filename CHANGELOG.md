@@ -13,6 +13,7 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 
 - Wrong passwords and blocked addresses are written to the container log (never the password itself), so attacks become visible and tools like fail2ban can react; the server overview shows how many addresses are blocked right now
 - The dashboard has a main heading for screen readers
+- The dashboard opens much faster with very large libraries (thousands of titles)
 
 ## 0.5.1 – 2026-10-03
 

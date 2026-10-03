@@ -64,6 +64,20 @@ export function getDashboard(): {
 		.where(inArray(watchedEpisodes.itemId, ids))
 		.all();
 
+	// Grouped once by item: looking them up per item in the full lists made the dashboard slow
+	// for large libraries (thousands of titles).
+	const group = <T extends { itemId: number }>(list: T[]) => {
+		const byItem = new Map<number, T[]>();
+		for (const entry of list) {
+			const own = byItem.get(entry.itemId);
+			if (own) own.push(entry);
+			else byItem.set(entry.itemId, [entry]);
+		}
+		return byItem;
+	};
+	const rowsOf = group(rows);
+	const watchedOf = group(watched);
+
 	const now = today();
 	const recentStart = new Date();
 	recentStart.setDate(recentStart.getDate() - RECENT_DAYS);
@@ -73,13 +87,13 @@ export function getDashboard(): {
 	const upcoming: DashboardEntry[] = [];
 
 	for (const item of items) {
-		const itemWatched = watched.filter((w) => w.itemId === item.id);
-		const isWatched = (r: Row) =>
-			itemWatched.some((w) => w.season === r.season && w.episode === r.episode);
+		const itemWatched = watchedOf.get(item.id) ?? [];
+		const watchedKeys = new Set(itemWatched.map((w) => `${w.season}:${w.episode}`));
+		const isWatched = (r: Row) => watchedKeys.has(`${r.season}:${r.episode}`);
 		// Highest season with a watched episode (0 = none).
 		const lastWatchedSeason = Math.max(0, ...itemWatched.map((w) => w.season));
 
-		let events = rows.filter((r) => r.itemId === item.id);
+		let events = rowsOf.get(item.id) ?? [];
 		if (item.status === 'completed' || item.status === 'paused') {
 			// Only new seasons of shows (e.g. S2 watched, S3 announced); nothing for movies/games.
 			if (item.category !== 'series' && item.category !== 'anime') continue;
