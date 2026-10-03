@@ -14,6 +14,7 @@ Self-hosted Media-Tracker, Single-User, Deployment per Docker Compose.
 SvelteKit (adapter-node, Svelte 5 Runes), TypeScript, Drizzle ORM, better-sqlite3, Tailwind v4. Mobile-first.
 
 - `better-sqlite3` bleibt auf v12 (v13 hat keine Prebuilt-Binaries mehr → bräuchte Compiler).
+- Docker-Image für amd64 + arm64: Die App wird nur einmal gebaut, auf der Architektur des Build-Rechners (`FROM --platform=$BUILDPLATFORM … AS build`), weil das Ergebnis überall gleich ist und der emulierte arm64-Bau langsam war und schon abgestürzt ist (Abbruchcode 132 beim Release 0.5.1). Je Architektur läuft nur `npm ci --omit=dev` (Stufe `deps`, bringt das passende better-sqlite3-Binary). Was zur Laufzeit ein natives Modul braucht, muss deshalb unter `dependencies` stehen. Kein Build-Cache in der Release-Action (Tags können den Cache anderer Tags nicht lesen).
 - Server-Code liegt unter `src/lib/server/` (nie im Browser-Bundle).
 - DB wird lazy über `getDb()` geöffnet; Migrationen laufen automatisch beim Start (`src/hooks.server.ts`).
 - Code, URLs und DB-Werte auf Englisch (`/movies`, `/series`, `/anime`, `/games`; Kategorie-Keys ebenso).

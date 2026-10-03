@@ -1,5 +1,10 @@
-# ---- Stage 1: install dependencies and build the app ----
-FROM node:24-alpine AS build
+# The image is built for several processor types (amd64, arm64). Building the app itself gives
+# the same result on all of them, so it is done only once, on the machine's own processor type –
+# never emulated, which is slow and has crashed before. Only the small set of runtime packages
+# is installed per processor type (better-sqlite3 brings a ready-made binary for each).
+
+# ---- Stage 1: build the app (once, on the build machine's own processor type) ----
+FROM --platform=$BUILDPLATFORM node:24-alpine AS build
 WORKDIR /app
 
 # Build tools, only used if no prebuilt better-sqlite3 binary is available
@@ -9,9 +14,19 @@ COPY package.json package-lock.json .npmrc ./
 RUN npm ci
 
 COPY . .
-RUN npm run build && npm prune --omit=dev
+RUN npm run build
 
-# ---- Stage 2: small runtime image ----
+# ---- Stage 2: runtime packages for the processor type of the image ----
+FROM node:24-alpine AS deps
+WORKDIR /app
+
+# Build tools, only used if no prebuilt better-sqlite3 binary is available
+RUN apk add --no-cache python3 make g++
+
+COPY package.json package-lock.json .npmrc ./
+RUN npm ci --omit=dev
+
+# ---- Stage 3: small runtime image ----
 FROM node:24-alpine
 WORKDIR /app
 
@@ -24,7 +39,7 @@ ENV NODE_ENV=production \
     MIGRATIONS_DIR=/app/drizzle
 
 COPY --from=build /app/package.json ./
-COPY --from=build /app/node_modules ./node_modules
+COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/build ./build
 COPY --from=build /app/drizzle ./drizzle
 COPY --from=build /app/start.js ./start.js

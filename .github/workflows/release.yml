@@ -46,8 +46,6 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
   # After the image is published: prepare the release notes from the matching section of
   # CHANGELOG.md (fails if there is none). The release itself is created by hand on GitHub,
