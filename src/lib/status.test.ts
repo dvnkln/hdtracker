@@ -19,6 +19,14 @@ describe('isReleased', () => {
 		expect(isReleased({ releaseDate: '2026-10-04' }, today)).toBe(false);
 		expect(isReleased({ releaseDate: null }, today)).toBe(false);
 	});
+	it('never locks a title its data source no longer knows', () => {
+		const gone = {
+			releaseDate: null,
+			metadataUpdatedAt: new Date(),
+			sourceMissingSince: new Date()
+		};
+		expect(isReleased(gone, today)).toBe(true);
+	});
 	it('never locks a title whose details are still loading', () => {
 		expect(isReleased({ releaseDate: null, metadataUpdatedAt: null }, today)).toBe(true);
 	});

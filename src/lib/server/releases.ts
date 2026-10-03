@@ -87,7 +87,8 @@ export async function refreshItem(item: LibraryItem) {
 				malId: fresh.malId,
 				posterUrl: fresh.posterUrl,
 				overview: fresh.overview,
-				metadataUpdatedAt: new Date()
+				metadataUpdatedAt: new Date(),
+				sourceMissingSince: null
 			})
 			.where(eq(libraryItems.id, item.id))
 			.run();
@@ -120,6 +121,30 @@ export async function refreshItem(item: LibraryItem) {
 	);
 }
 
+const isNotFound = (err: unknown) => err instanceof ProviderError && err.status === 404;
+
+// Like refreshItem, but a title the data source no longer knows is not an error: it is marked
+// (see `sourceMissingSince`), keeps what is stored and is only asked for again once a month.
+// Returns false in that case.
+export async function refreshOrMarkMissing(item: LibraryItem) {
+	try {
+		await refreshItem(item);
+		return true;
+	} catch (err) {
+		if (!isNotFound(err)) throw err;
+		const now = new Date();
+		getDb()
+			.update(libraryItems)
+			.set({ metadataUpdatedAt: now, sourceMissingSince: item.sourceMissingSince ?? now })
+			.where(eq(libraryItems.id, item.id))
+			.run();
+		console.warn(
+			`${item.category}/${item.externalId} (${item.title}) is no longer known to its source`
+		);
+		return false;
+	}
+}
+
 type Source = LibraryItem['source'];
 const SOURCES: Source[] = ['tmdb', 'igdb', 'anilist'];
 
@@ -141,8 +166,10 @@ function exclusive<T>(source: Source, work: () => Promise<T>): Promise<T> {
 const refreshing = new Set<number>();
 export function refreshSoon(item: LibraryItem) {
 	if (refreshing.has(item.id)) return;
+	// Missing at its source: asked again once a month only (see isDue)
+	if (item.sourceMissingSince && !isDue(item, false, Date.now())) return;
 	refreshing.add(item.id);
-	exclusive(item.source, () => refreshItem(item))
+	exclusive(item.source, () => refreshOrMarkMissing(item))
 		.catch((err) => console.error(`Refreshing ${item.category}/${item.externalId} failed`, err))
 		.finally(() => refreshing.delete(item.id));
 }
@@ -193,7 +220,7 @@ export async function refreshBatch(source: Source, batch: LibraryItem[]) {
 	for (const [index, item] of batch.entries()) {
 		try {
 			if (!item.metadataUpdatedAt) await tickAllEpisodesIfImported(item);
-			await refreshItem(item);
+			await refreshOrMarkMissing(item);
 		} catch (err) {
 			console.error(`Refreshing ${item.category}/${item.externalId} failed`, err);
 			if (isRateLimited(err)) return { failed: [...failed, ...batch.slice(index)], stopped: true };
@@ -273,7 +300,8 @@ const WEEKLY: Category[] = ['movies', 'games', 'anime'];
 export function isDue(item: LibraryItem, ended: boolean, now: number) {
 	if (!item.metadataUpdatedAt) return true;
 	const age = now - item.metadataUpdatedAt.getTime();
-	if (item.status === 'dropped') return age >= 30 * 24 * HOUR;
+	// Dropped, or no longer known to the data source: a look once a month is enough.
+	if (item.status === 'dropped' || item.sourceMissingSince) return age >= 30 * 24 * HOUR;
 	// A few hours short of a week, so a run at the same time of day counts as "a week later".
 	if (item.status === 'completed' && (ended || WEEKLY.includes(item.category)))
 		return age >= 7 * 24 * HOUR - 6 * HOUR;

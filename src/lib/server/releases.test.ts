@@ -89,7 +89,13 @@ describe('refreshBatch', () => {
 		// One request for all three, one more for the unknown anime asking for itself.
 		expect(calls).toHaveLength(2);
 		expect(result.stopped).toBe(false);
-		expect(result.failed.map((i) => i.externalId)).toEqual(['99999999']);
+		// A title the source does not know is not a failure: it is marked and left alone.
+		expect(result.failed).toEqual([]);
+		const gone = getDb().select().from(libraryItems).where(eq(libraryItems.id, items[2].id)).get()!;
+		expect(gone.sourceMissingSince).not.toBeNull();
+		expect(gone.metadataUpdatedAt).not.toBeNull();
+		expect(isDue(gone, false, Date.now())).toBe(false);
+		expect(isDue(gone, false, Date.now() + 31 * DAY)).toBe(true);
 
 		const db = getDb();
 		const saved = db.select().from(libraryItems).where(eq(libraryItems.id, items[0].id)).get()!;
@@ -100,6 +106,27 @@ describe('refreshBatch', () => {
 		const details = db.select().from(itemDetails).where(eq(itemDetails.itemId, items[1].id)).get()!;
 		expect(details.show?.seasons[0].episodes).toHaveLength(12);
 		expect(db.select().from(releases).where(eq(releases.itemId, items[0].id)).all()).toEqual([]);
+	});
+
+	it('a title that is found again loses its mark', async () => {
+		const item = addItem({
+			category: 'anime',
+			source: 'anilist',
+			externalId: '31',
+			sourceMissingSince: new Date()
+		});
+		mockFetch({
+			'graphql.anilist.co': {
+				data: {
+					Page: { media: [anime(31)] },
+					past: { pageInfo: { hasNextPage: false }, airingSchedules: [] }
+				}
+			}
+		});
+		await refreshBatch('anilist', [item]);
+		const saved = getDb().select().from(libraryItems).where(eq(libraryItems.id, item.id)).get()!;
+		expect(saved.sourceMissingSince).toBeNull();
+		expect(saved.title).toBe('Anime 31');
 	});
 
 	it('gives up on the whole batch when the service keeps answering "too many requests"', async () => {

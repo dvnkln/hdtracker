@@ -116,6 +116,12 @@ export const en: Messages = {
 	},
 
 	detail: {
+		watchedKept: (n) =>
+			n === 1 ? '1 episode is stored as watched.' : `${n} episodes are stored as watched.`,
+		sourceMissingNoCopy: (source) =>
+			`${source} does not know this title (any more), and nothing was stored for it. Your status is kept.`,
+		sourceMissing: (source) =>
+			`${source} no longer knows this title. What you see is the stored copy; it is no longer updated.`,
 		addToLibrary: 'Add to library',
 		whereToWatch: 'Where to watch',
 		flatrate: 'Stream',
@@ -242,6 +248,14 @@ export const en: Messages = {
 			library: {
 				ok: () => 'All titles loaded',
 				hint: (n) => (n === 1 ? '1 title is still loading' : `${n} titles are still loading`),
+				action: () => ''
+			},
+			missing: {
+				ok: () => 'All titles known to their data source',
+				hint: (n) =>
+					n === 1
+						? '1 title no longer found at its source:'
+						: `${n} titles no longer found at their source:`,
 				action: () => ''
 			}
 		},

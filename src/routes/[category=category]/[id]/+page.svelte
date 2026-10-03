@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Notice from '$lib/components/Notice.svelte';
 	import { CATEGORIES } from '$lib/categories';
 	import { hasEpisodes } from '$lib/status';
 	import { formatDate, formatRating, formatRuntime, m, statusLabel } from '$lib/i18n/index.svelte';
@@ -19,7 +20,8 @@
 	// Header line, e.g. "2024 · 2 Std. 47 Min." or "2023 · TV-Serie · 28 Folgen".
 	let metaLine = $derived(
 		[
-			info.item.year ?? m.common.tba,
+			// "TBA" would be wrong for a placeholder: nothing is known, not even whether it is out
+			info.item.year ?? (data.placeholder ? null : m.common.tba),
 			info.item.earlyAccess && m.common.earlyAccess,
 			info.format && (m.detail.formats[info.format] ?? info.format),
 			info.runtime && formatRuntime(info.runtime),
@@ -137,15 +139,17 @@
 							{m.detail.addToLibrary}
 						{/if}
 					</button>
-					<a
-						href={info.externalUrl}
-						target="_blank"
-						rel="noreferrer"
-						class="inline-flex items-center gap-1 text-sm text-zinc-400 hover:text-zinc-200"
-					>
-						{info.sourceLabel}
-						<ExternalLink size={14} />
-					</a>
+					{#if info.externalUrl}
+						<a
+							href={info.externalUrl}
+							target="_blank"
+							rel="noreferrer"
+							class="inline-flex items-center gap-1 text-sm text-zinc-400 hover:text-zinc-200"
+						>
+							{info.sourceLabel}
+							<ExternalLink size={14} />
+						</a>
+					{/if}
 				</div>
 			</div>
 		</div>
@@ -157,6 +161,17 @@
 					<span class="rounded-full bg-zinc-800 px-2.5 py-0.5 text-xs text-zinc-300">{genre}</span>
 				{/each}
 			</div>
+		{/if}
+
+		{#if data.sourceMissing}
+			<Notice kind="warning" class="mt-4 max-w-3xl">
+				{data.placeholder
+					? m.detail.sourceMissingNoCopy(info.sourceLabel)
+					: m.detail.sourceMissing(info.sourceLabel)}
+				{#if data.placeholder && data.watched.length}
+					{m.detail.watchedKept(data.watched.length)}
+				{/if}
+			</Notice>
 		{/if}
 
 		{#if info.item.overview}

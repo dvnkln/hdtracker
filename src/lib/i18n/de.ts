@@ -122,6 +122,14 @@ export const de = {
 	},
 
 	detail: {
+		watchedKept: (n: number) =>
+			n === 1
+				? '1 Folge ist als gesehen gespeichert.'
+				: `${n} Folgen sind als gesehen gespeichert.`,
+		sourceMissingNoCopy: (source: string) =>
+			`${source} kennt diesen Titel nicht (mehr), und es wurde nichts dazu gespeichert. Dein Status bleibt erhalten.`,
+		sourceMissing: (source: string) =>
+			`${source} kennt diesen Titel nicht mehr. Du siehst den gespeicherten Stand; er wird nicht mehr aktualisiert.`,
 		addToLibrary: 'Zur Bibliothek',
 		whereToWatch: "Wo läuft's?",
 		flatrate: 'Im Abo',
@@ -258,6 +266,14 @@ export const de = {
 				ok: (_n: number, _names: string[]) => 'Alle Titel geladen',
 				hint: (n: number, _names: string[]) =>
 					n === 1 ? '1 Titel wird noch geladen' : `${n} Titel werden noch geladen`,
+				action: (_n: number, _names: string[]) => ''
+			},
+			missing: {
+				ok: (_n: number, _names: string[]) => 'Alle Titel bei ihrer Datenquelle bekannt',
+				hint: (n: number, _names: string[]) =>
+					n === 1
+						? '1 Titel bei der Datenquelle nicht mehr gefunden:'
+						: `${n} Titel bei der Datenquelle nicht mehr gefunden:`,
 				action: (_n: number, _names: string[]) => ''
 			}
 		},

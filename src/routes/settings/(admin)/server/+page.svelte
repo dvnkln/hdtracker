@@ -49,7 +49,8 @@
 		proxy: '#connection',
 		sources: `${WIKI}/Installation`,
 		tasks: '/settings/maintenance',
-		library: ''
+		library: '',
+		missing: ''
 	};
 	let todo = $derived(data.overview.checks.filter((check) => check.level === 'action').length);
 	let facts = $derived([
@@ -134,25 +135,33 @@
 	<ul class="mt-3 flex flex-col gap-1.5 text-sm">
 		{#each data.overview.checks as check (check.key)}
 			{@const link = CHECK_LINKS[check.key]}
-			<li class="flex items-center gap-2">
+			<li class="flex items-start gap-2">
 				{#if check.level === 'ok'}
-					<Check size={16} class="shrink-0 text-emerald-400" />
+					<Check size={16} class="mt-0.5 shrink-0 text-emerald-400" />
 				{:else if check.level === 'hint'}
-					<Info size={16} class="shrink-0 text-zinc-400" />
+					<Info size={16} class="mt-0.5 shrink-0 text-zinc-400" />
 				{:else}
-					<TriangleAlert size={16} class="shrink-0 text-amber-400" />
+					<TriangleAlert size={16} class="mt-0.5 shrink-0 text-amber-400" />
 				{/if}
-				<span class={check.level === 'ok' ? 'text-zinc-400' : 'text-zinc-100'}>
+				<!-- Text, then (only if not fine) the titles concerned or a link to deal with it -->
+				<p class="min-w-0 {check.level === 'ok' ? 'text-zinc-400' : 'text-zinc-100'}">
 					{m.settings.checks[check.key][check.level](check.count ?? 0, check.names ?? [])}
-				</span>
-				{#if check.level !== 'ok' && link}
-					<a
-						class="shrink-0 text-zinc-400 underline"
-						href={link}
-						target={link.startsWith('http') ? '_blank' : undefined}
-						rel="noreferrer">{check.level === 'action' ? m.settings.fix : m.settings.learnMore}</a
-					>
-				{/if}
+					{#if check.level !== 'ok'}
+						{#each check.items ?? [] as item, i (item.href)}{i ? ', ' : ''}<a
+								class="text-zinc-400 underline"
+								href={item.href}>{item.title}</a
+							>{/each}
+						{#if link}
+							<a
+								class="ml-1 text-zinc-400 underline"
+								href={link}
+								target={link.startsWith('http') ? '_blank' : undefined}
+								rel="noreferrer"
+								>{check.level === 'action' ? m.settings.fix : m.settings.learnMore}</a
+							>
+						{/if}
+					{/if}
+				</p>
 			</li>
 		{/each}
 	</ul>

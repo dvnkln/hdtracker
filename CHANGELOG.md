@@ -18,6 +18,7 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 - Errors (a page that does not exist, a data source that is not reachable) now show a proper page in the look of the app, in your language and theme
 - Settings: “Save” and similar buttons stay greyed out until there is something to save or send (a changed value, a chosen file, all fields filled in)
 - Maintenance: a small arrow next to “How often” puts a task back to its default schedule – it only appears when the schedule was changed
+- Titles that were removed at TMDB, IGDB or AniList are no longer retried and reported as errors every night: they keep what is stored, show a note on their page and are listed in the server overview
 
 ## 0.5.0 – 2026-10-02
 

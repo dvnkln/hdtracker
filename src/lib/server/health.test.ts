@@ -6,7 +6,8 @@ const fine: Facts = {
 	connection: { forwarded: null, via: null, hidden: false },
 	missingKeys: [],
 	failedTasks: 0,
-	pendingItems: 0
+	pendingItems: 0,
+	missingItems: []
 };
 const levels = (facts: Partial<Facts>) =>
 	Object.fromEntries(evaluate({ ...fine, ...facts }).map((c) => [c.key, c.level]));
@@ -39,4 +40,13 @@ it('missing keys and failed tasks need action, loading titles are a hint', () =>
 	});
 	expect(checks.find((c) => c.key === 'tasks')).toMatchObject({ level: 'action', count: 2 });
 	expect(checks.find((c) => c.key === 'library')).toMatchObject({ level: 'hint', count: 7 });
+});
+
+it('titles the data source no longer knows are listed as a hint', () => {
+	const missingItems = [{ title: 'Gone', href: '/anime/1' }];
+	expect(evaluate({ ...fine, missingItems }).find((c) => c.key === 'missing')).toMatchObject({
+		level: 'hint',
+		count: 1,
+		items: missingItems
+	});
 });

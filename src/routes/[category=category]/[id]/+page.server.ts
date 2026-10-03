@@ -1,5 +1,6 @@
 import { error, fail } from '@sveltejs/kit';
 import type { Category } from '$lib/categories';
+import type { Status } from '$lib/status';
 import {
 	airedEpisodes,
 	findItem,
@@ -9,7 +10,7 @@ import {
 } from '$lib/server/episodes';
 import { detailsFor } from '$lib/server/itemDetails';
 import { libraryStatusFor } from '$lib/server/library';
-import { ProviderError, type ShowDetails } from '$lib/server/providers/types';
+import { ProviderError, type Details, type ShowDetails } from '$lib/server/providers/types';
 import { serverMessages } from '$lib/server/i18n';
 import { getSetting } from '$lib/server/settings';
 import type { Actions, PageServerLoad } from './$types';
@@ -56,14 +57,67 @@ export const load: PageServerLoad = async ({ params }) => {
 			info,
 			show,
 			status: item?.status ?? null,
+			// The data source no longer knows this title: what is shown is the stored copy
+			sourceMissing: !!item?.sourceMissingSince,
+			placeholder: false,
 			watched: [...watchedKeys(item?.id)],
 			similarStatus: Object.fromEntries(similarStatus),
 			hideSpoilers: getSetting('hideSpoilers') === 'on'
 		};
 	} catch (err) {
+		// A title of the library that its data source no longer knows and that has no stored
+		// details (e.g. imported with a dead ID): show what the library has instead of an error.
+		const item = findItem(category, params.id);
+		if (item && err instanceof ProviderError && err.status === 404) return placeholderFor(item);
 		failLoading(err);
 	}
 };
+
+const SOURCE_LABELS = { tmdb: 'TMDB', igdb: 'IGDB', anilist: 'AniList' } as const;
+
+// A detail page made of the little the library row holds (title, maybe poster and year).
+function placeholderFor(item: NonNullable<ReturnType<typeof findItem>>) {
+	const info: Details = {
+		item: {
+			source: item.source,
+			externalId: item.externalId,
+			title: item.title,
+			originalTitle: item.originalTitle,
+			year: item.year,
+			// Unknown, not "unreleased": the status must stay changeable (see isReleased)
+			releaseDate: item.releaseDate ?? '1900-01-01',
+			earlyAccess: item.earlyAccess,
+			malId: item.malId,
+			posterUrl: item.posterUrl,
+			overview: item.overview
+		},
+		externalUrl: '',
+		sourceLabel: SOURCE_LABELS[item.source],
+		backdropUrl: null,
+		genres: [],
+		rating: null,
+		runtime: null,
+		seasonCount: null,
+		episodeCount: null,
+		episodeRuntime: null,
+		format: null,
+		facts: [],
+		watch: null,
+		links: [],
+		similar: []
+	};
+	return {
+		category: item.category,
+		info,
+		show: null,
+		status: item.status,
+		watched: [...watchedKeys(item.id)],
+		similarStatus: {} as Record<string, Status>,
+		hideSpoilers: getSetting('hideSpoilers') === 'on',
+		sourceMissing: true,
+		placeholder: true
+	};
+}
 
 function readInt(data: FormData, name: string) {
 	const value = Number(data.get(name));
