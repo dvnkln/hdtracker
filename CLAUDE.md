@@ -45,7 +45,7 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
 
 - PC: Seitenleiste links, Handy: `/settings` zeigt eine gruppierte Liste, jeder Bereich hat „← Einstellungen“. Bereiche in `src/lib/settingsNav.ts` (neuer Bereich = eine Zeile + Seite unter `src/routes/settings/`). Überschrift „Einstellungen“ nur `sr-only`.
 - **Persönlich** (je Benutzer): Allgemein (`/settings/general`: Oberflächensprache, Anime-Titel, Spoiler-Schutz, Auto-Status, Bereiche) · Design (`/appearance`: Farbschema) · Konto (`/account`: Benutzername, Passwort, andere Geräte) · Daten (`/data`: Import, später Export, Bibliothek leeren) · später Benachrichtigungen.
-- **Verwaltung** (ganze Installation, Route-Gruppe `(admin)`): Server (`/server`: Inhaltssprache, Region) · Wartung (`/maintenance`) · später Benutzer. Geschützt über `isAdmin()`/`requireAdmin()` in `src/lib/server/auth.ts` (heute immer true, einziges Konto = Admin); Form-Actions und Endpunkte der Admin-Seiten rufen `requireAdmin` selbst auf.
+- **Verwaltung** (ganze Installation, Route-Gruppe `(admin)`): Server (`/server`: Übersicht, Inhaltssprache, Region, Verbindung/Reverse Proxy; die Übersicht zeigt wenige Prüfungen mit Stufe ok/Hinweis/Handlungsbedarf plus ein paar Fakten – Regeln in `evaluate()` in `src/lib/server/health.ts`, neue Prüfung = dort + Texte `settings.checks` + Link in `CHECK_LINKS`; bewusst knapp halten, keine Update-Prüfung, keine Live-Abfragen der Datenquellen) · Wartung (`/maintenance`) · später Benutzer. Geschützt über `isAdmin()`/`requireAdmin()` in `src/lib/server/auth.ts` (heute immer true, einziges Konto = Admin); Form-Actions und Endpunkte der Admin-Seiten rufen `requireAdmin` selbst auf.
 - **Über** für alle, zuletzt.
 
 ## Datenquellen

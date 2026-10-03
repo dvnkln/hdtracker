@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { m } from '$lib/i18n/index.svelte';
+	import { formatDateTime, formatFileSize, m } from '$lib/i18n/index.svelte';
 	import { FormFeedback } from '$lib/forms.svelte';
 	import { proxySnippets } from '$lib/proxySnippets';
 	import { ui } from '$lib/ui';
@@ -8,6 +8,7 @@
 	import Notice from '$lib/components/Notice.svelte';
 	import SubmitButton, { BUTTON_SECONDARY } from '$lib/components/SubmitButton.svelte';
 	import {
+		Activity,
 		Check,
 		CircleCheck,
 		Copy,
@@ -39,6 +40,32 @@
 			})
 			.sort((a, b) => a.name.localeCompare(b.name, m.locale));
 	}
+
+	// ---- Overview ----
+	const WIKI = 'https://github.com/dvnkln/hdtracker/wiki';
+	// Where a check that is not fine can be dealt with
+	const CHECK_LINKS: Record<string, string> = {
+		https: `${WIKI}/HTTPS-and-installing-as-an-app`,
+		proxy: '#connection',
+		sources: `${WIKI}/Installation`,
+		tasks: '/settings/maintenance',
+		library: ''
+	};
+	let todo = $derived(data.overview.checks.filter((check) => check.level === 'action').length);
+	let facts = $derived([
+		{
+			label: m.settings.infoVersion,
+			value: data.overview.version,
+			href: `https://github.com/dvnkln/hdtracker/releases/tag/v${data.overview.version}`
+		},
+		{
+			label: m.settings.infoRunning,
+			value: formatDateTime(data.overview.info.startedAt),
+			href: ''
+		},
+		{ label: m.settings.infoTitles, value: String(data.overview.info.titles), href: '' },
+		{ label: m.settings.infoStorage, value: formatFileSize(data.overview.info.bytes), href: '' }
+	]);
 
 	// ---- Connection: how this request reached hdtracker ----
 	let c = $derived(data.connection);
@@ -94,6 +121,56 @@
 <svelte:head><title>{m.settings.server} · hdtracker</title></svelte:head>
 
 <h2 class={pageTitle}>{m.settings.server}</h2>
+
+<!-- Overview: is everything fine? -->
+<section class={card}>
+	<h3 class={heading}><Activity size={20} class="text-zinc-400" />{m.settings.overview}</h3>
+	<p
+		class="mt-3 flex items-center gap-2 font-medium {todo ? 'text-amber-400' : 'text-emerald-400'}"
+	>
+		{#if todo}<TriangleAlert size={18} />{:else}<CircleCheck size={18} />{/if}
+		{todo ? m.settings.needsAttention(todo) : m.settings.allFine}
+	</p>
+	<ul class="mt-3 flex flex-col gap-1.5 text-sm">
+		{#each data.overview.checks as check (check.key)}
+			{@const link = CHECK_LINKS[check.key]}
+			<li class="flex items-center gap-2">
+				{#if check.level === 'ok'}
+					<Check size={16} class="shrink-0 text-emerald-400" />
+				{:else if check.level === 'hint'}
+					<Info size={16} class="shrink-0 text-zinc-400" />
+				{:else}
+					<TriangleAlert size={16} class="shrink-0 text-amber-400" />
+				{/if}
+				<span class={check.level === 'ok' ? 'text-zinc-400' : 'text-zinc-100'}>
+					{m.settings.checks[check.key][check.level](check.count ?? 0, check.names ?? [])}
+				</span>
+				{#if check.level !== 'ok' && link}
+					<a
+						class="shrink-0 text-zinc-400 underline"
+						href={link}
+						target={link.startsWith('http') ? '_blank' : undefined}
+						rel="noreferrer">{check.level === 'action' ? m.settings.fix : m.settings.learnMore}</a
+					>
+				{/if}
+			</li>
+		{/each}
+	</ul>
+	<dl
+		class="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-zinc-800 pt-4 text-sm sm:grid-cols-4"
+	>
+		{#each facts as fact (fact.label)}
+			<div>
+				<dt class="text-xs text-zinc-500">{fact.label}</dt>
+				<dd class="text-zinc-100">
+					{#if fact.href}
+						<a class="underline" href={fact.href} target="_blank" rel="noreferrer">{fact.value}</a>
+					{:else}{fact.value}{/if}
+				</dd>
+			</div>
+		{/each}
+	</dl>
+</section>
 
 <section class={card}>
 	<h3 class={heading}><Globe size={20} class="text-zinc-400" />{m.settings.content}</h3>

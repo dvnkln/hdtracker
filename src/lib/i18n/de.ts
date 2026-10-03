@@ -225,6 +225,46 @@ export const de = {
 			'Titel und Beschreibungen von Filmen und Serien (TMDB). Titel, die schon in der Bibliothek sind, bleiben vorerst in ihrer bisherigen Sprache.',
 		region: 'Region',
 		regionHint: 'Für Streaming-Anbieter und Erscheinungsdaten.',
+		overview: 'Übersicht',
+		allFine: 'Alles in Ordnung',
+		needsAttention: (n: number) =>
+			n === 1 ? '1 Punkt braucht Aufmerksamkeit' : `${n} Punkte brauchen Aufmerksamkeit`,
+		fix: 'Beheben',
+		checks: {
+			https: {
+				ok: (_n: number, _names: string[]) => 'Über HTTPS geöffnet',
+				hint: (_n: number, _names: string[]) => 'Ohne HTTPS geöffnet',
+				action: (_n: number, _names: string[]) => ''
+			},
+			proxy: {
+				ok: (_n: number, _names: string[]) => 'Geräte werden einzeln erkannt',
+				hint: (_n: number, _names: string[]) => 'Alle Besucher teilen sich eine Adresse',
+				action: (_n: number, _names: string[]) => 'Reverse Proxy nicht bestätigt'
+			},
+			sources: {
+				ok: (_n: number, _names: string[]) => 'Datenquellen eingerichtet',
+				hint: (_n: number, _names: string[]) => '',
+				action: (_n: number, names: string[]) => `Schlüssel fehlt: ${names.join(', ')}`
+			},
+			tasks: {
+				ok: (_n: number, _names: string[]) => 'Hintergrundaufgaben laufen ohne Fehler',
+				hint: (_n: number, _names: string[]) => '',
+				action: (n: number, _names: string[]) =>
+					n === 1
+						? '1 Hintergrundaufgabe fehlgeschlagen'
+						: `${n} Hintergrundaufgaben fehlgeschlagen`
+			},
+			library: {
+				ok: (_n: number, _names: string[]) => 'Alle Titel geladen',
+				hint: (n: number, _names: string[]) =>
+					n === 1 ? '1 Titel wird noch geladen' : `${n} Titel werden noch geladen`,
+				action: (_n: number, _names: string[]) => ''
+			}
+		},
+		infoVersion: 'Version',
+		infoRunning: 'Läuft seit',
+		infoTitles: 'Titel',
+		infoStorage: 'Belegter Speicher',
 		connection: 'Verbindung',
 		direct: 'Direkt verbunden',
 		directHint: 'Mit Reverse Proxy? Öffne diese Seite über ihn, um ihn zu bestätigen.',

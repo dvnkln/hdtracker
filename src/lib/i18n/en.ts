@@ -218,6 +218,37 @@ export const en: Messages = {
 			'Titles and descriptions of movies and series (TMDB). Titles already in your library keep their current language for now.',
 		region: 'Region',
 		regionHint: 'Used for streaming providers and release dates.',
+		overview: 'Overview',
+		allFine: 'Everything is fine',
+		needsAttention: (n) => (n === 1 ? '1 item needs attention' : `${n} items need attention`),
+		fix: 'Fix',
+		checks: {
+			https: { ok: () => 'Opened via HTTPS', hint: () => 'Opened without HTTPS', action: () => '' },
+			proxy: {
+				ok: () => 'Devices are recognised one by one',
+				hint: () => 'All visitors share one address',
+				action: () => 'Reverse proxy not confirmed'
+			},
+			sources: {
+				ok: () => 'Data sources set up',
+				hint: () => '',
+				action: (_n, names) => `Key missing: ${names.join(', ')}`
+			},
+			tasks: {
+				ok: () => 'Background tasks run without errors',
+				hint: () => '',
+				action: (n) => (n === 1 ? '1 background task failed' : `${n} background tasks failed`)
+			},
+			library: {
+				ok: () => 'All titles loaded',
+				hint: (n) => (n === 1 ? '1 title is still loading' : `${n} titles are still loading`),
+				action: () => ''
+			}
+		},
+		infoVersion: 'Version',
+		infoRunning: 'Running since',
+		infoTitles: 'Titles',
+		infoStorage: 'Storage used',
 		connection: 'Connection',
 		direct: 'Connected directly',
 		directHint: 'Using a reverse proxy? Open this page through it to confirm it.',

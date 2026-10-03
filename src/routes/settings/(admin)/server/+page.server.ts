@@ -1,5 +1,7 @@
 import { fail } from '@sveltejs/kit';
+import pkg from '../../../../../package.json';
 import { connectionOf, requireAdmin } from '$lib/server/auth';
+import { serverOverview } from '$lib/server/health';
 import { randomBytes } from 'node:crypto';
 import { PROXY_KEY_HEADER, parseProxies } from '$lib/server/proxy';
 import { getDb } from '$lib/server/db';
@@ -32,6 +34,8 @@ export const load: PageServerLoad = async (event) => {
 			values.language
 		),
 		listsFailed,
+		// Overview: is everything fine, plus a few facts for the admin
+		overview: { ...(await serverOverview(event)), version: pkg.version },
 		// Reverse proxy: what hdtracker sees of this request, and the proxies entered so far.
 		connection: connectionOf(event),
 		trustedProxies: parseProxies(getSetting('trustedProxies')).entries.join(', '),
