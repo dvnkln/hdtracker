@@ -46,9 +46,9 @@ What changed in each version: [Changelog](CHANGELOG.md). What's planned: [Roadma
 - 🔎 **Quick search** – always at the top of the screen; on a computer, press <kbd>/</kbd> to start typing.
 - 📄 **Detail pages** – runtime, genres, rating, release dates and similar titles.
 - 📥 **Import and export** – take over your library from Yamtrack including statuses, watched episodes and anime progress, and download it again as a file Yamtrack can read.
-- 🛠️ **Maintenance built in** – release dates refresh nightly; optional scheduled database backups you can download.
+- 🛠️ **Maintenance built in** – release dates refresh nightly; optional scheduled database backups you can download; a server overview tells you whether anything needs attention.
 - 🎨 **Themes** – follows your device (dark or light) by default; or pick dark, light, Tokyo Night, Dracula, SynthWave '84, Cyberpunk, Retro 95, Terminal and Breadbin.
-- 🔒 **Private** – runs on your own server, single account, all data in one SQLite file. No tracking, no cloud – [what is sent where](https://github.com/dvnkln/hdtracker/wiki/Privacy-and-security) is documented.
+- 🔒 **Private** – runs on your own server, single account, all data in one SQLite file. No tracking, no cloud – [what is sent where](https://github.com/dvnkln/hdtracker/wiki/Privacy-and-security) is documented. Your browser only ever talks to your own server, and repeated wrong passwords block the address they come from – also behind a reverse proxy.
 
 ## 📱 Screenshots
 

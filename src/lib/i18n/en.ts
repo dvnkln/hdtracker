@@ -257,6 +257,14 @@ export const en: Messages = {
 						? '1 title no longer found at its source:'
 						: `${n} titles no longer found at their source:`,
 				action: () => ''
+			},
+			logins: {
+				ok: () => 'No address blocked for wrong passwords',
+				hint: (n) =>
+					n === 1
+						? '1 address is blocked for wrong passwords'
+						: `${n} addresses are blocked for wrong passwords`,
+				action: () => ''
 			}
 		},
 		infoVersion: 'Version',

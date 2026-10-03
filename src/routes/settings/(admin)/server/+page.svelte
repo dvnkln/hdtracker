@@ -50,7 +50,8 @@
 		sources: `${WIKI}/Installation`,
 		tasks: '/settings/maintenance',
 		library: '',
-		missing: ''
+		missing: '',
+		logins: ''
 	};
 	let todo = $derived(data.overview.checks.filter((check) => check.level === 'action').length);
 	let facts = $derived([

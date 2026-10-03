@@ -7,7 +7,8 @@ const fine: Facts = {
 	missingKeys: [],
 	failedTasks: 0,
 	pendingItems: 0,
-	missingItems: []
+	missingItems: [],
+	blockedAddresses: 0
 };
 const levels = (facts: Partial<Facts>) =>
 	Object.fromEntries(evaluate({ ...fine, ...facts }).map((c) => [c.key, c.level]));
@@ -48,5 +49,12 @@ it('titles the data source no longer knows are listed as a hint', () => {
 		level: 'hint',
 		count: 1,
 		items: missingItems
+	});
+});
+
+it('blocked addresses are shown as a hint', () => {
+	expect(evaluate({ ...fine, blockedAddresses: 2 }).find((c) => c.key === 'logins')).toMatchObject({
+		level: 'hint',
+		count: 2
 	});
 });

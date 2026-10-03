@@ -1,7 +1,7 @@
 import type { RequestEvent } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { isNotNull } from 'drizzle-orm';
-import { connectionOf } from './auth';
+import { blockedAddresses, connectionOf } from './auth';
 import { getDb } from './db';
 import { libraryItems } from './db/schema';
 import { imageStats } from './images';
@@ -14,7 +14,7 @@ import { databaseSize, listTasks } from './tasks/scheduler';
 // The overview on Settings → Server: a few checks that tell the admin whether everything is
 // fine. 'ok' = fine, 'hint' = worth knowing, 'action' = something should be done.
 export type Level = 'ok' | 'hint' | 'action';
-export type CheckKey = 'https' | 'proxy' | 'sources' | 'tasks' | 'library' | 'missing';
+export type CheckKey = 'https' | 'proxy' | 'sources' | 'tasks' | 'library' | 'missing' | 'logins';
 // `count`/`names` fill in the text of a check (e.g. how many tasks failed, which keys are missing).
 // `items` are titles to link to (titles the data source no longer knows).
 export type Item = { title: string; href: string };
@@ -33,6 +33,7 @@ export type Facts = {
 	failedTasks: number;
 	pendingItems: number;
 	missingItems: Item[];
+	blockedAddresses: number;
 };
 
 // The rules, separate from where the facts come from (so they can be tested).
@@ -58,6 +59,11 @@ export function evaluate(facts: Facts): Check[] {
 			level: facts.missingItems.length ? 'hint' : 'ok',
 			count: facts.missingItems.length,
 			items: facts.missingItems
+		},
+		{
+			key: 'logins',
+			level: facts.blockedAddresses ? 'hint' : 'ok',
+			count: facts.blockedAddresses
 		}
 	];
 }
@@ -79,7 +85,8 @@ export async function serverOverview(event: RequestEvent) {
 			.where(isNotNull(libraryItems.sourceMissingSince))
 			.orderBy(libraryItems.title)
 			.all()
-			.map((i) => ({ title: i.title, href: `/${i.category}/${i.externalId}` }))
+			.map((i) => ({ title: i.title, href: `/${i.category}/${i.externalId}` })),
+		blockedAddresses: blockedAddresses()
 	});
 	const images = await imageStats();
 	const backups = listBackups().reduce((sum, b) => sum + b.size, 0);

@@ -205,13 +205,22 @@ export function recordLoginFailure(ip: string) {
 	const entry = failures.get(ip) ?? { count: 0, locks: 0, lockedUntil: 0, lastFailure: 0 };
 	entry.count++;
 	entry.lastFailure = Date.now();
+	// One line per wrong password in the container log (never the password or the user name
+	// that was typed): makes attacks visible and can be read by tools like fail2ban.
+	console.warn(`Login failed: wrong password from ${ip}`);
 	if (entry.count >= MAX_FAILURES) {
 		const minutes = LOCK_MINUTES[Math.min(entry.locks, LOCK_MINUTES.length - 1)];
 		entry.count = 0;
 		entry.locks++;
 		entry.lockedUntil = Date.now() + minutes * 60 * 1000;
+		console.warn(`Login blocked: ${ip} for ${minutes} min after ${MAX_FAILURES} wrong passwords`);
 	}
 	failures.set(ip, entry);
+}
+
+// How many addresses are blocked right now (shown in the server overview).
+export function blockedAddresses() {
+	return [...failures.values()].filter((entry) => entry.lockedUntil > Date.now()).length;
 }
 
 export function clearLoginFailures(ip: string) {

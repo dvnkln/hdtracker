@@ -7,6 +7,13 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
+## Upcoming release
+
+### 🔧 Improved
+
+- Wrong passwords and blocked addresses are written to the container log (never the password itself), so attacks become visible and tools like fail2ban can react; the server overview shows how many addresses are blocked right now
+- The dashboard has a main heading for screen readers
+
 ## 0.5.1 – 2026-10-03
 
 A round of hardening and polish: better login protection behind a reverse proxy, a server overview, and fewer requests to the data sources.

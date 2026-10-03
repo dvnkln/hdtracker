@@ -1,5 +1,6 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import {
+	blockedAddresses,
 	clearLoginFailures,
 	createSession,
 	deleteExpiredSessions,
@@ -103,6 +104,15 @@ describe('login protection', () => {
 		pruneLoginFailures();
 		for (let i = 0; i < 5; i++) recordLoginFailure(ip);
 		expect(loginLockedFor(ip)).toBe(60); // starts again with one minute
+	});
+	it('counts the addresses blocked right now', () => {
+		vi.useFakeTimers();
+		const before = blockedAddresses();
+		for (let i = 0; i < 5; i++) recordLoginFailure('203.0.113.20');
+		expect(blockedAddresses()).toBe(before + 1);
+		vi.advanceTimersByTime(61_000);
+		// (addresses blocked by other tests may still be counted)
+		expect(blockedAddresses()).toBeLessThanOrEqual(before);
 	});
 	it('a successful login clears the count', () => {
 		const ip = '203.0.113.7';

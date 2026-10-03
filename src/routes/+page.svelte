@@ -157,6 +157,8 @@
 {/snippet}
 
 <main class="mx-auto max-w-screen-sm p-4">
+	<!-- Main heading for screen readers (the two lists have visible headings of their own) -->
+	<h1 class="sr-only">{m.common.home}</h1>
 	{#if data.libraryEmpty}
 		<p class="mt-2 text-zinc-400">{m.home.emptyLibrary}</p>
 	{:else}

@@ -275,6 +275,14 @@ export const de = {
 						? '1 Titel bei der Datenquelle nicht mehr gefunden:'
 						: `${n} Titel bei der Datenquelle nicht mehr gefunden:`,
 				action: (_n: number, _names: string[]) => ''
+			},
+			logins: {
+				ok: (_n: number, _names: string[]) => 'Keine Adresse wegen falscher Passwörter gesperrt',
+				hint: (n: number, _names: string[]) =>
+					n === 1
+						? '1 Adresse ist wegen falscher Passwörter gesperrt'
+						: `${n} Adressen sind wegen falscher Passwörter gesperrt`,
+				action: (_n: number, _names: string[]) => ''
 			}
 		},
 		infoVersion: 'Version',
