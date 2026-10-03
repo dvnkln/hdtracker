@@ -15,6 +15,9 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 - Even fewer requests to the data sources: anime and games are now loaded in batches (up to 25 anime or 50 games with a single request) – after an import, a large anime library is ready in seconds instead of minutes. Watched series that have ended are only checked once a week instead of every night
 - Hardened against attacks from other websites: hdtracker now tells the browser to load and run only what comes from your own server, and not to let other pages embed it
 - Login protection: repeated wrong passwords now block an address for longer each time (1, 5, then 15 minutes). Behind a reverse proxy, hdtracker can now tell visitors apart: Settings → Server → Connection shows how your request arrived and lets you confirm the proxy – with one click, or with a key where Docker hides the addresses (ready-made lines for Nginx Proxy Manager, Caddy, Traefik and nginx; the key stays hidden until you ask to see it)
+- Errors (a page that does not exist, a data source that is not reachable) now show a proper page in the look of the app, in your language and theme
+- Settings: “Save” and similar buttons stay greyed out until there is something to save or send (a changed value, a chosen file, all fields filled in)
+- Maintenance: a small arrow next to “How often” puts a task back to its default schedule – it only appears when the schedule was changed
 
 ## 0.5.0 – 2026-10-02
 

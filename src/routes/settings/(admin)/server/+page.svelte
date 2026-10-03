@@ -206,7 +206,7 @@
 		{/if}
 
 		<div class={actions}>
-			<SubmitButton text={m.settings.save} busy={forms.busy === 'content'} />
+			<SubmitButton text={m.settings.save} busy={forms.busy === 'content'} when="changed" />
 			<FeedbackText feedback={forms.messages.content} />
 		</div>
 	</form>
@@ -392,7 +392,7 @@
 					/>
 				</label>
 				<div class={actions}>
-					<SubmitButton text={m.settings.save} busy={forms.busy === 'proxies'} />
+					<SubmitButton text={m.settings.save} busy={forms.busy === 'proxies'} when="changed" />
 					<FeedbackText feedback={forms.messages.proxies} />
 				</div>
 			</form>

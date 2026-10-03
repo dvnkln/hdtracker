@@ -13,7 +13,7 @@ export class FormFeedback {
 	// For use:enhance: submit in the background, then show the server's answer under `id`.
 	// The server answers with { message } or fail(..., { error }).
 	submit(id: string, reset = false): SubmitFunction {
-		return ({ submitter }) => {
+		return ({ submitter, formElement }) => {
 			this.busy = id;
 			this.busyAction = submitter?.getAttribute('formaction') ?? null;
 			this.messages[id] = undefined;
@@ -21,6 +21,8 @@ export class FormFeedback {
 				await update({ reset });
 				this.busy = null;
 				this.busyAction = null;
+				// Tells the form's buttons that what it shows is now the saved state (SubmitButton `when`)
+				if (result.type === 'success') formElement.dispatchEvent(new Event('saved'));
 				if (result.type !== 'success' && result.type !== 'failure') return;
 				const answer = result.data as { message?: string; error?: string } | undefined;
 				if (!answer?.error && !answer?.message) return;

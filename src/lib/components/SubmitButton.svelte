@@ -9,7 +9,7 @@
 
 <script lang="ts">
 	import { LoaderCircle } from '@lucide/svelte';
-	import type { Component } from 'svelte';
+	import { tick, type Component } from 'svelte';
 
 	type Props = {
 		text: string;
@@ -21,6 +21,9 @@
 		// Several buttons in one form: which one was pressed
 		name?: string;
 		value?: string;
+		// Only clickable once there is something to send: 'changed' = a field of the form differs
+		// from what is saved, 'filled' = all required fields are filled in correctly.
+		when?: 'changed' | 'filled';
 	};
 	let {
 		text,
@@ -30,12 +33,58 @@
 		style = BUTTON_PRIMARY,
 		formaction,
 		name,
-		value
+		value,
+		when
 	}: Props = $props();
+
+	let button = $state<HTMLButtonElement>();
+	let ready = $state(true);
+
+	// Watches the form the button belongs to. The saved state is what the form looked like when
+	// the page was drawn, and again after every successful save (event "saved", see FormFeedback).
+	$effect(() => {
+		const form = button?.form;
+		if (!when || !form) return;
+		const snapshot = () =>
+			JSON.stringify(
+				[...new FormData(form)].map(([key, v]) => [
+					key,
+					v instanceof File ? `${v.name}:${v.size}` : v
+				])
+			);
+		let saved = snapshot();
+		const check = () => {
+			ready = when === 'filled' ? form.checkValidity() : snapshot() !== saved;
+		};
+		const reset = async () => {
+			await tick();
+			saved = snapshot();
+			check();
+		};
+		check();
+		form.addEventListener('input', check);
+		form.addEventListener('change', check);
+		form.addEventListener('saved', reset);
+		form.addEventListener('reset', reset);
+		return () => {
+			form.removeEventListener('input', check);
+			form.removeEventListener('change', check);
+			form.removeEventListener('saved', reset);
+			form.removeEventListener('reset', reset);
+		};
+	});
 </script>
 
-<!-- Submit button that shows a spinner while the form is being sent -->
-<button class={style} disabled={busy || disabled} {formaction} {name} {value}>
+<!-- Submit button that shows a spinner while the form is being sent; with `when` it stays
+     greyed out until there is something to send -->
+<button
+	bind:this={button}
+	class={style}
+	disabled={busy || disabled || !ready}
+	{formaction}
+	{name}
+	{value}
+>
 	{#if busy}
 		<LoaderCircle size={18} class="animate-spin" />
 	{:else if Icon}

@@ -44,7 +44,11 @@
 			<PasswordInput name="current" autocomplete="current-password" required />
 		</label>
 		<div class={actions}>
-			<SubmitButton text={m.settings.changeUsername} busy={forms.busy === 'username'} />
+			<SubmitButton
+				text={m.settings.changeUsername}
+				busy={forms.busy === 'username'}
+				when="filled"
+			/>
 			<FeedbackText feedback={forms.messages.username} />
 		</div>
 	</form>
@@ -94,6 +98,7 @@
 			<SubmitButton
 				text={m.settings.changePassword}
 				busy={forms.busy === 'password'}
+				when="filled"
 				icon={KeyRound}
 			/>
 			<FeedbackText feedback={forms.messages.password} />

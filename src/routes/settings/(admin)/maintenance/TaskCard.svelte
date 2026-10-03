@@ -7,7 +7,7 @@
 	import FeedbackText from '$lib/components/FeedbackText.svelte';
 	import SubmitButton, { BUTTON_SECONDARY } from '$lib/components/SubmitButton.svelte';
 	import Switch from '$lib/components/Switch.svelte';
-	import { CircleAlert, CircleCheck, Play } from '@lucide/svelte';
+	import { CircleAlert, CircleCheck, Play, RotateCcw } from '@lucide/svelte';
 	import type { PageData } from './$types';
 
 	type Props = {
@@ -26,6 +26,12 @@
 	// Local copy, so the time/weekday fields can follow the chosen frequency right away.
 	// svelte-ignore state_referenced_locally
 	let frequency = $state(task.frequency);
+	// ... and follows the saved value again when that changes (e.g. after a reset).
+	$effect.pre(() => {
+		frequency = task.frequency;
+	});
+
+	let mainForm = $state<HTMLFormElement>();
 
 	// Weekday names in the interface language, Monday first. 2023-01-01 was a Sunday.
 	let weekdays = $derived(
@@ -39,7 +45,27 @@
 </script>
 
 <section class={card}>
+	<!-- Own little form for the reset arrow (a second submit button inside the main form would
+	     be the one the Enter key presses). -->
 	<form
+		id="reset-{task.key}"
+		method="POST"
+		action="?/resetSchedule"
+		hidden
+		use:enhance={(input) => {
+			const done = forms.submit(task.key)(input);
+			return async (answer) => {
+				if (typeof done === 'function') await done(answer);
+				// The main form now shows the saved state again
+				if (answer.result.type === 'success') mainForm?.dispatchEvent(new Event('saved'));
+			};
+		}}
+	>
+		<input type="hidden" name="key" value={task.key} />
+	</form>
+
+	<form
+		bind:this={mainForm}
 		method="POST"
 		action="?/save"
 		use:enhance={forms.submit(task.key)}
@@ -105,14 +131,27 @@
 
 		<!-- Schedule -->
 		<div class="grid grid-cols-2 gap-3">
-			<label class={label}>
-				<span class={labelText}>{m.maintenance.frequency}</span>
-				<select name="frequency" bind:value={frequency}>
+			<div class={label}>
+				<div class="flex items-center gap-2">
+					<label for="frequency-{task.key}" class={labelText}>{m.maintenance.frequency}</label>
+					{#if task.customSchedule}
+						<!-- Small on purpose: the cards are full enough -->
+						<button
+							form="reset-{task.key}"
+							class="ui-btn rounded p-0.5 text-zinc-500 transition-colors hover:text-zinc-100"
+							aria-label={m.maintenance.resetSchedule}
+							title={m.maintenance.resetSchedule}
+						>
+							<RotateCcw size={14} />
+						</button>
+					{/if}
+				</div>
+				<select id="frequency-{task.key}" name="frequency" bind:value={frequency}>
 					{#each frequencies as value (value)}
 						<option {value}>{m.maintenance.frequencies[value]}</option>
 					{/each}
 				</select>
-			</label>
+			</div>
 			{#if frequency === 'hourly'}
 				<input type="hidden" name="time" value={task.time} />
 			{:else}
@@ -147,6 +186,7 @@
 				text={m.settings.save}
 				busy={forms.busy === task.key && !forms.busyAction}
 				disabled={forms.busy === task.key}
+				when="changed"
 			/>
 			<SubmitButton
 				text={m.maintenance.runNow}

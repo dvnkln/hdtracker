@@ -82,7 +82,7 @@
 		</div>
 
 		<div class={actions}>
-			<SubmitButton text={m.settings.save} busy={forms.busy === 'display'} />
+			<SubmitButton text={m.settings.save} busy={forms.busy === 'display'} when="changed" />
 			<FeedbackText feedback={forms.messages.display} />
 		</div>
 	</form>
@@ -104,7 +104,7 @@
 		</div>
 		<div class="mt-4">
 			<div class={actions}>
-				<SubmitButton text={m.settings.save} busy={forms.busy === 'behavior'} />
+				<SubmitButton text={m.settings.save} busy={forms.busy === 'behavior'} when="changed" />
 				<FeedbackText feedback={forms.messages.behavior} />
 			</div>
 		</div>
@@ -145,7 +145,7 @@
 			{/if}
 		{/each}
 		<div class="mt-1 {actions}">
-			<SubmitButton text={m.settings.save} busy={forms.busy === 'areas'} />
+			<SubmitButton text={m.settings.save} busy={forms.busy === 'areas'} when="changed" />
 			<FeedbackText feedback={forms.messages.areas} />
 		</div>
 	</form>

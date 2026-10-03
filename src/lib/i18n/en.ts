@@ -178,13 +178,13 @@ export const en: Messages = {
 		title: 'Settings',
 		groupPersonal: 'Personal',
 		groupAdmin: 'Administration',
-		generalHint: 'Language, display, areas',
+		generalHint: 'Language, display, auto status, areas',
 		accountHint: 'Username, password, devices',
 		data: 'Data',
-		dataHint: 'Import, clear library',
+		dataHint: 'Import, export, clear library',
 		server: 'Server',
-		serverHint: 'Content language, region',
-		maintenanceHint: 'Background tasks, backups',
+		serverHint: 'Overview, content language, reverse proxy',
+		maintenanceHint: 'Background tasks, storage, backups',
 		aboutHint: 'Version, links, data sources',
 		content: 'Content',
 		changeUsername: 'Change username',
@@ -372,6 +372,7 @@ export const en: Messages = {
 		frequencies: { hourly: 'Hourly', daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly' },
 		time: 'Time',
 		weekday: 'Weekday',
+		resetSchedule: 'Back to the default schedule',
 		hourlyHint: 'At the start of every hour.',
 		monthlyHint: 'On the 1st of every month.',
 		lastRun: (date) => `Last run: ${date}`,
@@ -478,6 +479,13 @@ export const en: Messages = {
 		ai: 'Built with the help of AI (Claude Code).'
 	},
 
+	errorPage: {
+		notFound: 'Page not found',
+		notFoundHint: 'This address does not exist (any more).',
+		failed: 'Something went wrong',
+		failedHint: 'Please try again in a moment.',
+		home: 'To the dashboard'
+	},
 	errors: {
 		missingKey: (name) => `${name} is missing in .env – see .env.example.`,
 		unreachable: (source) => `${source} is not reachable right now.`,

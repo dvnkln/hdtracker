@@ -57,7 +57,9 @@ export const load: PageServerLoad = async () => {
 			lastDurationMs: t.lastDurationMs,
 			lastFreedBytes: t.lastFreedBytes,
 			lastError: t.lastError,
-			nextRunAt: t.enabled ? nextSlot(t).toISOString() : null
+			nextRunAt: t.enabled ? nextSlot(t).toISOString() : null,
+			// The schedule differs from the one a new installation has (then it can be reset)
+			customSchedule: !sameSchedule(t, TASKS[key].defaults)
 		};
 	});
 	return {
@@ -69,6 +71,16 @@ export const load: PageServerLoad = async () => {
 		timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
 	};
 };
+
+// Only what takes effect counts: hourly tasks have no time, the weekday only matters weekly.
+type Schedule = { frequency: Frequency; time: string; weekday: number };
+function sameSchedule(a: Schedule, b: Schedule) {
+	return (
+		a.frequency === b.frequency &&
+		(a.frequency === 'hourly' || a.time === b.time) &&
+		(a.frequency !== 'weekly' || a.weekday === b.weekday)
+	);
+}
 
 function readKey(data: FormData) {
 	const key = String(data.get('key') ?? '');
@@ -102,6 +114,17 @@ export const actions: Actions = {
 		}
 		updateTask(key, { enabled: data.get('enabled') === 'on', frequency, time, weekday });
 		return { key, message: t.settings.saved };
+	},
+
+	// Back to the schedule of a new installation; whether the task is switched on stays as it is.
+	resetSchedule: async ({ request, locals }) => {
+		requireAdmin(locals.user);
+		const key = readKey(await request.formData());
+		const current = listTasks().find((t) => t.key === key);
+		if (!key || !current) return fail(400, { key, error: serverMessages().common.invalidData });
+		const { frequency, time, weekday } = TASKS[key].defaults;
+		updateTask(key, { enabled: current.enabled, frequency, time, weekday });
+		return { key, message: serverMessages().settings.saved };
 	},
 
 	run: async ({ request, locals }) => {

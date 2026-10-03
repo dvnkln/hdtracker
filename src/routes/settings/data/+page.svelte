@@ -118,7 +118,7 @@
 		{/if}
 
 		<div class={actions}>
-			<SubmitButton text={m.importData.start} icon={Upload} {busy} />
+			<SubmitButton text={m.importData.start} icon={Upload} {busy} when="filled" />
 			{#if form?.error}
 				<p role="status" class="text-sm text-red-400">{form.error}</p>
 			{/if}

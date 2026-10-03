@@ -185,13 +185,13 @@ export const de = {
 		title: 'Einstellungen',
 		groupPersonal: 'Persönlich',
 		groupAdmin: 'Verwaltung',
-		generalHint: 'Sprache, Anzeige, Bereiche',
+		generalHint: 'Sprache, Anzeige, Auto-Status, Bereiche',
 		accountHint: 'Benutzername, Passwort, Geräte',
 		data: 'Daten',
-		dataHint: 'Import, Bibliothek leeren',
+		dataHint: 'Import, Export, Bibliothek leeren',
 		server: 'Server',
-		serverHint: 'Sprache der Inhalte, Region',
-		maintenanceHint: 'Hintergrundaufgaben, Backups',
+		serverHint: 'Übersicht, Sprache der Inhalte, Reverse Proxy',
+		maintenanceHint: 'Hintergrundaufgaben, Speicher, Backups',
 		aboutHint: 'Version, Links, Datenquellen',
 		content: 'Inhalte',
 		changeUsername: 'Benutzernamen ändern',
@@ -395,6 +395,7 @@ export const de = {
 		} as Record<string, string>,
 		time: 'Uhrzeit',
 		weekday: 'Wochentag',
+		resetSchedule: 'Zurück zum Standard-Zeitplan',
 		hourlyHint: 'Immer zur vollen Stunde.',
 		monthlyHint: 'Immer am 1. des Monats.',
 		lastRun: (date: string) => `Zuletzt: ${date}`,
@@ -507,6 +508,13 @@ export const de = {
 	},
 
 	// Errors from the external APIs (created on the server).
+	errorPage: {
+		notFound: 'Seite nicht gefunden',
+		notFoundHint: 'Diese Adresse gibt es nicht (mehr).',
+		failed: 'Etwas ist schiefgelaufen',
+		failedHint: 'Bitte versuch es gleich noch einmal.',
+		home: 'Zum Dashboard'
+	},
 	errors: {
 		missingKey: (name: string) => `${name} fehlt in der .env – siehe .env.example.`,
 		unreachable: (source: string) => `${source} ist gerade nicht erreichbar.`,
