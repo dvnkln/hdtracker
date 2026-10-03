@@ -6,10 +6,7 @@ import { afterAll, beforeEach, vi } from 'vitest';
 
 const dir = mkdtempSync(join(tmpdir(), 'hdtracker-test-'));
 process.env.DATA_DIR = dir;
-process.env.SECRET = 'test-secret-test-secret-test-secret-0123';
-process.env.TMDB_API_TOKEN = 'test';
-process.env.IGDB_CLIENT_ID = 'test';
-process.env.IGDB_CLIENT_SECRET = 'test';
+// (SECRET and the API keys of the tests are set in vite.config.ts.)
 
 // Tests never ask a real API: a test that needs an answer provides it with mockFetch().
 beforeEach(() => {

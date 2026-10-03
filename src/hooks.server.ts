@@ -34,9 +34,24 @@ function redirectTo(location: string) {
 	return new Response(null, { status: 303, headers: { location } });
 }
 
+// Sent with every answer: no embedding in other pages, no guessing of file types, and the
+// address of a page is not passed on to other sites. (What the browser may load at all is
+// set in vite.config.ts, `csp`.)
+const SECURITY_HEADERS = {
+	'X-Frame-Options': 'DENY',
+	'X-Content-Type-Options': 'nosniff',
+	'Referrer-Policy': 'same-origin'
+};
+
+export const handle: Handle = async (input) => {
+	const response = await respond(input);
+	for (const [name, value] of Object.entries(SECURITY_HEADERS)) response.headers.set(name, value);
+	return response;
+};
+
 // Runs for every request: checks the origin of form posts, loads the logged-in user and
 // redirects to /setup or /login if needed.
-export const handle: Handle = async ({ event, resolve }) => {
+const respond: Handle = async ({ event, resolve }) => {
 	const { url, request } = event;
 	const path = url.pathname;
 	if (path === '/health') return resolve(event);
