@@ -21,7 +21,12 @@
 		{ name: 'JustWatch', href: 'https://www.justwatch.com', text: m.about.justwatch },
 		{ name: 'IGDB', href: 'https://www.igdb.com', text: m.about.igdb },
 		{ name: 'AniList', href: 'https://anilist.co', text: m.about.anilist },
-		{ name: 'Wikidata', href: 'https://www.wikidata.org', text: m.about.wikidata }
+		{ name: 'Wikidata', href: 'https://www.wikidata.org', text: m.about.wikidata },
+		{
+			name: 'anibridge-mappings',
+			href: 'https://github.com/anibridge/anibridge-mappings',
+			text: m.about.anibridge
+		}
 	]);
 
 	const palettes = [

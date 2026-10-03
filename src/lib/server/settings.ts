@@ -13,6 +13,10 @@ const DEFAULTS = {
 	autoStatus: 'on', // change the status automatically when episodes are ticked: 'on' | 'off'
 	backupKeep: '7', // how many backup files to keep
 	categories: 'movies,series,anime,games', // areas shown in the app (comma-separated)
+	// Episode titles and texts for anime from TMDB ('on' | 'off'), and when the list that says
+	// which TMDB season belongs to an AniList entry was last downloaded (see animeMapping.ts)
+	animeEpisodeTitles: 'on',
+	animeMappingAt: '',
 	// Reverse proxies whose X-Forwarded-For header is believed (see proxy.ts): addresses or
 	// ranges, comma-separated. Empty = none.
 	trustedProxies: '',

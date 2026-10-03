@@ -230,7 +230,9 @@ export const de = {
 		uiLanguage: 'Sprache der Oberfläche',
 		contentLanguage: 'Sprache der Inhalte',
 		contentLanguageHint:
-			'Titel und Beschreibungen von Filmen und Serien (TMDB). Titel, die schon in der Bibliothek sind, bleiben vorerst in ihrer bisherigen Sprache.',
+			'Titel und Beschreibungen von Filmen und Serien, Folgentitel von Anime (TMDB). Titel, die schon in der Bibliothek sind, bleiben vorerst in ihrer bisherigen Sprache.',
+		animeEpisodeTitles: 'Folgentitel für Anime',
+		animeEpisodeTitlesHint: 'Titel, Bilder und Beschreibung von TMDB, in der Sprache der Inhalte.',
 		region: 'Region',
 		regionHint: 'Für Streaming-Anbieter und Erscheinungsdaten.',
 		overview: 'Übersicht',
@@ -527,6 +529,7 @@ export const de = {
 		igdb: 'Spieldaten',
 		anilist: 'Animedaten',
 		wikidata: 'Direktlinks zu Titeln bei Streaming-Diensten',
+		anibridge: 'Zuordnung von Anime zu TMDB für die Folgentitel (MIT-Lizenz)',
 		palettes: 'Einige Farbschemata nutzen freie Farbpaletten:',
 		ai: 'Entwickelt mit Unterstützung von KI (Claude Code).'
 	},

@@ -101,7 +101,7 @@ Where to get the keys and what every setting means: **[Installation guide](https
 
 ## 🙏 Data sources
 
-Movie and series data from [TMDB](https://www.themoviedb.org). This product uses the TMDB API but is not endorsed or certified by TMDB. Streaming availability by [JustWatch](https://www.justwatch.com). Game data from [IGDB](https://www.igdb.com), anime data from [AniList](https://anilist.co).
+Movie and series data from [TMDB](https://www.themoviedb.org). This product uses the TMDB API but is not endorsed or certified by TMDB. Streaming availability by [JustWatch](https://www.justwatch.com). Game data from [IGDB](https://www.igdb.com), anime data from [AniList](https://anilist.co); episode titles for anime are matched to TMDB with the community list [anibridge-mappings](https://github.com/anibridge/anibridge-mappings) (MIT).
 
 ## 🤖 Built with AI
 

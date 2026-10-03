@@ -8,6 +8,7 @@ import { getDetails } from './details';
 import { airedEpisodes, getShowDetails } from './episodes';
 import { serverMessages } from './i18n';
 import type { LibraryItem } from './library';
+import { ensureAnimeMapping } from './animeMapping';
 import { ANIME_PER_REQUEST, getAnimeReleases, preloadAnime } from './providers/anilist';
 import { GAMES_PER_REQUEST, getGameReleases, preloadGames } from './providers/igdb';
 import { getMovieReleases, getTvDetails } from './providers/tmdb';
@@ -210,6 +211,8 @@ const BATCH: Record<Source, { size: number; preload?: (ids: string[]) => Promise
 // the service still answered "too many requests" after waiting, so the rest was not tried.
 export async function refreshBatch(source: Source, batch: LibraryItem[]) {
 	const failed: LibraryItem[] = [];
+	// Anime take their episode titles from TMDB; the list that says where must be there first.
+	if (source === 'anilist') await ensureAnimeMapping();
 	try {
 		await BATCH[source].preload?.(batch.map((item) => item.externalId));
 	} catch (err) {

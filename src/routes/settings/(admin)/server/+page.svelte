@@ -6,6 +6,7 @@
 	import { ui } from '$lib/ui';
 	import FeedbackText from '$lib/components/FeedbackText.svelte';
 	import Notice from '$lib/components/Notice.svelte';
+	import Switch from '$lib/components/Switch.svelte';
 	import SubmitButton, { BUTTON_SECONDARY } from '$lib/components/SubmitButton.svelte';
 	import {
 		Activity,
@@ -210,6 +211,18 @@
 			</select>
 			<span class={hint}>{m.settings.regionHint}</span>
 		</label>
+
+		<div class="flex items-start justify-between gap-4">
+			<label for="animeEpisodeTitles" class="flex cursor-pointer flex-col gap-1">
+				<span class={labelText}>{m.settings.animeEpisodeTitles}</span>
+				<span class={hint}>{m.settings.animeEpisodeTitlesHint}</span>
+			</label>
+			<Switch
+				id="animeEpisodeTitles"
+				name="animeEpisodeTitles"
+				checked={data.values.animeEpisodeTitles}
+			/>
+		</div>
 
 		{#if data.listsFailed}
 			<Notice kind="warning">{m.settings.listsUnavailable}</Notice>

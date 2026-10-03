@@ -56,6 +56,7 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
 - TMDB: Filme, Serien inkl. Staffeln/Episoden, Watch Providers (Region DE). Attribution TMDB + JustWatch: im Reiter „Über“ (`/settings/about`, Version verlinkt auf die Release-Notes, GitHub, Issues, Lizenz) und JustWatch zusätzlich bei den Streaming-Angeboten der Detailseite.
 - IGDB via Twitch OAuth: Spiele.
 - AniList GraphQL: Anime.
+- Folgentitel für Anime: AniList kennt keine Folgentitel und nur englische Beschreibungen → Titel, Text, Bild je Folge und die Beschreibung des Anime kommen in der Inhaltssprache aus TMDB (`providers/animeEpisodes.ts`, eingehängt in `loadAnimeWithTexts()` in `anilist.ts`). AniList bleibt Quelle für Titel, Status, Folgenzahl, „ausgestrahlt“, Termine und Fortschritt. Welche TMDB-Staffel/Folgen zu einem AniList-Eintrag gehören, sagt die Community-Liste **anibridge-mappings** (MIT; `src/lib/server/animeMapping.ts`: ganze Liste höchstens einmal pro Woche von GitHub, entpackt mit `zlib.zstdDecompressSync`, nur `anilist → tmdb_show` in Tabelle `anime_tmdb_map`; Abruf vor dem Anime-Paket in `refreshBatch()`). Die Liste ist nicht verlässlich (mehrere/falsche Ziele), deshalb **Prüfung jeder Zuordnung**: Die für Folge 1 genannte TMDB-Folge muss existieren und ihr Sendetag zum AniList-Starttag passen (± 2 Tage); verschachtelte Bereiche (`|n`, Komma) werden nicht unterstützt. Im Zweifel ohne: kein Treffer, Prüfung nicht bestanden, TMDB nicht erreichbar oder Schalter aus (Setting `animeEpisodeTitles`, Einstellungen → Server, Standard an; umschalten lädt die Anime neu) → Anime wie von AniList, nie ein Fehler. Beschreibung: Staffeltext (nur wenn der Anime die TMDB-Staffel ab Folge 1 ist) → Serientext (nur bei Staffel 1 ab Folge 1) → AniList; ein Text, der eine andere Staffel beschreibt, ist schlechter als ein englischer, der passt (Wunsch des Users). TMDB wird über das vorhandene `getTvDetails()` gefragt (eine Abfrage je Serie, mehrere Staffeln desselben Anime teilen sie sich über den Zwischenspeicher). Quelle ist im Reiter „Über“, in der README und im Wiki genannt und verlinkt.
 - Wikidata: Direktlinks zu Titeln bei Streaming-Diensten (Detailseite Filme/Serien); im Reiter „Über“ mit aufgeführt.
 
 ## Config
@@ -86,7 +87,7 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
 
 5. ✅ Serien/Anime: Staffeln und Episoden sehen; ganze Serie, einzelne Staffel oder einzelne Episode als gesehen markieren. Progress pro Staffel und Episode.
    - Serien (TMDB): Staffeln mit Folgenliste (Titel, Datum). Specials (Staffel 0) unten, zählen nicht zum Fortschritt.
-   - Anime (AniList): keine Staffeln/Folgentitel verfügbar → Raster mit Folgennummern. Jede Anime-Staffel ist ein eigener Eintrag.
+   - Anime (AniList): Jede Anime-Staffel ist ein eigener Eintrag. Mit Folgentiteln aus TMDB (siehe „Datenquellen“) dieselbe Folgenliste wie Serien (ohne Staffel-Block, Fortschritt steht nur oben), sonst Raster mit Folgennummern (`numbersOnly` in `Episodes.svelte`).
    - Auto-Status: erste Folge abgehakt → „Schaue ich“; alle Folgen einer beendeten Serie gesehen → „Gesehen“. Später in Settings abschaltbar (Punkt 7).
 6. ✅ Detailseite mit Streaming-Anbietern DE (Flatrate/Leihen/Kaufen), Attribution TMDB + JustWatch. Plus „Ähnliche Titel“ (TMDB recommendations, AniList recommendations, IGDB similar_games).
 7. ✅ Einstellungen – in drei Etappen, nach jeder kurz berichten/testen lassen:
@@ -118,7 +119,6 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
 - Technische Notizen zu den Punkten (nicht in der Roadmap):
   - Benachrichtigungen (Pushover): persönlicher Bereich „Benachrichtigungen“ in den Einstellungen.
   - Streaming-Übersicht: Anbieter ohne Treffer ausblenden. Offen: eigener Menüpunkt oder Teil des Dashboards.
-  - Anime-Hybrid: AniList bleibt Quelle, Zuordnung AniList→TMDB über Community-Mapping-Listen. Watcharr nutzt übrigens nur TMDB für Anime.
   - Mehrbenutzer: Bereich „Verwaltung → Benutzer“; `isAdmin()` wird dann eine echte Prüfung, persönliche Einstellungen/Bibliothek je Benutzer. Details noch offen.
 - Nicht geplant: eingebautes HTTPS – das Projekt geht von einem Reverse Proxy aus (Wiki: „HTTPS and installing as an app“).
 

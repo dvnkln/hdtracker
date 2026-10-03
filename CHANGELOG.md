@@ -9,6 +9,10 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 
 ## Upcoming release
 
+### ✨ New
+
+- Anime have episode titles: the detail page shows the episode list with titles, images and descriptions like for series, and the description of the anime comes in your content language. The texts come from TMDB; which TMDB season belongs to an anime is looked up in the community list [anibridge-mappings](https://github.com/anibridge/anibridge-mappings) and checked against the air date. Anime without a reliable match keep the grid of episode numbers. Can be switched off under Settings → Server
+
 ### 🔧 Improved
 
 - Wrong passwords and blocked addresses are written to the container log (never the password itself), so attacks become visible and tools like fail2ban can react; the server overview shows how many addresses are blocked right now

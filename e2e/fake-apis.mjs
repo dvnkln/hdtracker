@@ -2,7 +2,16 @@
 // app never talks to a real data source. Known addresses are answered with the made-up titles
 // from fixtures.mjs, image servers with a one-pixel picture, anything else fails loudly.
 // The app itself has no test mode – this file is all there is.
-import { ANIME, ANIME_PAST, GAMES, MOVIES, SERIES } from './fixtures.mjs';
+import { zstdCompressSync } from 'node:zlib';
+import {
+	ANIME,
+	ANIME_MAPPING,
+	ANIME_PAST,
+	ANIME_SHOWS,
+	GAMES,
+	MOVIES,
+	SERIES
+} from './fixtures.mjs';
 
 const PIXEL = Buffer.from(
 	'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
@@ -21,7 +30,9 @@ function tmdb(url) {
 		return json({ results: [{ iso_3166_1: 'US' }, { iso_3166_1: 'DE' }] });
 	if (path === '/configuration/primary_translations') return json(['en-US', 'de-DE']);
 	const [, kind, id] = /^\/(movie|tv)\/(\d+)$/.exec(path) ?? [];
-	const found = (kind === 'movie' ? MOVIES : SERIES).find((t) => String(t.id) === id);
+	const found = (kind === 'movie' ? MOVIES : [...SERIES, ...ANIME_SHOWS]).find(
+		(t) => String(t.id) === id
+	);
 	return found ? json(found) : json({ status_code: 34, status_message: 'Not found' }, 404);
 }
 
@@ -67,6 +78,9 @@ globalThis.fetch = async (input, init) => {
 		return json({ access_token: 'test-token', expires_in: 5_000_000 });
 	if (url.host === 'api.igdb.com') return igdb(body);
 	if (url.host === 'graphql.anilist.co') return anilist(body);
+	if (url.href.startsWith('https://github.com/anibridge/anibridge-mappings/releases/')) {
+		return new Response(zstdCompressSync(JSON.stringify(ANIME_MAPPING)));
+	}
 	if (url.host === 'www.wikidata.org') {
 		// The movie with a streaming offer has a Netflix ID at "Wikidata"
 		return json({

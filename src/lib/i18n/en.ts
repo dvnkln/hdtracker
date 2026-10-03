@@ -221,7 +221,9 @@ export const en: Messages = {
 		uiLanguage: 'Interface language',
 		contentLanguage: 'Content language',
 		contentLanguageHint:
-			'Titles and descriptions of movies and series (TMDB). Titles already in your library keep their current language for now.',
+			'Titles and descriptions of movies and series, episode titles of anime (TMDB). Titles already in your library keep their current language for now.',
+		animeEpisodeTitles: 'Episode titles for anime',
+		animeEpisodeTitlesHint: 'Titles, images and description from TMDB, in the content language.',
 		region: 'Region',
 		regionHint: 'Used for streaming providers and release dates.',
 		overview: 'Overview',
@@ -497,6 +499,7 @@ export const en: Messages = {
 		igdb: 'Game data',
 		anilist: 'Anime data',
 		wikidata: 'Direct links to titles on streaming services',
+		anibridge: 'Maps anime to TMDB for the episode titles (MIT licence)',
 		palettes: 'Some themes use free colour palettes:',
 		ai: 'Built with the help of AI (Claude Code).'
 	},

@@ -260,6 +260,7 @@ type TmdbSeason = {
 	season_number: number;
 	name: string;
 	air_date: string | null;
+	overview?: string;
 	episodes: TmdbEpisode[];
 };
 type TmdbTvWithSeasons = TmdbTvFull & {
@@ -350,6 +351,7 @@ export async function getTvDetails(id: string, language: string): Promise<ShowDe
 					: s.name || serverMessages().episodes.season(s.season_number),
 			special: s.season_number === 0,
 			airDate: s.air_date || null,
+			overview: s.overview || null,
 			episodes: s.episodes.map((e) => ({
 				number: e.episode_number,
 				title: e.name || null,

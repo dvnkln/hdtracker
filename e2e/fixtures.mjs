@@ -112,6 +112,39 @@ export const SERIES = [
 	}
 ];
 
+// ---- TMDB: the show the test anime (301) is mapped to – source of its episode titles ----
+// Not in SERIES, so the search for series does not find it. Episode 1 aired on the day the
+// anime started at AniList, which is what the app checks before it trusts the mapping.
+const animeEpisode = (number, days, name) => ({ ...episode(number, days), name, runtime: 24 });
+export const ANIME_SHOWS = [
+	{
+		id: 202,
+		name: 'Test Anime Delta',
+		original_name: 'Tesuto Anime Delta',
+		first_air_date: day(-11),
+		poster_path: null,
+		overview: 'The show as TMDB describes it.',
+		status: 'Returning Series',
+		seasons: [{ season_number: 1 }],
+		'season/1': {
+			season_number: 1,
+			name: 'Season 1',
+			air_date: day(-11),
+			overview: 'The season as TMDB describes it.',
+			episodes: [
+				animeEpisode(1, -11, 'Delta sets out'),
+				animeEpisode(2, -4, 'The second step'),
+				animeEpisode(3, 3, 'Things to come')
+			]
+		}
+	}
+];
+// The list that maps AniList entries to TMDB (anibridge-mappings), as small as it gets
+export const ANIME_MAPPING = {
+	$meta: { schema_version: '3' },
+	'anilist:301': { 'tmdb_show:202:s1': { '1-12': '1-12' } }
+};
+
 // ---- IGDB: one game that is out ----
 export const GAMES = [
 	{

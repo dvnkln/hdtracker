@@ -71,6 +71,12 @@
 		return null;
 	});
 
+	// Anime show the plain grid of numbers unless their episodes have titles (from TMDB); then
+	// they get the same list as series.
+	let numbersOnly = $derived(
+		category === 'anime' && !show.seasons.some((s) => s.episodes.some((e) => e.title))
+	);
+
 	// Single episode: toggle immediately in the UI, then let the server confirm.
 	const toggleEpisode: SubmitFunction = ({ formData }) => {
 		const k = key(Number(formData.get('season')), Number(formData.get('episode')));
@@ -89,6 +95,74 @@
 		return async ({ update }) => update({ reset: false });
 	};
 </script>
+
+<!-- The episodes of one season as a list with image, title and text -->
+{#snippet episodeList(season: Season)}
+	<form method="POST" action="?/toggle" use:enhance={toggleEpisode} class="mt-1">
+		<input type="hidden" name="season" value={season.number} />
+		<ul>
+			{#each season.episodes as ep (ep.number)}
+				{@const watched = isWatched(season.number, ep.number)}
+				{@const blur = hideSpoilers && !watched}
+				<li>
+					<button
+						name="episode"
+						value={ep.number}
+						disabled={!ep.aired}
+						aria-pressed={watched}
+						class="flex w-full items-start gap-3 rounded-lg p-2 text-left hover:bg-zinc-800 disabled:opacity-50 disabled:hover:bg-transparent"
+					>
+						<!-- Episode still with the check mark on top -->
+						<span
+							class="relative aspect-video w-28 shrink-0 overflow-hidden rounded-md bg-zinc-800 sm:w-36"
+						>
+							{#if img(ep.stillUrl)}
+								<img
+									src={img(ep.stillUrl)}
+									alt=""
+									loading="lazy"
+									referrerpolicy="no-referrer"
+									class="h-full w-full object-cover transition {watched ? 'opacity-40' : ''} {blur
+										? 'scale-110 blur-md'
+										: ''}"
+								/>
+							{/if}
+							<span
+								class="absolute right-1.5 bottom-1.5 flex size-6 items-center justify-center rounded-full border-2 transition-colors {watched
+									? 'border-(--accent) bg-(--accent) text-white'
+									: 'border-white/80 bg-black/40'}"
+							>
+								{#if watched}<Check size={14} strokeWidth={3} />{/if}
+							</span>
+						</span>
+						<span class="min-w-0 flex-1">
+							<span class="line-clamp-2 text-sm leading-snug font-medium">
+								<span class="text-zinc-500">{ep.number}.</span>
+								{ep.title ?? m.episodes.episode(ep.number)}
+							</span>
+							<span class="mt-0.5 block text-xs text-zinc-500">
+								{[
+									// Date only matters for upcoming episodes.
+									!ep.aired && ep.airDate && m.episodes.airsOn(formatDate(ep.airDate)),
+									ep.runtime && m.units.minutes(ep.runtime)
+								]
+									.filter(Boolean)
+									.join(' · ')}
+							</span>
+							{#if ep.overview}
+								<span
+									class="mt-1 line-clamp-2 text-xs text-zinc-400 transition {blur
+										? 'blur-[3px] select-none'
+										: ''}">{ep.overview}</span
+								>
+							{/if}
+						</span>
+					</button>
+				</li>
+			{/each}
+		</ul>
+	</form>
+{/snippet}
 
 <!-- Overall progress -->
 <section class="ui-card mt-5 rounded-xl border border-zinc-800 bg-zinc-900 p-4">
@@ -130,8 +204,8 @@
 
 {#if show.seasons.every((s) => s.episodes.length === 0)}
 	<p class="mt-6 text-zinc-500">{m.episodes.noneKnown}</p>
-{:else if category === 'anime'}
-	<!-- Anime: grid of episode numbers -->
+{:else if numbersOnly}
+	<!-- Anime without episode titles: grid of episode numbers -->
 	{@const season = show.seasons[0]}
 	<form
 		method="POST"
@@ -163,6 +237,12 @@
 			</button>
 		{/each}
 	</form>
+{:else if category === 'anime'}
+	<!-- Anime with episode titles: the list as for series. An anime is a single season, so
+	     there is no season block around it – progress and "all watched" are at the top. -->
+	<div class="ui-card mt-3 rounded-xl border border-zinc-800 bg-zinc-900 px-2 pb-2">
+		{@render episodeList(show.seasons[0])}
+	</div>
 {:else}
 	<!-- Series: one collapsible block per season -->
 	{#each show.seasons as season (season.number)}
@@ -238,70 +318,7 @@
 						</form>
 					{/if}
 
-					<form method="POST" action="?/toggle" use:enhance={toggleEpisode} class="mt-1">
-						<input type="hidden" name="season" value={season.number} />
-						<ul>
-							{#each season.episodes as ep (ep.number)}
-								{@const watched = isWatched(season.number, ep.number)}
-								{@const blur = hideSpoilers && !watched}
-								<li>
-									<button
-										name="episode"
-										value={ep.number}
-										disabled={!ep.aired}
-										aria-pressed={watched}
-										class="flex w-full items-start gap-3 rounded-lg p-2 text-left hover:bg-zinc-800 disabled:opacity-50 disabled:hover:bg-transparent"
-									>
-										<!-- Episode still with the check mark on top -->
-										<span
-											class="relative aspect-video w-28 shrink-0 overflow-hidden rounded-md bg-zinc-800 sm:w-36"
-										>
-											{#if img(ep.stillUrl)}
-												<img
-													src={img(ep.stillUrl)}
-													alt=""
-													loading="lazy"
-													referrerpolicy="no-referrer"
-													class="h-full w-full object-cover transition {watched
-														? 'opacity-40'
-														: ''} {blur ? 'scale-110 blur-md' : ''}"
-												/>
-											{/if}
-											<span
-												class="absolute right-1.5 bottom-1.5 flex size-6 items-center justify-center rounded-full border-2 transition-colors {watched
-													? 'border-(--accent) bg-(--accent) text-white'
-													: 'border-white/80 bg-black/40'}"
-											>
-												{#if watched}<Check size={14} strokeWidth={3} />{/if}
-											</span>
-										</span>
-										<span class="min-w-0 flex-1">
-											<span class="line-clamp-2 text-sm leading-snug font-medium">
-												<span class="text-zinc-500">{ep.number}.</span>
-												{ep.title ?? m.episodes.episode(ep.number)}
-											</span>
-											<span class="mt-0.5 block text-xs text-zinc-500">
-												{[
-													// Date only matters for upcoming episodes.
-													!ep.aired && ep.airDate && m.episodes.airsOn(formatDate(ep.airDate)),
-													ep.runtime && m.units.minutes(ep.runtime)
-												]
-													.filter(Boolean)
-													.join(' · ')}
-											</span>
-											{#if ep.overview}
-												<span
-													class="mt-1 line-clamp-2 text-xs text-zinc-400 transition {blur
-														? 'blur-[3px] select-none'
-														: ''}">{ep.overview}</span
-												>
-											{/if}
-										</span>
-									</button>
-								</li>
-							{/each}
-						</ul>
-					</form>
+					{@render episodeList(season)}
 				</div>
 			</details>
 		{/if}

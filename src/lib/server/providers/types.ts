@@ -130,6 +130,7 @@ export type Season = {
 	name: string;
 	special: boolean; // TMDB "season 0": shown, but not counted in progress
 	airDate: string | null; // start of the season (YYYY-MM-DD), if known
+	overview?: string | null; // text about the season (TMDB; used for anime, see animeEpisodes.ts)
 	episodes: Episode[];
 };
 

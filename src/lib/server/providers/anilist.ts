@@ -1,5 +1,6 @@
 import { cached, remember } from '../cache';
 import { serverMessages } from '../i18n';
+import { animeTextsFor } from './animeEpisodes';
 import {
 	ProviderError,
 	fetchJson,
@@ -223,26 +224,41 @@ export async function preloadAnime(ids: string[]) {
 	for (const [id, anime] of await fetchAnime(ids)) remember(`anilist:${id}`, CACHE_MS, anime);
 }
 
-const dayOf = (airing: Airing) => new Date(airing.airingAt * 1000).toLocaleDateString('sv-SE');
-
-// ---- Anime details with episode list ----
-
-export async function getAnimeDetails(id: string): Promise<ShowDetails> {
-	const { m } = await loadAnime(id);
-
+// How many episodes there are so far and how many of them have aired.
+function episodeCounts(m: AniListAnime) {
 	// Episodes already aired: everything before the next scheduled one.
 	const next = m.nextAiringEpisode;
 	let aired: number;
 	if (next) aired = next.episode - 1;
 	else if (m.status === 'NOT_YET_RELEASED') aired = 0;
 	else aired = m.episodes ?? 0;
+	const scheduled = m.airingSchedule.nodes.map((n) => n.episode);
+	return { aired, total: Math.max(m.episodes ?? 0, next?.episode ?? 0, aired, ...scheduled) };
+}
 
+// The anime as AniList has it, plus episode titles and a description in the content language
+// from TMDB where they can be matched (see animeEpisodes.ts).
+async function loadAnimeWithTexts(id: string) {
+	const anime = await loadAnime(id);
+	const { total } = episodeCounts(anime.m);
+	const texts = await animeTextsFor(id, fullDate(anime.m.startDate), total);
+	const item = toSearchResult(anime.m);
+	if (texts?.overview) item.overview = texts.overview;
+	return { ...anime, texts, item };
+}
+
+const dayOf = (airing: Airing) => new Date(airing.airingAt * 1000).toLocaleDateString('sv-SE');
+
+// ---- Anime details with episode list ----
+
+export async function getAnimeDetails(id: string): Promise<ShowDetails> {
+	const { m, texts, item } = await loadAnimeWithTexts(id);
+	const { aired, total } = episodeCounts(m);
 	// Air date of every upcoming episode (YYYY-MM-DD in server timezone).
 	const upcoming = new Map(m.airingSchedule.nodes.map((n) => [n.episode, dayOf(n)]));
-	const total = Math.max(m.episodes ?? 0, next?.episode ?? 0, aired, ...upcoming.keys());
 
 	return {
-		item: toSearchResult(m),
+		item,
 		ended: m.status === 'FINISHED' || m.status === 'CANCELLED',
 		externalUrl: m.siteUrl,
 		episodeRuntime: m.duration,
@@ -252,15 +268,18 @@ export async function getAnimeDetails(id: string): Promise<ShowDetails> {
 				name: serverMessages().detail.episodes,
 				special: false,
 				airDate: null,
-				episodes: Array.from({ length: total }, (_, i) => ({
-					number: i + 1,
-					title: null,
-					airDate: upcoming.get(i + 1) ?? null,
-					aired: i + 1 <= aired,
-					overview: null,
-					stillUrl: null,
-					runtime: m.duration
-				}))
+				episodes: Array.from({ length: total }, (_, i) => {
+					const known = texts?.episodes.get(i + 1);
+					return {
+						number: i + 1,
+						title: known?.title ?? null,
+						airDate: upcoming.get(i + 1) ?? known?.airDate ?? null,
+						aired: i + 1 <= aired,
+						overview: known?.overview ?? null,
+						stillUrl: known?.stillUrl ?? null,
+						runtime: known?.runtime ?? m.duration
+					};
+				})
 			}
 		]
 	};
@@ -303,7 +322,7 @@ export async function getAnimeByMalIds(malIds: number[]) {
 
 // Anime metadata and the air dates of its episodes from 60 days ago onwards.
 export async function getAnimeReleases(id: string): Promise<ReleaseInfo> {
-	const { m, airings } = await loadAnime(id);
+	const { m, airings, item } = await loadAnimeWithTexts(id);
 	const episode = (number: number, date: string | null): ReleaseEvent => ({
 		kind: 'episode',
 		date,
@@ -315,13 +334,13 @@ export async function getAnimeReleases(id: string): Promise<ReleaseInfo> {
 	if (events.length === 0 && m.status === 'NOT_YET_RELEASED') {
 		events.push(episode(1, fullDate(m.startDate)));
 	}
-	return { item: toSearchResult(m), events };
+	return { item, events };
 }
 
 // ---- Detail page ----
 
 export async function getAnimeInfo(id: string): Promise<Details> {
-	const { m } = await loadAnime(id);
+	const { m, item } = await loadAnimeWithTexts(id);
 	const start = fullDate(m.startDate);
 	const studio = m.studios.nodes.map((s) => s.name).join(', ');
 	const facts: Fact[] = [];
@@ -329,7 +348,7 @@ export async function getAnimeInfo(id: string): Promise<Details> {
 	if (studio) facts.push({ key: 'studio', value: studio });
 
 	return {
-		item: toSearchResult(m),
+		item,
 		externalUrl: m.siteUrl,
 		sourceLabel: 'AniList',
 		backdropUrl: m.bannerImage,

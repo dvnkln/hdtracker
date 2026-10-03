@@ -4,6 +4,7 @@ import { connectionOf, requireAdmin } from '$lib/server/auth';
 import { serverOverview } from '$lib/server/health';
 import { randomBytes } from 'node:crypto';
 import { PROXY_KEY_HEADER, parseProxies } from '$lib/server/proxy';
+import { eq } from 'drizzle-orm';
 import { getDb } from '$lib/server/db';
 import { libraryItems } from '$lib/server/db/schema';
 import { serverMessages } from '$lib/server/i18n';
@@ -17,7 +18,11 @@ const REGION_PATTERN = /^[A-Z]{2}$/; // e.g. "DE"
 
 // Settings for the whole installation: titles, dates and streaming offers are stored once.
 export const load: PageServerLoad = async (event) => {
-	const values = { language: getSetting('language'), region: getSetting('region') };
+	const values = {
+		language: getSetting('language'),
+		region: getSetting('region'),
+		animeEpisodeTitles: getSetting('animeEpisodeTitles') === 'on'
+	};
 
 	// Choices come from TMDB. If it is not reachable, only the current value can be kept.
 	const [regions, languages] = await Promise.allSettled([getWatchRegions(), getContentLanguages()]);
@@ -53,11 +58,16 @@ export const actions: Actions = {
 		if (!LANGUAGE_PATTERN.test(language) || !REGION_PATTERN.test(region)) {
 			return fail(400, { section: 'content', error: serverMessages().common.invalidData });
 		}
+		const animeEpisodeTitles = data.get('animeEpisodeTitles') === 'on' ? 'on' : 'off';
 		const changed = language !== getSetting('language') || region !== getSetting('region');
-		setSettings({ language, region });
-		// Stored texts and streaming offers depend on both: load the whole library again.
-		if (changed) {
-			getDb().update(libraryItems).set({ metadataUpdatedAt: null }).run();
+		const animeChanged = animeEpisodeTitles !== getSetting('animeEpisodeTitles');
+		setSettings({ language, region, animeEpisodeTitles });
+		// Stored texts and streaming offers depend on language and region: load the whole
+		// library again. The switch for episode titles only concerns the anime.
+		if (changed || animeChanged) {
+			const reload = getDb().update(libraryItems).set({ metadataUpdatedAt: null });
+			if (changed) reload.run();
+			else reload.where(eq(libraryItems.category, 'anime')).run();
 			refreshPending();
 		}
 		return { section: 'content', message: serverMessages().settings.saved };

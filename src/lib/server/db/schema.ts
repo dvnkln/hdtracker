@@ -82,6 +82,24 @@ export const wikidataLinks = sqliteTable('wikidata_links', {
 	fetchedAt: integer('fetched_at', { mode: 'timestamp' }).notNull()
 });
 
+// Which TMDB season and episodes an AniList entry corresponds to (AniList has one entry per
+// season, TMDB one show with seasons). Copied from the community list anibridge-mappings, see
+// server/animeMapping.ts; replaced as a whole with every download. Ranges like "1-23", "14-".
+export const animeTmdbMap = sqliteTable(
+	'anime_tmdb_map',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		anilistId: integer('anilist_id').notNull(),
+		tmdbId: integer('tmdb_id').notNull(),
+		season: integer('season').notNull(),
+		// Episodes of the AniList entry ...
+		sourceRange: text('source_range').notNull(),
+		// ... and the episodes of the TMDB season they are
+		targetRange: text('target_range').notNull()
+	},
+	(t) => [index('anime_tmdb_map_anilist').on(t.anilistId)]
+);
+
 // One row per watched episode. Anime use season 1.
 export const watchedEpisodes = sqliteTable(
 	'watched_episodes',
