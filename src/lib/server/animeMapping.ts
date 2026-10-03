@@ -12,6 +12,11 @@ import { enabledCategories, getSetting, setSettings } from './settings';
 export const MAPPING_URL =
 	'https://github.com/anibridge/anibridge-mappings/releases/download/v3/mappings.json.zst';
 
+// Raised whenever the way the list is read changes: a stored list of an older version is
+// downloaded again at once, and the anime of the library are loaded again (see
+// prepareAnimeTitles in releases.ts).
+export const MAPPING_VERSION = '4';
+
 const DAY = 24 * 60 * 60 * 1000;
 const KEEP_MS = 7 * DAY;
 const RETRY_MS = 60 * 60 * 1000;
@@ -63,24 +68,70 @@ export function mappingFor(anilistId: string): MapRow[] {
 
 type MappingFile = Record<string, Record<string, Record<string, string>>>;
 
+const text = (range: Range) =>
+	range.to === range.from ? String(range.from) : `${range.from}-${range.to ?? ''}`;
+
+// Two steps in one: episodes `first` of A are episodes `via` of B, and episodes `from` of B
+// are episodes `to` of C – which episodes of A are which of C? Null if the two do not meet or
+// a range is not supported.
+export function composeRanges(first: string, via: string, from: string, to: string) {
+	const [a, b1, b2, c] = [first, via, from, to].map(parseRange);
+	if (!a || !b1 || !b2 || !c) return null;
+	// Everything in the numbering of B. A range is as long as the shorter of its two sides.
+	const end = (x: Range, y: Range, start: number) =>
+		Math.min(x.to ?? Infinity, y.to === null ? Infinity : start + (y.to - y.from));
+	const low = Math.max(b1.from, b2.from);
+	const high = Math.min(end(b1, a, b1.from), end(b2, c, b2.from));
+	if (low > high) return null;
+	const shifted = (by: number): Range => ({
+		from: low + by,
+		to: high === Infinity ? null : high + by
+	});
+	return {
+		sourceRange: text(shifted(a.from - b1.from)),
+		targetRange: text(shifted(c.from - b2.from))
+	};
+}
+
+const TMDB_SHOW = /^tmdb_show:(\d+):s(\d+)$/;
+const isObject = (value: unknown): value is Record<string, unknown> =>
+	typeof value === 'object' && value !== null;
+
 // The AniList → TMDB show rows of the list, e.g. "anilist:145064" → "tmdb_show:95479:s1".
+// Many entries only name the season at TVDB, and the list knows the TMDB season of that one
+// ("anilist:171018" → "tvdb_show:432832:s1" → "tmdb_show:240411:s1"): for anime without a
+// direct TMDB entry, the two steps are put together.
 export function rowsOf(file: MappingFile) {
 	const rows: (MapRow & { anilistId: number })[] = [];
 	for (const [source, targets] of Object.entries(file)) {
 		const anilist = /^anilist:(\d+)$/.exec(source);
-		if (!anilist || typeof targets !== 'object' || targets === null) continue;
-		for (const [target, ranges] of Object.entries(targets)) {
-			const show = /^tmdb_show:(\d+):s(\d+)$/.exec(target);
-			if (!show || typeof ranges !== 'object' || ranges === null) continue;
-			for (const [sourceRange, targetRange] of Object.entries(ranges)) {
-				if (typeof targetRange !== 'string') continue;
-				rows.push({
-					anilistId: Number(anilist[1]),
-					tmdbId: Number(show[1]),
-					season: Number(show[2]),
-					sourceRange,
-					targetRange
-				});
+		if (!anilist || !isObject(targets)) continue;
+		const anilistId = Number(anilist[1]);
+		const add = (target: string, sourceRange: string, targetRange: unknown) => {
+			const show = TMDB_SHOW.exec(target);
+			if (!show || typeof targetRange !== 'string') return;
+			const [tmdbId, season] = [Number(show[1]), Number(show[2])];
+			rows.push({ anilistId, tmdbId, season, sourceRange, targetRange });
+		};
+
+		const direct = Object.entries(targets).filter(([t, r]) => TMDB_SHOW.test(t) && isObject(r));
+		for (const [target, ranges] of direct) {
+			for (const [from, to] of Object.entries(ranges)) add(target, from, to);
+		}
+		if (direct.length) continue;
+
+		for (const [tvdb, ranges] of Object.entries(targets)) {
+			const onward = file[tvdb];
+			if (!tvdb.startsWith('tvdb_show:') || !isObject(ranges) || !isObject(onward)) continue;
+			for (const [target, further] of Object.entries(onward)) {
+				if (!TMDB_SHOW.test(target) || !isObject(further)) continue;
+				for (const [first, via] of Object.entries(ranges)) {
+					for (const [from, to] of Object.entries(further)) {
+						if (typeof via !== 'string' || typeof to !== 'string') continue;
+						const both = composeRanges(first, via, from, to);
+						if (both) add(target, both.sourceRange, both.targetRange);
+					}
+				}
 			}
 		}
 	}
@@ -104,7 +155,7 @@ export async function updateAnimeMapping() {
 				.run();
 		}
 	});
-	setSettings({ animeMappingAt: new Date().toISOString() });
+	setSettings({ animeMappingAt: new Date().toISOString(), animeMappingVersion: MAPPING_VERSION });
 	return rows.length;
 }
 
@@ -116,7 +167,8 @@ let lastAttempt = 0;
 export async function ensureAnimeMapping() {
 	if (!animeTitlesEnabled()) return;
 	const last = Date.parse(getSetting('animeMappingAt'));
-	if (Number.isFinite(last) && Date.now() - last < KEEP_MS) return;
+	const current = getSetting('animeMappingVersion') === MAPPING_VERSION;
+	if (current && Number.isFinite(last) && Date.now() - last < KEEP_MS) return;
 	if (Date.now() - lastAttempt < RETRY_MS) return;
 	lastAttempt = Date.now();
 	try {

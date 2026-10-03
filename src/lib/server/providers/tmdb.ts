@@ -8,6 +8,7 @@ import {
 	today,
 	yearOf,
 	type Details,
+	type Episode,
 	type Fact,
 	type ReleaseInfo,
 	type SearchResult,
@@ -105,7 +106,7 @@ export async function searchTv(query: string, language: string): Promise<SearchR
 // ---- Detail pages (movies and series) ----
 
 type TmdbProvider = { provider_name: string; logo_path: string; display_priority: number };
-type TmdbWatch = {
+export type TmdbWatch = {
 	results: Record<
 		string,
 		{ link?: string; flatrate?: TmdbProvider[]; rent?: TmdbProvider[]; buy?: TmdbProvider[] }
@@ -154,7 +155,7 @@ function providerUrl(name: string, title: string, links: StreamingLinks, fallbac
 }
 
 // Streaming offers for one region, sorted like on JustWatch.
-async function watchFor(
+export async function watchFor(
 	data: TmdbWatch,
 	region: string,
 	title: string,
@@ -260,7 +261,6 @@ type TmdbSeason = {
 	season_number: number;
 	name: string;
 	air_date: string | null;
-	overview?: string;
 	episodes: TmdbEpisode[];
 };
 type TmdbTvWithSeasons = TmdbTvFull & {
@@ -351,18 +351,66 @@ export async function getTvDetails(id: string, language: string): Promise<ShowDe
 					: s.name || serverMessages().episodes.season(s.season_number),
 			special: s.season_number === 0,
 			airDate: s.air_date || null,
-			overview: s.overview || null,
-			episodes: s.episodes.map((e) => ({
-				number: e.episode_number,
-				title: e.name || null,
-				airDate: e.air_date || null,
-				aired: !!e.air_date && e.air_date <= now,
-				overview: e.overview || null,
-				stillUrl: e.still_path ? STILL + e.still_path : null,
-				runtime: e.runtime || null
-			}))
+			episodes: s.episodes.map((e) => toEpisode(e, now))
 		}))
 	};
+}
+
+function toEpisode(e: TmdbEpisode, now: string): Episode {
+	return {
+		number: e.episode_number,
+		title: e.name || null,
+		airDate: e.air_date || null,
+		aired: !!e.air_date && e.air_date <= now,
+		overview: e.overview || null,
+		stillUrl: e.still_path ? STILL + e.still_path : null,
+		runtime: e.runtime || null
+	};
+}
+
+// ---- Anime: single seasons of a show ----
+
+type TmdbTvSeasons = TmdbTv & {
+	external_ids?: { wikidata_id: string | null };
+	[key: `season/${number}`]: TmdbSeason | undefined;
+	[key: `season/${number}/watch/providers`]: TmdbWatch | undefined;
+};
+export type TvSeason = { episodes: Episode[]; watch: TmdbWatch | null };
+
+// What anime take from TMDB (see animeEpisodes.ts): the episodes of the given seasons and
+// where each of these seasons can be streamed – TMDB knows that per season, and seasons of
+// one show are often on different services. One request for up to 9 seasons (two parts per
+// season); seasons TMDB does not have are simply missing in the answer.
+export function getTvSeasons(id: string, seasons: number[], language: string) {
+	const wanted = [...new Set(seasons)].sort((a, b) => a - b);
+	return cached(`tmdb:tvseasons:${id}:${wanted.join('.')}:${language}`, CACHE_MS, async () => {
+		const found = new Map<number, TvSeason>();
+		const now = today();
+		const perRequest = Math.floor((PARTS_PER_REQUEST - 1) / 2);
+		let show: TmdbTvSeasons | undefined;
+		for (let i = 0; i < wanted.length; i += perRequest) {
+			const batch = wanted.slice(i, i + perRequest);
+			const parts = batch.flatMap((n) => [`season/${n}`, `season/${n}/watch/providers`]);
+			const data = await tmdb<TmdbTvSeasons>(`/tv/${id}`, {
+				language,
+				append_to_response: ['external_ids', ...parts].join(',')
+			});
+			show ??= data;
+			for (const n of batch) {
+				const season = data[`season/${n}`];
+				if (!season) continue;
+				found.set(n, {
+					episodes: season.episodes.map((e) => toEpisode(e, now)),
+					watch: data[`season/${n}/watch/providers`] ?? null
+				});
+			}
+		}
+		return {
+			name: show?.name ?? '',
+			wikidataId: show?.external_ids?.wikidata_id ?? null,
+			seasons: found
+		};
+	});
 }
 
 // ---- Choices for the settings page ----

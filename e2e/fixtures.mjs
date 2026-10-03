@@ -124,13 +124,20 @@ export const ANIME_SHOWS = [
 		first_air_date: day(-11),
 		poster_path: null,
 		overview: 'The show as TMDB describes it.',
-		status: 'Returning Series',
-		seasons: [{ season_number: 1 }],
+		external_ids: { wikidata_id: null },
+		// Where season 1 can be streamed in the region of the test installation
+		'season/1/watch/providers': {
+			results: {
+				US: {
+					link: 'https://www.themoviedb.org/tv/202/watch',
+					flatrate: [{ provider_name: 'Crunchyroll', logo_path: '/cr.jpg', display_priority: 1 }]
+				}
+			}
+		},
 		'season/1': {
 			season_number: 1,
 			name: 'Season 1',
 			air_date: day(-11),
-			overview: 'The season as TMDB describes it.',
 			episodes: [
 				animeEpisode(1, -11, 'Delta sets out'),
 				animeEpisode(2, -4, 'The second step'),
@@ -192,7 +199,10 @@ export const ANIME = [
 			]
 		},
 		studios: { nodes: [{ name: 'Test Studio' }] },
-		externalLinks: [],
+		// Replaced by the offers of TMDB while the anime is matched to a TMDB season
+		externalLinks: [
+			{ site: 'Bilibili TV', url: 'https://www.bilibili.tv/delta', type: 'STREAMING' }
+		],
 		recommendations: { nodes: [] }
 	}
 ];

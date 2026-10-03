@@ -11,7 +11,8 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 
 ### ✨ New
 
-- Anime have episode titles: the detail page shows the episode list with titles, images and descriptions like for series, and the description of the anime comes in your content language. The texts come from TMDB; which TMDB season belongs to an anime is looked up in the community list [anibridge-mappings](https://github.com/anibridge/anibridge-mappings) and checked against the air date. Anime without a reliable match keep the grid of episode numbers. Can be switched off under Settings → Server
+- Anime have episode titles: the detail page shows the episode list with titles, images and descriptions like for series. They come from TMDB, in English like everything else about anime; which TMDB season belongs to an anime is looked up in the community list [anibridge-mappings](https://github.com/anibridge/anibridge-mappings) and checked against the air date. Anime without a reliable match keep the grid of episode numbers. Can be switched off under Settings → Server
+- Anime show where to watch them in your region: matched anime get the streaming offers of their season (via JustWatch) instead of AniList's links, which are not checked for any region
 
 ### 🔧 Improved
 

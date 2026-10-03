@@ -7,7 +7,7 @@ import { getDb } from '../db';
 import { pruneImages } from '../images';
 import { pruneWikidataLinks } from '../providers/wikidata';
 import { tasks } from '../db/schema';
-import { refreshAll, refreshPending } from '../releases';
+import { prepareAnimeTitles, refreshAll, refreshPending } from '../releases';
 import { createBackup } from './backups';
 
 export type TaskRow = typeof tasks.$inferSelect;
@@ -241,6 +241,9 @@ export function startScheduler() {
 	const safeTick = () => tick().catch((err) => console.error('Scheduler failed', err));
 	setTimeout(safeTick, 30_000).unref();
 	// Details still missing (e.g. an import interrupted by a restart): continue loading them.
-	setTimeout(refreshPending, 5_000).unref();
+	setTimeout(() => {
+		refreshPending();
+		void prepareAnimeTitles();
+	}, 5_000).unref();
 	setInterval(safeTick, 60_000).unref();
 }

@@ -236,15 +236,13 @@ function episodeCounts(m: AniListAnime) {
 	return { aired, total: Math.max(m.episodes ?? 0, next?.episode ?? 0, aired, ...scheduled) };
 }
 
-// The anime as AniList has it, plus episode titles and a description in the content language
-// from TMDB where they can be matched (see animeEpisodes.ts).
+// The anime as AniList has it, plus what TMDB knows about its episodes (titles, texts, images)
+// where they can be matched (see animeEpisodes.ts).
 async function loadAnimeWithTexts(id: string) {
 	const anime = await loadAnime(id);
 	const { total } = episodeCounts(anime.m);
 	const texts = await animeTextsFor(id, fullDate(anime.m.startDate), total);
-	const item = toSearchResult(anime.m);
-	if (texts?.overview) item.overview = texts.overview;
-	return { ...anime, texts, item };
+	return { ...anime, texts, item: toSearchResult(anime.m) };
 }
 
 const dayOf = (airing: Airing) => new Date(airing.airingAt * 1000).toLocaleDateString('sv-SE');
@@ -270,11 +268,14 @@ export async function getAnimeDetails(id: string): Promise<ShowDetails> {
 				airDate: null,
 				episodes: Array.from({ length: total }, (_, i) => {
 					const known = texts?.episodes.get(i + 1);
+					const hasAired = i + 1 <= aired;
 					return {
 						number: i + 1,
 						title: known?.title ?? null,
-						airDate: upcoming.get(i + 1) ?? known?.airDate ?? null,
-						aired: i + 1 <= aired,
+						// Whether and when an episode airs is AniList's call: a date of TMDB is only
+						// taken for episodes that have aired, never to announce one.
+						airDate: upcoming.get(i + 1) ?? (hasAired ? known?.airDate : null) ?? null,
+						aired: hasAired,
 						overview: known?.overview ?? null,
 						stillUrl: known?.stillUrl ?? null,
 						runtime: known?.runtime ?? m.duration
@@ -340,8 +341,11 @@ export async function getAnimeReleases(id: string): Promise<ReleaseInfo> {
 // ---- Detail page ----
 
 export async function getAnimeInfo(id: string): Promise<Details> {
-	const { m, item } = await loadAnimeWithTexts(id);
+	const { m, item, texts } = await loadAnimeWithTexts(id);
 	const start = fullDate(m.startDate);
+	// Offers for the configured region (TMDB/JustWatch) replace the links of AniList, which
+	// are not checked for any region; without a match or without offers the links stay.
+	const watch = texts?.watch ?? null;
 	const studio = m.studios.nodes.map((s) => s.name).join(', ');
 	const facts: Fact[] = [];
 	if (start) facts.push({ key: 'firstAired', value: start, isDate: true });
@@ -360,10 +364,12 @@ export async function getAnimeInfo(id: string): Promise<Details> {
 		episodeRuntime: m.duration,
 		format: m.format,
 		facts,
-		watch: null,
-		links: m.externalLinks
-			.filter((l) => l.type === 'STREAMING')
-			.map((l) => ({ name: l.site, url: l.url })),
+		watch,
+		links: watch
+			? []
+			: m.externalLinks
+					.filter((l) => l.type === 'STREAMING')
+					.map((l) => ({ name: l.site, url: l.url })),
 		similar: m.recommendations.nodes
 			.map((n) => n.mediaRecommendation)
 			.filter((r): r is NonNullable<typeof r> => !!r && r.type === 'ANIME')

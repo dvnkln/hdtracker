@@ -8,7 +8,7 @@ import { getDetails } from './details';
 import { airedEpisodes, getShowDetails } from './episodes';
 import { serverMessages } from './i18n';
 import type { LibraryItem } from './library';
-import { ensureAnimeMapping } from './animeMapping';
+import { MAPPING_VERSION, animeTitlesEnabled, ensureAnimeMapping } from './animeMapping';
 import { ANIME_PER_REQUEST, getAnimeReleases, preloadAnime } from './providers/anilist';
 import { GAMES_PER_REQUEST, getGameReleases, preloadGames } from './providers/igdb';
 import { getMovieReleases, getTvDetails } from './providers/tmdb';
@@ -270,6 +270,22 @@ export function refreshPending() {
 			}
 		}).catch((err) => console.error(`Loading details (${source}) failed`, err));
 	}
+}
+
+// Called at startup. The first time the list for anime episode titles is there (after an
+// update to a version that has them, or one that reads the list differently), the anime
+// already in the library are loaded again, so they get their titles at once instead of with
+// their next regular refresh.
+export async function prepareAnimeTitles() {
+	const current = () => getSetting('animeMappingVersion') === MAPPING_VERSION;
+	if (current() || !animeTitlesEnabled()) return;
+	const anime = eq(libraryItems.category, 'anime');
+	if (!getDb().select({ id: libraryItems.id }).from(libraryItems).where(anime).limit(1).get())
+		return;
+	await ensureAnimeMapping();
+	if (!current()) return;
+	getDb().update(libraryItems).set({ metadataUpdatedAt: null }).where(anime).run();
+	refreshPending();
 }
 
 // How many items still wait for their details, and roughly how long that takes (seconds).

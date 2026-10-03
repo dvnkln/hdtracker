@@ -2,6 +2,7 @@ import { zstdCompressSync } from 'node:zlib';
 import { describe, expect, it, vi } from 'vitest';
 import {
 	MAPPING_URL,
+	composeRanges,
 	ensureAnimeMapping,
 	mappingFor,
 	parseRange,
@@ -59,6 +60,31 @@ describe('tmdbEpisodesFor', () => {
 	});
 });
 
+describe('composeRanges', () => {
+	const both = (sourceRange: string, targetRange: string) => ({ sourceRange, targetRange });
+	it('same numbers all the way', () => {
+		expect(composeRanges('1-12', '1-12', '1-12', '1-12')).toEqual(both('1-12', '1-12'));
+	});
+	it('shifts on both steps', () => {
+		// Anime 1–10 = TVDB season 2, 1–10 = TMDB season 1, 29–38
+		expect(composeRanges('1-10', '1-10', '1-10', '29-38')).toEqual(both('1-10', '29-38'));
+		// Anime 1–12 = TVDB 13–24; TVDB 1–24 = TMDB 101–124
+		expect(composeRanges('1-12', '13-24', '1-24', '101-124')).toEqual(both('1-12', '113-124'));
+	});
+	it('keeps only the part both steps cover', () => {
+		expect(composeRanges('1-24', '1-24', '13-24', '1-12')).toEqual(both('13-24', '1-12'));
+		expect(composeRanges('1-12', '1-12', '13-24', '1-12')).toBeNull();
+	});
+	it('open ends and single episodes', () => {
+		expect(composeRanges('1-', '5-', '1-', '1-')).toEqual(both('1-', '5-'));
+		expect(composeRanges('1-', '1-', '1-12', '1-12')).toEqual(both('1-12', '1-12'));
+		expect(composeRanges('3', '7', '1-12', '1-12')).toEqual(both('3', '7'));
+	});
+	it('refuses ranges it does not support', () => {
+		expect(composeRanges('1-12', '1-6|2', '1-6', '1-6')).toBeNull();
+	});
+});
+
 const FILE = {
 	$meta: { schema_version: '3.0.3' },
 	'anilist:145064': {
@@ -71,6 +97,14 @@ const FILE = {
 		'tmdb_show:46298:s2': { '63-136': '63-136' }
 	},
 	'anilist:999': { 'tmdb_movie:5': { '1': '1' } },
+	// Only known at TVDB; the list knows the TMDB season of that TVDB season
+	'anilist:171018': { 'mal:57334': { '1-12': '1-12' }, 'tvdb_show:432832:s1': { '1-12': '1-12' } },
+	'tvdb_show:432832:s1': {
+		'anilist:171018': { '1-12': '1-12' },
+		'tmdb_show:240411:s1': { '1-12': '1-12' }
+	},
+	// Known at TVDB only, and nobody knows the TMDB season: nothing
+	'anilist:5': { 'tvdb_show:1:s1': { '1-12': '1-12' } },
 	'tmdb_show:95479:s1': { 'anilist:145064': { '25-47': '1-23' } }
 };
 const answerWithList = () =>
@@ -83,13 +117,14 @@ describe('the mapping list', () => {
 		expect(rowsOf(FILE as never)).toEqual([
 			{ anilistId: 145064, tmdbId: 95479, season: 1, sourceRange: '1-23', targetRange: '25-47' },
 			{ anilistId: 11061, tmdbId: 46298, season: 1, sourceRange: '1-62', targetRange: '1-62' },
-			{ anilistId: 11061, tmdbId: 46298, season: 2, sourceRange: '63-136', targetRange: '63-136' }
+			{ anilistId: 11061, tmdbId: 46298, season: 2, sourceRange: '63-136', targetRange: '63-136' },
+			{ anilistId: 171018, tmdbId: 240411, season: 1, sourceRange: '1-12', targetRange: '1-12' }
 		]);
 	});
 
 	it('is downloaded, unpacked and stored; a second download replaces it', async () => {
 		answerWithList();
-		expect(await updateAnimeMapping()).toBe(3);
+		expect(await updateAnimeMapping()).toBe(4);
 		expect(vi.mocked(fetch).mock.calls[0][0]).toBe(MAPPING_URL);
 		expect(mappingFor('11061')).toHaveLength(2);
 		expect(mappingFor('145064')[0]).toMatchObject({ tmdbId: 95479, season: 1 });

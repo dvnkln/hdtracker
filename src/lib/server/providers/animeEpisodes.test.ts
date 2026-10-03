@@ -6,8 +6,13 @@ import { setSettings } from '../settings';
 import { animeTextsFor } from './animeEpisodes';
 import { getAnimeDetails, getAnimeInfo } from './anilist';
 
-// What TMDB answers for a show: seasons as { number: [first episode, count, first air date] }.
-function tmdbShow(id: number, seasons: Record<number, [number, number, string]>) {
+// What TMDB answers for a show: seasons as { number: [first episode, count, first air date] },
+// and the services each season is on in Germany.
+function tmdbShow(
+	id: number,
+	seasons: Record<number, [number, number, string]>,
+	services: Record<number, string[]> = {}
+) {
 	const day = (start: string, offset: number) =>
 		new Date(Date.parse(start) + offset * 7 * 86_400_000).toISOString().slice(0, 10);
 	const show: Record<string, unknown> = {
@@ -17,9 +22,18 @@ function tmdbShow(id: number, seasons: Record<number, [number, number, string]>)
 		first_air_date: '2020-10-03',
 		poster_path: null,
 		overview: 'Text der Serie',
-		status: 'Ended',
-		seasons: Object.keys(seasons).map((n) => ({ season_number: Number(n) }))
+		external_ids: { wikidata_id: null }
 	};
+	for (const [n, names] of Object.entries(services)) {
+		const flatrate = names.map((provider_name, i) => ({
+			provider_name,
+			logo_path: `/${provider_name}.jpg`,
+			display_priority: i
+		}));
+		show[`season/${n}/watch/providers`] = {
+			results: { DE: { link: `https://www.themoviedb.org/tv/${id}/watch`, flatrate } }
+		};
+	}
 	for (const [n, [first, count, start]] of Object.entries(seasons)) {
 		show[`season/${n}`] = {
 			season_number: Number(n),
@@ -58,14 +72,13 @@ function mapped(rows: [tmdbId: number, season: number, source: string, target: s
 	return String(anilistId);
 }
 
-beforeEach(() => setSettings({ animeEpisodeTitles: 'on', language: 'de-DE' }));
+beforeEach(() => setSettings({ animeEpisodeTitles: 'on', language: 'de-DE', region: 'DE' }));
 
 describe('animeTextsFor', () => {
-	it('takes titles, texts and the season text of a matching season', async () => {
+	it('takes titles, texts and images of the episodes', async () => {
 		const calls = mockFetch({ '/tv/501': tmdbShow(501, { 1: [1, 12, '2020-10-03'] }) });
 		const id = mapped([[501, 1, '1-12', '1-12']]);
 		const texts = await animeTextsFor(id, '2020-10-03', 12);
-		expect(texts?.overview).toBe('Text der Staffel 1');
 		expect(texts?.episodes.size).toBe(12);
 		expect(texts?.episodes.get(3)).toEqual({
 			title: 'S1 Folge 3',
@@ -75,7 +88,12 @@ describe('animeTextsFor', () => {
 			runtime: 24
 		});
 		expect(calls).toHaveLength(1);
-		expect(calls[0]).toContain('language=de-DE');
+		// English like everything else about an anime, whatever the content language is
+		expect(calls[0]).toContain('language=en-US');
+		// Only the season the list names, with its streaming offers
+		expect(decodeURIComponent(calls[0])).toContain(
+			'append_to_response=external_ids,season/1,season/1/watch/providers'
+		);
 	});
 
 	it('picks the place whose first episode aired when the anime started', async () => {
@@ -91,19 +109,31 @@ describe('animeTextsFor', () => {
 		const texts = await animeTextsFor(id, '2021-03-20', 23);
 		expect(texts?.episodes.get(1)?.title).toBe('S1 Folge 25');
 		expect(texts?.episodes.get(23)?.title).toBe('S1 Folge 47');
-		// Not the start of a TMDB season: no text of TMDB fits, the one of AniList stays
-		expect(texts?.overview).toBeNull();
 	});
 
-	it('uses the text of the show only for its first season', async () => {
-		const show = tmdbShow(511, { 1: [1, 12, '2020-10-03'], 2: [1, 12, '2021-10-02'] });
-		for (const n of [1, 2]) (show[`season/${n}`] as { overview: string }).overview = '';
-		mockFetch({ '/tv/511': show });
-		const first = await animeTextsFor(mapped([[511, 1, '1-12', '1-12']]), '2020-10-03', 12);
-		expect(first?.overview).toBe('Text der Serie');
-		const second = await animeTextsFor(mapped([[511, 2, '1-12', '1-12']]), '2021-10-02', 12);
-		expect(second?.overview).toBeNull();
-		expect(second?.episodes.size).toBe(12);
+	it('takes the streaming offers of the matched season, for the configured region', async () => {
+		mockFetch({
+			'/tv/513': tmdbShow(
+				513,
+				{ 1: [1, 12, '2020-10-03'], 2: [1, 12, '2021-10-02'] },
+				{ 1: ['Prime Video'], 2: ['Crunchyroll', 'Netflix'] }
+			)
+		});
+		const id = mapped([
+			[513, 1, '1-12', '1-12'],
+			[513, 2, '1-12', '1-12']
+		]);
+		const second = await animeTextsFor(id, '2021-10-02', 12);
+		expect(second?.watch?.flatrate.map((p) => p.name)).toEqual(['Crunchyroll', 'Netflix']);
+		expect(second?.watch?.flatrate[0].url).toBe('https://www.crunchyroll.com/search?q=Show%20513');
+		const first = await animeTextsFor(id, '2020-10-03', 12);
+		expect(first?.watch?.flatrate.map((p) => p.name)).toEqual(['Prime Video']);
+
+		// Nothing on offer in the region: no offers, but the episodes are still there
+		setSettings({ region: 'FR' });
+		const elsewhere = await animeTextsFor(id, '2020-10-03', 12);
+		expect(elsewhere?.watch).toBeNull();
+		expect(elsewhere?.episodes.size).toBe(12);
 	});
 
 	it('accepts a start date that is up to two days off, not more', async () => {
@@ -180,7 +210,9 @@ describe('an anime with texts from TMDB', () => {
 							nodes: [{ episode: 3, airingAt: Date.parse('2030-01-05T15:00:00Z') / 1000 }]
 						},
 						studios: { nodes: [] },
-						externalLinks: [],
+						externalLinks: [
+							{ site: 'Crunchyroll', url: 'https://crunchyroll.com/x', type: 'STREAMING' }
+						],
 						recommendations: { nodes: [] }
 					}
 				]
@@ -189,7 +221,7 @@ describe('an anime with texts from TMDB', () => {
 		}
 	});
 
-	it('keeps title, progress and dates of AniList and adds the TMDB texts', async () => {
+	it('keeps title, description, progress and dates of AniList and adds the episode texts', async () => {
 		const id = mapped([[509, 1, '1-4', '1-4']]);
 		mockFetch({
 			'graphql.anilist.co': anilist(Number(id), 4),
@@ -197,7 +229,7 @@ describe('an anime with texts from TMDB', () => {
 		});
 		const show = await getAnimeDetails(id);
 		expect(show.item.title).toBe('Anime EN');
-		expect(show.item.overview).toBe('Text der Staffel 1');
+		expect(show.item.overview).toBe('English text');
 		const [first, , third, fourth] = show.seasons[0].episodes;
 		expect(first).toMatchObject({ title: 'S1 Folge 1', aired: true, airDate: '2020-10-03' });
 		// Not aired yet according to AniList, whose date wins
@@ -206,7 +238,36 @@ describe('an anime with texts from TMDB', () => {
 		// TMDB has no fourth episode yet
 		expect(fourth).toMatchObject({ title: null, overview: null, stillUrl: null, runtime: 23 });
 
-		expect((await getAnimeInfo(id)).item.overview).toBe('Text der Staffel 1');
+		// No offers known for the season: the links of AniList stay
+		const info = await getAnimeInfo(id);
+		expect(info.item.overview).toBe('English text');
+		expect(info.watch).toBeNull();
+		expect(info.links).toEqual([{ name: 'Crunchyroll', url: 'https://crunchyroll.com/x' }]);
+	});
+
+	it('shows the offers of the region instead of the links of AniList', async () => {
+		const id = mapped([[514, 1, '1-4', '1-4']]);
+		mockFetch({
+			'graphql.anilist.co': anilist(Number(id), 4),
+			'/tv/514': tmdbShow(514, { 1: [1, 3, '2020-10-03'] }, { 1: ['Netflix'] })
+		});
+		const info = await getAnimeInfo(id);
+		expect(info.watch?.flatrate.map((p) => p.name)).toEqual(['Netflix']);
+		expect(info.links).toEqual([]);
+	});
+
+	it('never takes an air date of TMDB for an episode AniList has not aired', async () => {
+		// TMDB lists four episodes with dates in 2020; AniList has aired two, announces the
+		// third for 2030 and knows no date for the fourth.
+		const id = mapped([[512, 1, '1-4', '1-4']]);
+		mockFetch({
+			'graphql.anilist.co': anilist(Number(id), 4),
+			'/tv/512': tmdbShow(512, { 1: [1, 4, '2020-10-03'] })
+		});
+		const [, second, third, fourth] = (await getAnimeDetails(id)).seasons[0].episodes;
+		expect(second).toMatchObject({ aired: true, airDate: '2020-10-10' });
+		expect(third.airDate).toMatch(/^2030-/);
+		expect(fourth).toMatchObject({ title: 'S1 Folge 4', aired: false, airDate: null });
 	});
 
 	it('stays as AniList has it when the mapping does not fit', async () => {

@@ -221,9 +221,10 @@ export const en: Messages = {
 		uiLanguage: 'Interface language',
 		contentLanguage: 'Content language',
 		contentLanguageHint:
-			'Titles and descriptions of movies and series, episode titles of anime (TMDB). Titles already in your library keep their current language for now.',
+			'Titles and descriptions of movies and series (TMDB). Titles already in your library keep their current language for now.',
 		animeEpisodeTitles: 'Episode titles for anime',
-		animeEpisodeTitlesHint: 'Titles, images and description from TMDB, in the content language.',
+		animeEpisodeTitlesHint:
+			'Titles, images and texts of the episodes from TMDB – in English, like everything about anime.',
 		region: 'Region',
 		regionHint: 'Used for streaming providers and release dates.',
 		overview: 'Overview',

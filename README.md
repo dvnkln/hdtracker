@@ -40,7 +40,7 @@ What changed in each version: [Changelog](CHANGELOG.md). What's planned: [Roadma
 
 - 🎬 **Four separate areas** – movies, series, anime and games, each with a library grouped by status (watching, paused, planned, completed, dropped). Don't track games or anime? Hide the areas you don't need.
 - 📅 **Dashboard** – what was released recently and what is coming up: new episodes, new seasons, cinema and home releases, game releases.
-- 📺 **Episode tracking** – tick off single episodes, whole seasons or entire shows; see upcoming episodes and announced seasons with dates.
+- 📺 **Episode tracking** – tick off single episodes, whole seasons or entire shows; see upcoming episodes and announced seasons with dates. Anime get episode titles and images too.
 - 🙈 **Spoiler protection** – images and descriptions of episodes you have not watched yet are blurred (can be switched off).
 - 🍿 **Where to watch** – streaming, rent and buy offers for your region (via JustWatch), with direct links where possible.
 - 🔎 **Quick search** – always at the top of the screen; on a computer, press <kbd>/</kbd> to start typing.

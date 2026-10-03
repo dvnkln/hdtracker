@@ -17,6 +17,7 @@ const DEFAULTS = {
 	// which TMDB season belongs to an AniList entry was last downloaded (see animeMapping.ts)
 	animeEpisodeTitles: 'on',
 	animeMappingAt: '',
+	animeMappingVersion: '', // MAPPING_VERSION of the code that read the stored list
 	// Reverse proxies whose X-Forwarded-For header is believed (see proxy.ts): addresses or
 	// ranges, comma-separated. Empty = none.
 	trustedProxies: '',

@@ -1,20 +1,25 @@
 import { animeTitlesEnabled, mappingFor, parseRange, type MapRow } from '../animeMapping';
 import { getSetting } from '../settings';
-import { getTvDetails } from './tmdb';
-import type { Episode } from './types';
+import { getTvSeasons, watchFor } from './tmdb';
+import type { Details, Episode } from './types';
 
-// AniList knows no episode titles and describes anime in English only. TMDB has titles, texts
-// and images per episode in the content language – but as one show with seasons, where AniList
-// has one entry per season. The list in animeMapping.ts says which TMDB episodes belong to an
+// AniList knows no episode titles. TMDB has titles, texts and images per episode – but as one
+// show with seasons, where AniList has one entry per season. The list in animeMapping.ts says which TMDB episodes belong to an
 // AniList entry. It is a community list and sometimes names several or wrong places, so every
 // mapping is checked here before it is used; in doubt the anime stays as AniList has it.
 
 export type AnimeTexts = {
-	// Description in the content language, null = keep the one from AniList
-	overview: string | null;
 	// AniList episode number → what TMDB knows about it
 	episodes: Map<number, Pick<Episode, 'title' | 'overview' | 'stillUrl' | 'airDate' | 'runtime'>>;
+	// Where the matched TMDB season can be streamed in the configured region (JustWatch);
+	// null = no offers there
+	watch: Details['watch'];
 };
+
+// Everything else about an anime (title, description, genres) comes from AniList and is in
+// English, so the episodes are asked for in English as well – whatever the content language.
+// German episode titles under an English description looked like a mix-up (the user's call).
+const LANGUAGE = 'en-US';
 
 // The first mapped episode must have aired within this many days of the AniList start date.
 const MAX_DAYS_APART = 2;
@@ -24,7 +29,7 @@ const MAX_SHOWS = 2;
 
 const daysApart = (a: string, b: string) => Math.abs(Date.parse(a) - Date.parse(b)) / DAY_MS;
 
-type Show = Awaited<ReturnType<typeof getTvDetails>>;
+type Show = Awaited<ReturnType<typeof getTvSeasons>>;
 type Part = { row: MapRow; from: number; to: number | null; target: number };
 
 // TMDB texts for an anime, or null if there is no mapping that passes the check. Never throws:
@@ -44,11 +49,12 @@ export async function animeTextsFor(
 	const anchors = parts.filter((p) => p.from === 1);
 	if (anchors.length === 0) return null;
 
-	const language = getSetting('language');
 	const shows = new Map<number, Show>();
 	for (const tmdbId of [...new Set(anchors.map((p) => p.row.tmdbId))].slice(0, MAX_SHOWS)) {
+		// Only the seasons the list names for this anime, in one request
+		const seasons = parts.filter((p) => p.row.tmdbId === tmdbId).map((p) => p.row.season);
 		try {
-			shows.set(tmdbId, await getTvDetails(String(tmdbId), language));
+			shows.set(tmdbId, await getTvSeasons(String(tmdbId), seasons, LANGUAGE));
 		} catch {
 			// Not reachable, no key, unknown show: fetchJson has logged it; go on without.
 		}
@@ -56,7 +62,7 @@ export async function animeTextsFor(
 	const episodeAt = (tmdbId: number, season: number, number: number) =>
 		shows
 			.get(tmdbId)
-			?.seasons.find((s) => s.number === season)
+			?.seasons.get(season)
 			?.episodes.find((e) => e.number === number);
 
 	// The check: the first mapped episode exists and aired when the anime started.
@@ -67,7 +73,6 @@ export async function animeTextsFor(
 		return daysApart(startDate, first.airDate) <= MAX_DAYS_APART;
 	});
 	if (!anchor) return null;
-	const show = shows.get(anchor.row.tmdbId)!;
 
 	// Further parts (an entry spread over several TMDB seasons) count for the same show only.
 	const usable = [anchor, ...parts.filter((p) => p.from > 1 && p.row.tmdbId === anchor.row.tmdbId)];
@@ -83,13 +88,13 @@ export async function animeTextsFor(
 		}
 	}
 
-	// A text must describe this anime, not another part of the show: the text of the season
-	// only fits if the anime is that season from its first episode on (not e.g. the second half
-	// of a TMDB season), the text of the whole show only for its very beginning. Otherwise the
-	// description of AniList stays – in English, but about the right season.
-	const fromStart = anchor.target === 1;
-	const season = show.seasons.find((s) => s.number === anchor.row.season);
-	const seasonText = fromStart ? season?.overview : null;
-	const showText = fromStart && anchor.row.season === 1 ? show.item.overview : null;
-	return { overview: seasonText || showText || null, episodes };
+	// Streaming offers of the season the anime starts in. (An anime that is only a part of a
+	// TMDB season gets the offers of that whole season – TMDB knows nothing finer.)
+	const show = shows.get(anchor.row.tmdbId)!;
+	const offers = show.seasons.get(anchor.row.season)?.watch;
+	const watch = offers
+		? await watchFor(offers, getSetting('region'), show.name, show.wikidataId)
+		: null;
+	const hasOffers = !!watch && watch.flatrate.length + watch.rent.length + watch.buy.length > 0;
+	return { episodes, watch: hasOffers ? watch : null };
 }

@@ -17,12 +17,17 @@ async function setEpisodeTitles(page: Page, on: boolean) {
 	await expect(content.getByText('Saved')).toBeVisible();
 }
 
-test('anime: episode titles and description from TMDB, can be switched off', async ({ page }) => {
+test('anime: episode titles and streaming offers from TMDB, can be switched off', async ({
+	page
+}) => {
 	await loginOk(page);
 	await page.goto(ANIME);
-	// Title stays the one of AniList, the texts are those of TMDB
+	// Title and description stay those of AniList, the episodes come from TMDB
 	await expect(page.getByRole('heading', { name: 'Test Anime Delta' })).toBeVisible();
-	await expect(page.getByText('The season as TMDB describes it.')).toBeVisible();
+	await expect(page.getByText('A made-up anime.')).toBeVisible();
+	// Where to watch: the offers for the region (JustWatch) instead of the links of AniList
+	await expect(page.getByRole('img', { name: 'Crunchyroll' })).toBeVisible();
+	await expect(page.getByRole('link', { name: /Bilibili TV/ })).toHaveCount(0);
 	const first = page.getByRole('button', { name: /Delta sets out/ });
 	await expect(first).toBeVisible();
 	// Episode 3 has a title already, but has not aired
@@ -35,15 +40,17 @@ test('anime: episode titles and description from TMDB, can be switched off', asy
 	await first.click();
 	await expect(first).toHaveAttribute('aria-pressed', 'false');
 
-	// Switched off: back to the numbers and the description of AniList. The anime is loaded
-	// again in the background, so look until it is there.
+	// Switched off: back to the grid of numbers. The anime is loaded again in the background,
+	// so look until it is there.
 	await setEpisodeTitles(page, false);
 	await expect(async () => {
 		await page.goto(ANIME);
-		await expect(page.getByText('A made-up anime.')).toBeVisible({ timeout: 1000 });
+		await expect(page.getByRole('button', { name: '1', exact: true })).toBeVisible({
+			timeout: 1000
+		});
 	}).toPass();
 	await expect(page.getByRole('button', { name: /Delta sets out/ })).toHaveCount(0);
-	await expect(page.getByRole('button', { name: '1', exact: true })).toBeVisible();
+	await expect(page.getByRole('link', { name: /Bilibili TV/ })).toBeVisible();
 
 	// ... and on again for whatever follows
 	await setEpisodeTitles(page, true);
