@@ -2,24 +2,28 @@
 
 All notable changes to hdtracker. Each version is also published as a [GitHub release](https://github.com/dvnkln/hdtracker/releases) with a ready-to-use Docker image.
 
-<!-- Changes since the last release are collected under "## Upcoming release" right below this
-     comment – the heading only exists while there are such changes. On release it becomes
-     "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
-     ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
+<!-- Changes since the last release are collected under "## 0.6.0 – 2026-10-03
 
-## Upcoming release
+Anime catch up with series: episode titles and where to watch in your region.
 
 ### ✨ New
 
-- Anime have episode titles: the detail page shows the episode list with titles, images and descriptions like for series. They come from TMDB, in English like everything else about anime; which TMDB season belongs to an anime is looked up in the community list [anibridge-mappings](https://github.com/anibridge/anibridge-mappings) and checked against the air date. Anime without a reliable match keep the grid of episode numbers. Can be switched off under Settings → Server
-- Anime show where to watch them in your region: matched anime get the streaming offers of their season (via JustWatch) instead of AniList's links, which are not checked for any region
+- **Episode titles for anime:** the detail page shows the episode list with titles, images and descriptions like for series. They come from TMDB, in English like everything else about anime; which TMDB season belongs to an anime is looked up in the community list [anibridge-mappings](https://github.com/anibridge/anibridge-mappings) and checked against the air date. Anime without a reliable match keep the grid of episode numbers. Can be switched off under Settings → Server
+- **Where to watch anime:** matched anime show the streaming offers of their season for your region (via JustWatch) instead of AniList's links, which are not checked for any region
 
 ### 🔧 Improved
 
 - Loading details after an import or after changing language or region is about four times faster: the direct links to streaming services are looked up for many titles at once instead of one by one
 - Wrong passwords and blocked addresses are written to the container log (never the password itself), so attacks become visible and tools like fail2ban can react; the server overview shows how many addresses are blocked right now
-- The dashboard has a main heading for screen readers
 - The dashboard opens much faster with very large libraries (thousands of titles)
+- The dashboard has a main heading for screen readers
+
+### ⬆️ Updating
+
+Just pull the new image – the database is updated automatically on start, your library stays as it is.
+
+- **Anime:** on the first start, hdtracker downloads the mapping list and loads your anime again, so episode titles and streaming offers appear within a minute or so – nothing to do.
+- **If you restrict outgoing connections:** hdtracker now also talks to `github.com` and `release-assets.githubusercontent.com` (the mapping list, once a week) and `query.wikidata.org` (direct links for many titles at once). Without them everything else keeps working. Details: [Privacy and security](https://github.com/dvnkln/hdtracker/wiki/Privacy-and-security).
 
 ## 0.5.1 – 2026-10-03
 
