@@ -44,6 +44,10 @@
 		};
 	});
 
+	// A series with a single season: its progress is the overall progress shown at the top, so
+	// the season does not repeat it.
+	let singleSeason = $derived(show.seasons.length === 1);
+
 	// The first season with unwatched episodes starts open.
 	let firstOpen = $derived(
 		show.seasons.find((s) => !s.special && progress(s).done < progress(s).aired)?.number ?? null
@@ -286,14 +290,14 @@
 									<span class="block font-medium text-(--accent)">{m.episodes.announced}</span>
 									<span class="block text-xs text-zinc-500">{upcomingDate(season)}</span>
 								</span>
-							{:else}
+							{:else if !singleSeason}
 								<span class="shrink-0 text-sm {complete ? 'text-(--accent)' : 'text-zinc-400'}">
 									{#if complete}<Check size={14} class="inline" />{/if}
 									{p.done} / {p.aired}
 								</span>
 							{/if}
 						</div>
-						{#if !upcoming}
+						{#if !upcoming && !singleSeason}
 							<div class="mt-2 h-1 overflow-hidden rounded-full bg-zinc-800">
 								<div
 									class="h-full bg-(--accent) transition-all"

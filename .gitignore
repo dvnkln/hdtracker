@@ -24,6 +24,9 @@ vite.config.ts.timestamp-*
 # Claude Code: personal local settings
 .claude/settings.local.json
 
+# Editor: personal workspace files
+*.code-workspace
+
 # Browser tests
 /playwright-report
 /test-results

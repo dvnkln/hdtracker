@@ -265,6 +265,12 @@
 					{m.detail.animeLinksNote}
 				</p>
 			</section>
+		{:else if data.category === 'anime' && !info.watch && !data.placeholder}
+			<!-- Anime nobody knows offers for: say so, like movies and series do -->
+			<section class="mt-6">
+				<h2 class="text-lg font-semibold">{m.detail.streaming}</h2>
+				<p class="mt-1 text-sm text-zinc-500">{m.detail.noStreamingKnown}</p>
+			</section>
 		{/if}
 
 		<!-- Series/anime: progress, seasons, episodes -->

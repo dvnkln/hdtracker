@@ -128,6 +128,7 @@ export const en: Messages = {
 		rent: 'Rent',
 		buy: 'Buy',
 		noOffers: 'Currently not available from any provider.',
+		noStreamingKnown: 'No streaming offers known.',
 		streamingDataBy: 'Streaming data by',
 		streaming: 'Streaming',
 		animeLinksNote: 'Official links from AniList – availability in your region is not guaranteed.',
@@ -221,7 +222,7 @@ export const en: Messages = {
 		uiLanguage: 'Interface language',
 		contentLanguage: 'Content language',
 		contentLanguageHint:
-			'Titles and descriptions of movies and series (TMDB). Titles already in your library keep their current language for now.',
+			'Titles and descriptions of movies and series (TMDB). After saving, your library is loaded again in the new language in the background.',
 		animeEpisodeTitles: 'Episode titles for anime',
 		animeEpisodeTitlesHint:
 			'Titles, images and texts of the episodes from TMDB – in English, like everything about anime.',

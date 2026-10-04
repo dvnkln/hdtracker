@@ -136,6 +136,7 @@ export const de = {
 		rent: 'Leihen',
 		buy: 'Kaufen',
 		noOffers: 'Aktuell bei keinem Anbieter verfügbar.',
+		noStreamingKnown: 'Keine Streaming-Angebote bekannt.',
 		streamingDataBy: 'Streaming-Daten von',
 		streaming: 'Streaming',
 		animeLinksNote:
@@ -230,7 +231,7 @@ export const de = {
 		uiLanguage: 'Sprache der Oberfläche',
 		contentLanguage: 'Sprache der Inhalte',
 		contentLanguageHint:
-			'Titel und Beschreibungen von Filmen und Serien (TMDB). Titel, die schon in der Bibliothek sind, bleiben vorerst in ihrer bisherigen Sprache.',
+			'Titel und Beschreibungen von Filmen und Serien (TMDB). Nach dem Speichern wird die Bibliothek im Hintergrund in der neuen Sprache geladen.',
 		animeEpisodeTitles: 'Folgentitel für Anime',
 		animeEpisodeTitlesHint:
 			'Titel, Bilder und Texte der Folgen von TMDB – auf Englisch, wie alles zu Anime.',

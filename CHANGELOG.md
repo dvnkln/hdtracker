@@ -7,6 +7,23 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
+## 0.6.1 – 2026-10-04
+
+Three small corrections.
+
+### 🔧 Improved
+
+- Series with a single season show their progress once (at the top) instead of twice
+- Anime without any known streaming offer say so instead of showing nothing
+
+### 🐛 Fixed
+
+- Settings → Server: the hint for the content language said titles in your library keep their language – they are loaded again in the new language
+
+### ⬆️ Updating
+
+Just pull the new image – nothing else to do.
+
 ## 0.6.0 – 2026-10-03
 
 Anime catch up with series: episode titles and where to watch in your region.
