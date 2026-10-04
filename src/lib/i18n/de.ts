@@ -533,6 +533,8 @@ export const de = {
 		wikidata: 'Direktlinks zu Titeln bei Streaming-Diensten',
 		anibridge: 'Zuordnung von Anime zu TMDB für die Folgentitel (MIT-Lizenz)',
 		palettes: 'Einige Farbschemata nutzen freie Farbpaletten:',
+		libraryIcons: 'Icons',
+		libraryFont: 'Schriftzug',
 		ai: 'Entwickelt mit Unterstützung von KI (Claude Code).'
 	},
 

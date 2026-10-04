@@ -29,6 +29,12 @@
 		}
 	]);
 
+	// Not required by their licences (ISC, OFL), but fair to name
+	let libraries = $derived([
+		{ name: 'Lucide', href: 'https://lucide.dev', text: m.about.libraryIcons },
+		{ name: 'Outfit', href: 'https://github.com/Outfitio/Outfit-Fonts', text: m.about.libraryFont }
+	]);
+
 	const palettes = [
 		{ name: 'Dracula', href: 'https://draculatheme.com' },
 		{ name: 'Tokyo Night', href: 'https://github.com/tokyo-night/tokyo-night-vscode-theme' },
@@ -100,6 +106,14 @@
 				target="_blank"
 				rel="noreferrer"
 				class="underline hover:text-zinc-300">{palette.name}</a
+			>
+		{/each}
+	</p>
+	<p class="mt-1 {hint}">
+		{#each libraries as library, i (library.name)}
+			{i ? ' · ' : ''}{library.text}:
+			<a href={library.href} target="_blank" rel="noreferrer" class="underline hover:text-zinc-300"
+				>{library.name}</a
 			>
 		{/each}
 	</p>

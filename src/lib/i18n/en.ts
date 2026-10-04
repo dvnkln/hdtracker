@@ -503,6 +503,8 @@ export const en: Messages = {
 		wikidata: 'Direct links to titles on streaming services',
 		anibridge: 'Maps anime to TMDB for the episode titles (MIT licence)',
 		palettes: 'Some themes use free colour palettes:',
+		libraryIcons: 'Icons',
+		libraryFont: 'Wordmark',
 		ai: 'Built with the help of AI (Claude Code).'
 	},
 

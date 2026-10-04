@@ -72,25 +72,15 @@ What changed in each version: [Changelog](CHANGELOG.md). What's planned: [Roadma
 
 ## 🐳 Quick start
 
-1. Create a folder with this `docker-compose.yml`:
+1. Create a folder and download the two files hdtracker needs – the [`docker-compose.yml`](docker-compose.yml) and a template for your settings, saved as `.env`:
 
-   ```yaml
-   services:
-     hdtracker:
-       image: ghcr.io/dvnkln/hdtracker:latest
-       container_name: hdtracker
-       restart: unless-stopped
-       ports:
-         - '3000:3000'
-       env_file: .env
-       volumes:
-         - hdtracker-data:/data
-
-   volumes:
-     hdtracker-data:
+   ```bash
+   mkdir hdtracker && cd hdtracker
+   curl -fsSLO https://raw.githubusercontent.com/dvnkln/hdtracker/main/docker-compose.yml
+   curl -fsSL -o .env https://raw.githubusercontent.com/dvnkln/hdtracker/main/.env.example
    ```
 
-2. Next to it, create a `.env` file (template: [`.env.example`](.env.example)) with a random `SECRET`, your API keys for TMDB and IGDB, your time zone and `ORIGIN` – **exactly** the address you open the app with, e.g. `http://192.168.1.50:3000`.
+2. Open `.env` and fill it in: a random `SECRET`, your API keys for TMDB and IGDB, your time zone and `ORIGIN` – **exactly** the address you open the app with, e.g. `http://192.168.1.50:3000`. The file explains every line.
 
 3. Start it and open that address. On first start you create your account.
 
@@ -103,6 +93,8 @@ Where to get the keys and what every setting means: **[Installation guide](https
 ## 🙏 Data sources
 
 Movie and series data from [TMDB](https://www.themoviedb.org). This product uses the TMDB API but is not endorsed or certified by TMDB. Streaming availability by [JustWatch](https://www.justwatch.com). Game data from [IGDB](https://www.igdb.com), anime data from [AniList](https://anilist.co); episode titles for anime are matched to TMDB with the community list [anibridge-mappings](https://github.com/anibridge/anibridge-mappings) (MIT).
+
+Icons by [Lucide](https://lucide.dev), wordmark set in [Outfit](https://github.com/Outfitio/Outfit-Fonts).
 
 ## 🤖 Built with AI
 
