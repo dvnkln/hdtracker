@@ -9,6 +9,7 @@
 <p align="center">
   <a href="https://github.com/dvnkln/hdtracker/releases"><img src="https://img.shields.io/github/v/release/dvnkln/hdtracker?label=version&style=for-the-badge&color=ec4899" alt="Version" /></a>
   <a href="https://github.com/dvnkln/hdtracker/pkgs/container/hdtracker"><img src="https://img.shields.io/github/actions/workflow/status/dvnkln/hdtracker/release.yml?label=docker%20image&style=for-the-badge&logo=docker&logoColor=white" alt="Docker image" /></a>
+  <a href="https://github.com/dvnkln/hdtracker/actions/workflows/check.yml"><img src="https://img.shields.io/github/actions/workflow/status/dvnkln/hdtracker/check.yml?branch=main&label=checks&style=for-the-badge&logo=github&logoColor=white" alt="Checks" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-3b82f6?style=for-the-badge" alt="License: AGPL-3.0" /></a>
 </p>
 
