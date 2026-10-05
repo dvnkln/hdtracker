@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { loginOk } from './helpers';
+import { loginOk, saved } from './helpers';
 
 // Push messages themselves cannot be tried here (the test browser has no push service); this
 // covers what the user sets up: the form of the messages, the hour, and muting a title.
@@ -17,12 +17,12 @@ test('notifications: choose form and hour, mute a single title', async ({ page }
 	await expect(page.getByRole('heading', { name: 'This device' })).toBeVisible();
 	await expect(page.getByText('No device switched on yet.')).toBeVisible();
 	const prefs = page.locator('form[action="?/prefs"]');
-	const save = prefs.getByRole('button', { name: 'Save' });
-	await expect(save).toBeDisabled();
-	await prefs.getByText('One by one').click();
-	await prefs.locator('select[name=hour]').selectOption('7');
-	await save.click();
-	await expect(prefs.getByText('Saved')).toBeVisible();
+	// Choices are saved the moment they are made – there is no button
+	await expect(prefs.getByRole('button')).toHaveCount(0);
+	// The hour only shows while messages are on
+	await expect(prefs.locator('select[name=hour]')).toHaveCount(0);
+	await saved(page, 'prefs', () => prefs.getByText('One by one').click());
+	await saved(page, 'prefs', () => prefs.locator('select[name=hour]').selectOption('7'));
 	await page.reload();
 	await expect(prefs.locator('input[name=mode][value=single]')).toBeChecked();
 	await expect(prefs.locator('select[name=hour]')).toHaveValue('7');

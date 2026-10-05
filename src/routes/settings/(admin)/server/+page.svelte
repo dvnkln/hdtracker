@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { autosave } from '$lib/autosave';
 	import { formatDateTime, formatFileSize, m } from '$lib/i18n/index.svelte';
 	import { FormFeedback } from '$lib/forms.svelte';
 	import { proxySnippets } from '$lib/proxySnippets';
@@ -212,18 +213,6 @@
 			<span class={hint}>{m.settings.regionHint}</span>
 		</label>
 
-		<div class="flex items-start justify-between gap-4">
-			<label for="animeEpisodeTitles" class="flex cursor-pointer flex-col gap-1">
-				<span class={labelText}>{m.settings.animeEpisodeTitles}</span>
-				<span class={hint}>{m.settings.animeEpisodeTitlesHint}</span>
-			</label>
-			<Switch
-				id="animeEpisodeTitles"
-				name="animeEpisodeTitles"
-				checked={data.values.animeEpisodeTitles}
-			/>
-		</div>
-
 		{#if data.listsFailed}
 			<Notice kind="warning">{m.settings.listsUnavailable}</Notice>
 		{/if}
@@ -231,6 +220,34 @@
 		<div class={actions}>
 			<SubmitButton text={m.settings.save} busy={forms.busy === 'content'} when="changed" />
 			<FeedbackText feedback={forms.messages.content} />
+		</div>
+	</form>
+
+	<!-- A plain switch: saved the moment it is flipped. (Language and region keep their button
+	     on purpose – changing them loads the whole library again.) -->
+	<form
+		method="POST"
+		action="?/animeTitles"
+		use:enhance={forms.submit('animeTitles')}
+		use:autosave
+		class="mt-5 border-t border-zinc-800 pt-5"
+	>
+		<div class="flex items-start justify-between gap-4">
+			<label for="animeEpisodeTitles" class="flex cursor-pointer flex-col gap-1">
+				<span class={labelText}>{m.settings.animeEpisodeTitles}</span>
+				<span class={hint}>{m.settings.animeEpisodeTitlesHint}</span>
+			</label>
+			<!-- Should saving fail, the reason appears under the switch -->
+			<div class="relative shrink-0">
+				<Switch
+					id="animeEpisodeTitles"
+					name="animeEpisodeTitles"
+					checked={data.values.animeEpisodeTitles}
+				/>
+				<div class="absolute top-full right-0 mt-1 whitespace-nowrap">
+					<FeedbackText feedback={forms.error('animeTitles')} />
+				</div>
+			</div>
 		</div>
 	</form>
 </section>

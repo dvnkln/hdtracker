@@ -58,19 +58,30 @@ export const actions: Actions = {
 		if (!LANGUAGE_PATTERN.test(language) || !REGION_PATTERN.test(region)) {
 			return fail(400, { section: 'content', error: serverMessages().common.invalidData });
 		}
-		const animeEpisodeTitles = data.get('animeEpisodeTitles') === 'on' ? 'on' : 'off';
 		const changed = language !== getSetting('language') || region !== getSetting('region');
-		const animeChanged = animeEpisodeTitles !== getSetting('animeEpisodeTitles');
-		setSettings({ language, region, animeEpisodeTitles });
-		// Stored texts and streaming offers depend on language and region: load the whole
-		// library again. The switch for episode titles only concerns the anime.
-		if (changed || animeChanged) {
-			const reload = getDb().update(libraryItems).set({ metadataUpdatedAt: null });
-			if (changed) reload.run();
-			else reload.where(eq(libraryItems.category, 'anime')).run();
+		setSettings({ language, region });
+		// Stored texts and streaming offers depend on both: load the whole library again.
+		if (changed) {
+			getDb().update(libraryItems).set({ metadataUpdatedAt: null }).run();
 			refreshPending();
 		}
 		return { section: 'content', message: serverMessages().settings.saved };
+	},
+
+	// Episode titles for anime from TMDB, on or off: only the anime are loaded again.
+	animeTitles: async ({ request, locals }) => {
+		requireAdmin(locals.user);
+		const wanted = (await request.formData()).get('animeEpisodeTitles') === 'on' ? 'on' : 'off';
+		if (wanted !== getSetting('animeEpisodeTitles')) {
+			setSettings({ animeEpisodeTitles: wanted });
+			getDb()
+				.update(libraryItems)
+				.set({ metadataUpdatedAt: null })
+				.where(eq(libraryItems.category, 'anime'))
+				.run();
+			refreshPending();
+		}
+		return { section: 'animeTitles', message: serverMessages().settings.saved };
 	},
 
 	// Reverse proxies whose forwarded visitor address is believed (see $lib/server/proxy.ts).

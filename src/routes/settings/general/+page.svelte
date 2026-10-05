@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { autosave } from '$lib/autosave';
 	import { CATEGORIES, CATEGORY_KEYS, type Category } from '$lib/categories';
 	import { LOCALES, m } from '$lib/i18n/index.svelte';
 	import { FormFeedback } from '$lib/forms.svelte';
 	import { ui } from '$lib/ui';
 	import FeedbackText from '$lib/components/FeedbackText.svelte';
-	import SubmitButton from '$lib/components/SubmitButton.svelte';
 	import Switch from '$lib/components/Switch.svelte';
 	import Notice from '$lib/components/Notice.svelte';
 	import { LayoutGrid, Monitor, SlidersHorizontal } from '@lucide/svelte';
@@ -38,12 +38,16 @@
 
 <!-- Display -->
 <section class={card}>
-	<h3 class={heading}><Monitor size={20} class="text-zinc-400" />{m.settings.display}</h3>
+	<div class="flex min-h-7 items-center justify-between gap-3">
+		<h3 class={heading}><Monitor size={20} class="text-zinc-400" />{m.settings.display}</h3>
+		<FeedbackText feedback={forms.error('display')} />
+	</div>
 
 	<form
 		method="POST"
 		action="?/display"
 		use:enhance={forms.submit('display')}
+		use:autosave
 		class="mt-4 flex flex-col gap-4"
 	>
 		<label class={label}>
@@ -80,21 +84,25 @@
 			</label>
 			<Switch id="hideSpoilers" name="hideSpoilers" checked={data.values.hideSpoilers} />
 		</div>
-
-		<div class={actions}>
-			<SubmitButton text={m.settings.save} busy={forms.busy === 'display'} when="changed" />
-			<FeedbackText feedback={forms.messages.display} />
-		</div>
 	</form>
 </section>
 
 <!-- Behavior -->
 <section class={card}>
-	<h3 class={heading}>
-		<SlidersHorizontal size={20} class="text-zinc-400" />{m.settings.behavior}
-	</h3>
+	<div class="flex min-h-7 items-center justify-between gap-3">
+		<h3 class={heading}>
+			<SlidersHorizontal size={20} class="text-zinc-400" />{m.settings.behavior}
+		</h3>
+		<FeedbackText feedback={forms.error('behavior')} />
+	</div>
 
-	<form method="POST" action="?/behavior" use:enhance={forms.submit('behavior')} class="mt-4">
+	<form
+		method="POST"
+		action="?/behavior"
+		use:enhance={forms.submit('behavior')}
+		use:autosave
+		class="mt-4 flex flex-col gap-3"
+	>
 		<div class="flex items-start justify-between gap-4">
 			<label for="autoStatus" class="flex cursor-pointer flex-col gap-1">
 				<span class={labelText}>{m.settings.autoStatus}</span>
@@ -102,24 +110,22 @@
 			</label>
 			<Switch id="autoStatus" name="autoStatus" checked={data.values.autoStatus} />
 		</div>
-		<div class="mt-4">
-			<div class={actions}>
-				<SubmitButton text={m.settings.save} busy={forms.busy === 'behavior'} when="changed" />
-				<FeedbackText feedback={forms.messages.behavior} />
-			</div>
-		</div>
 	</form>
 </section>
 
 <!-- Areas -->
 <section class={card}>
-	<h3 class={heading}><LayoutGrid size={20} class="text-zinc-400" />{m.settings.areas}</h3>
+	<div class="flex min-h-7 items-center justify-between gap-3">
+		<h3 class={heading}><LayoutGrid size={20} class="text-zinc-400" />{m.settings.areas}</h3>
+		<FeedbackText feedback={forms.error('areas')} />
+	</div>
 	<p class="mt-1 {hint}">{m.settings.areasHint}</p>
 
 	<form
 		method="POST"
 		action="?/areas"
 		use:enhance={forms.submit('areas')}
+		use:autosave
 		class="mt-4 flex flex-col gap-3"
 	>
 		{#each CATEGORY_KEYS as key (key)}
@@ -144,9 +150,5 @@
 				</Notice>
 			{/if}
 		{/each}
-		<div class="mt-1 {actions}">
-			<SubmitButton text={m.settings.save} busy={forms.busy === 'areas'} when="changed" />
-			<FeedbackText feedback={forms.messages.areas} />
-		</div>
 	</form>
 </section>

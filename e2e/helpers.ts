@@ -26,6 +26,15 @@ export async function addTitle(page: Page, area: string, title: string, status: 
 	await expect(sheet(page)).toHaveCount(0);
 }
 
+// Settings without a "Save" button: do something and wait until the server has stored it.
+export async function saved(page: Page, action: string, change: () => Promise<unknown>) {
+	const answer = page.waitForResponse(
+		(res) => res.request().method() === 'POST' && res.url().includes(`?/${action}`)
+	);
+	await change();
+	expect((await answer).ok()).toBe(true);
+}
+
 // A season of the episode list; opens it if it is closed.
 export async function openSeason(page: Page, name: string): Promise<Locator> {
 	const season = page.locator('details').filter({ has: page.getByRole('heading', { name }) });

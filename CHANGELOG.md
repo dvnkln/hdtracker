@@ -15,6 +15,7 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 
 ### 🔧 Improved
 
+- Settings are saved the moment you choose: General, Notifications and the anime switch under Server no longer need a “Save” button (content language and region keep theirs, because changing them loads the whole library again)
 - Settings → About names the icon set (Lucide) and the font of the wordmark (Outfit)
 
 ## 0.6.1 – 2026-10-04

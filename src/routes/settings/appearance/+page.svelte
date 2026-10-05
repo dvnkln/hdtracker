@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { autosave } from '$lib/autosave';
 	import { m } from '$lib/i18n/index.svelte';
 	import { FormFeedback } from '$lib/forms.svelte';
 	import { ui } from '$lib/ui';
@@ -14,16 +15,15 @@
 	const forms = new FormFeedback();
 	const { card, heading, hint, actions, pageTitle } = ui;
 
-	// A tap switches the whole app at once (no reload) and saves the choice.
+	// A tap switches the whole app at once (no reload); saving is done by `use:autosave`.
 	// svelte-ignore state_referenced_locally
 	let theme = $state<Theme>(data.theme);
-	function applyTheme(next: Theme, form: HTMLFormElement | null) {
+	function applyTheme(next: Theme) {
 		theme = next;
 		document.documentElement.dataset.theme = next;
 		document
 			.querySelectorAll('meta[name="theme-color"]')
 			.forEach((meta, i) => meta.setAttribute('content', barColors(next)[i]));
-		form?.requestSubmit();
 	}
 </script>
 
@@ -32,10 +32,19 @@
 <h2 class={pageTitle}>{m.settings.appearance}</h2>
 
 <section class={card}>
-	<h3 class={heading}><Palette size={20} class="text-zinc-400" />{m.settings.theme}</h3>
+	<div class="flex min-h-7 items-center justify-between gap-3">
+		<h3 class={heading}><Palette size={20} class="text-zinc-400" />{m.settings.theme}</h3>
+		<FeedbackText feedback={forms.error('theme')} />
+	</div>
 	<p class="mt-1 {hint}">{m.settings.themeHint}</p>
 
-	<form method="POST" action="?/theme" use:enhance={forms.submit('theme')} class="mt-4">
+	<form
+		method="POST"
+		action="?/theme"
+		use:enhance={forms.submit('theme')}
+		use:autosave
+		class="mt-4"
+	>
 		<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
 			{#each THEME_KEYS as key (key)}
 				<label
@@ -51,7 +60,7 @@
 							name="theme"
 							value={key}
 							checked={theme === key}
-							onchange={(e) => applyTheme(key, e.currentTarget.form)}
+							onchange={() => applyTheme(key)}
 							class="accent-zinc-100"
 						/>
 						{m.settings.themes[key]}
@@ -59,10 +68,7 @@
 				</label>
 			{/each}
 		</div>
-		<div class="mt-4 {actions}">
-			<!-- Only needed without JavaScript: a tap on a theme saves by itself -->
-			<noscript><SubmitButton text={m.settings.save} /></noscript>
-			<FeedbackText feedback={forms.messages.theme} />
-		</div>
+		<!-- Only needed without JavaScript: a tap on a theme saves by itself -->
+		<noscript><div class="mt-4 {actions}"><SubmitButton text={m.settings.save} /></div></noscript>
 	</form>
 </section>

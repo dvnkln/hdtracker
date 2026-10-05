@@ -10,6 +10,13 @@ export class FormFeedback {
 	// formaction of the pressed button, when one form has several buttons (e.g. "?/run")
 	busyAction = $state<string | null>(null);
 
+	// Only what went wrong – for forms that save by themselves (autosave.ts): the choice the
+	// user just made is confirmation enough, a "saved" after every tap is noise.
+	error(id: string) {
+		const message = this.messages[id];
+		return message && !message.ok ? message : undefined;
+	}
+
 	// For use:enhance: submit in the background, then show the server's answer under `id`.
 	// The server answers with { message } or fail(..., { error }).
 	submit(id: string, reset = false): SubmitFunction {
@@ -23,6 +30,8 @@ export class FormFeedback {
 				this.busyAction = null;
 				// Tells the form's buttons that what it shows is now the saved state (SubmitButton `when`)
 				if (result.type === 'success') formElement.dispatchEvent(new Event('saved'));
+				// ... and forms that save by themselves that the server has answered (see autosave.ts)
+				formElement.dispatchEvent(new Event('settled'));
 				if (result.type !== 'success' && result.type !== 'failure') return;
 				const answer = result.data as { message?: string; error?: string } | undefined;
 				if (!answer?.error && !answer?.message) return;

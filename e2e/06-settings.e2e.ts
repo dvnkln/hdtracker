@@ -1,17 +1,14 @@
 import { expect, test } from '@playwright/test';
-import { loginOk } from './helpers';
+import { loginOk, saved } from './helpers';
 
 test('settings: language, theme and hidden areas are kept', async ({ page }) => {
 	await loginOk(page);
 
-	// "Save" waits until something was changed
+	// Choices are saved the moment they are made – there is no "Save" button
 	await page.goto('/settings/general');
 	const display = page.locator('form[action="?/display"]');
-	const save = display.getByRole('button', { name: 'Save' });
-	await expect(save).toBeDisabled();
+	await expect(display.getByRole('button')).toHaveCount(0);
 	await display.locator('select[name=uiLanguage]').selectOption('de');
-	await expect(save).toBeEnabled();
-	await save.click();
 	await expect(page.getByRole('heading', { name: 'Allgemein' })).toBeVisible();
 	await page.reload();
 	await expect(page.locator('html')).toHaveAttribute('lang', 'de');
@@ -19,8 +16,17 @@ test('settings: language, theme and hidden areas are kept', async ({ page }) => 
 	// ... and back to English for the following tests
 	const anzeige = page.locator('form[action="?/display"]');
 	await anzeige.locator('select[name=uiLanguage]').selectOption('en');
-	await anzeige.getByRole('button', { name: 'Speichern' }).click();
 	await expect(page.getByRole('heading', { name: 'General' })).toBeVisible();
+
+	// Two quick choices in a row: both arrive, the last one counts
+	await anzeige.getByText('Romaji on top').click();
+	await saved(page, 'display', () => anzeige.locator('label[for=hideSpoilers]').click());
+	await page.reload();
+	await expect(anzeige.locator('input[name=animeTitle][value=romaji]')).toBeChecked();
+	await expect(anzeige.locator('input[name=hideSpoilers]')).not.toBeChecked();
+	await saved(page, 'display', () => anzeige.getByText('English title on top').click());
+	await saved(page, 'display', () => anzeige.locator('label[for=hideSpoilers]').click());
+	await expect(anzeige.locator('input[name=hideSpoilers]')).toBeChecked();
 
 	// Theme: applied at once and still there after a reload
 	await page.goto('/settings/appearance');
@@ -38,7 +44,6 @@ test('settings: language, theme and hidden areas are kept', async ({ page }) => 
 	const games = areas.locator('input[name=categories][value=games]');
 	await areas.locator('label[for=area-games]').click();
 	await expect(games).not.toBeChecked();
-	await areas.getByRole('button', { name: 'Save' }).click();
 	const nav = page.locator('nav');
 	await expect(nav.getByRole('link', { name: 'Games' })).toHaveCount(0);
 	await page.goto('/games');
@@ -46,6 +51,5 @@ test('settings: language, theme and hidden areas are kept', async ({ page }) => 
 
 	await page.goto('/settings/general');
 	await page.locator('form[action="?/areas"] label[for=area-games]').click();
-	await page.locator('form[action="?/areas"]').getByRole('button', { name: 'Save' }).click();
 	await expect(page.locator('nav').getByRole('link', { name: 'Games' })).toBeVisible();
 });

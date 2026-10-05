@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { loginOk } from './helpers';
+import { loginOk, saved } from './helpers';
 
 // The anime added in 05-dashboard comes from AniList, which has no episode titles. They are
 // taken from the show a community list maps it to at TMDB (see fixtures.mjs).
@@ -8,13 +8,12 @@ const ANIME = '/anime/301';
 // Switch "Episode titles for anime" under Settings → Server
 async function setEpisodeTitles(page: Page, on: boolean) {
 	await page.goto('/settings/server');
-	const content = page.locator('form[action="?/content"]');
-	const box = content.locator('input[name=animeEpisodeTitles]');
+	const form = page.locator('form[action="?/animeTitles"]');
+	const box = form.locator('input[name=animeEpisodeTitles]');
 	await expect(box).toBeChecked({ checked: !on });
-	// (the switch is a hidden checkbox: it is operated through its label)
-	await content.locator('label[for=animeEpisodeTitles]').click();
-	await content.getByRole('button', { name: 'Save' }).click();
-	await expect(content.getByText('Saved')).toBeVisible();
+	// (the switch is a hidden checkbox: it is operated through its label; it saves at once)
+	await saved(page, 'animeTitles', () => form.locator('label[for=animeEpisodeTitles]').click());
+	await expect(box).toBeChecked({ checked: on });
 }
 
 test('anime: episode titles and streaming offers from TMDB, can be switched off', async ({
