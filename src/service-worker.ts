@@ -75,6 +75,8 @@ sw.addEventListener('pushsubscriptionchange', (event) => {
 			.then((subscription) => {
 				const body = new FormData();
 				body.set('subscription', JSON.stringify(subscription));
+				// The old address is dead now: its entry in the list becomes this one
+				body.set('replaces', change.oldSubscription?.endpoint ?? '');
 				return fetch('/settings/notifications?/subscribe', {
 					method: 'POST',
 					body,

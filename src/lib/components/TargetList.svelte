@@ -19,6 +19,7 @@
 		BellOff,
 		BellRing,
 		ChevronDown,
+		LoaderCircle,
 		Megaphone,
 		MonitorSmartphone,
 		Plus,
@@ -145,12 +146,17 @@
 			}
 			// A subscription left over from before (e.g. made for another installation's key) would
 			// make subscribing fail: start clean.
-			await (await registration.pushManager.getSubscription())?.unsubscribe();
+			const old = await registration.pushManager.getSubscription();
+			await old?.unsubscribe();
 			const subscription = await registration.pushManager.subscribe({
 				userVisibleOnly: true,
 				applicationServerKey: publicKey
 			});
-			const answer = await post('subscribe', { subscription: JSON.stringify(subscription) });
+			// The old address is dead now: the server replaces its entry instead of keeping both
+			const answer = await post('subscribe', {
+				subscription: JSON.stringify(subscription),
+				replaces: old?.endpoint ?? ''
+			});
 			// The server did not take it: do not stay subscribed for nothing
 			if (!answer.ok) {
 				await subscription.unsubscribe();
@@ -541,7 +547,12 @@
 					disabled={busy || support !== 'ready'}
 					onclick={addThisDevice}
 				>
-					<MonitorSmartphone size={20} class="mt-0.5 shrink-0 text-zinc-400" />
+					<!-- Signing on at the push service takes a few seconds the first time -->
+					{#if busy}
+						<LoaderCircle size={20} class="mt-0.5 shrink-0 animate-spin text-zinc-400" />
+					{:else}
+						<MonitorSmartphone size={20} class="mt-0.5 shrink-0 text-zinc-400" />
+					{/if}
 					<span>
 						<span class="block text-sm font-medium">{m.notifications.kinds.device}</span>
 						<span class={hint}>{deviceNote || m.notifications.kindHints.device}</span>

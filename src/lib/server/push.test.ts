@@ -11,6 +11,7 @@ import {
 	pushPublicKey,
 	removeDevice,
 	renameDevice,
+	setDeviceEnabled,
 	sendPush
 } from './push';
 
@@ -117,6 +118,32 @@ describe('devices', () => {
 		expect(listDevices(anna)).toHaveLength(1);
 		expect(removeDevice(anna, device.id)).toBe(true);
 		expect(listDevices(anna)).toEqual([]);
+	});
+
+	it('a browser that replaced its subscription keeps its entry, name and switch', () => {
+		const [anna, ben] = [user(), user()];
+		const address = (name: string) => `https://fcm.googleapis.com/fcm/send/${name}`;
+		addDevice(anna, subscription(address('old')), CHROME_ANDROID);
+		const [before] = listDevices(anna);
+		renameDevice(anna, before.id, 'Phone');
+		setDeviceEnabled(anna, before.id, false);
+
+		expect(addDevice(anna, subscription(address('new')), CHROME_ANDROID, address('old'))).toBe(
+			true
+		);
+		expect(listDevices(anna)).toMatchObject([
+			{ id: before.id, endpoint: address('new'), label: 'Phone', enabled: false }
+		]);
+
+		// Somebody else naming that address removes nothing: they simply get a device of their own
+		addDevice(ben, subscription(address('ben')), CHROME_ANDROID, address('new'));
+		expect(listDevices(anna)).toHaveLength(1);
+		expect(listDevices(ben)).toMatchObject([{ endpoint: address('ben') }]);
+
+		// Both addresses listed already (the page was not told at the time): the dead one goes
+		addDevice(anna, subscription(address('newer')), CHROME_ANDROID);
+		addDevice(anna, subscription(address('newer')), CHROME_ANDROID, address('new'));
+		expect(listDevices(anna).map((d) => d.endpoint)).toEqual([address('newer')]);
 	});
 
 	it('a device that subscribes again is stored once, with its new keys', () => {

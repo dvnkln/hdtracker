@@ -43,9 +43,12 @@ export const actions: Actions = {
 	// "This device": called by the page after the browser has subscribed at its push service.
 	subscribe: async ({ request, locals }) => {
 		const t = serverMessages();
-		const sub = parseSubscription(String((await request.formData()).get('subscription') ?? ''));
+		const data = await request.formData();
+		const sub = parseSubscription(String(data.get('subscription') ?? ''));
 		const agent = request.headers.get('user-agent') ?? '';
-		if (!sub || !addDevice(locals.user!.id, sub, agent)) {
+		// The address this browser had before, if the new subscription takes its place
+		const replaces = String(data.get('replaces') ?? '');
+		if (!sub || !addDevice(locals.user!.id, sub, agent, replaces)) {
 			return fail(400, { error: t.notifications.refused });
 		}
 		return { message: t.settings.saved };

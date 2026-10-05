@@ -124,13 +124,36 @@ export function listDevices(userId: number) {
 
 // Stores a device for the user. A device that is already known (same address) simply moves
 // to this user with its fresh keys. Returns false if the user has too many devices.
-export function addDevice(userId: number, sub: NewSubscription, userAgent: string) {
+//
+// `replaces`: the address the browser had before, if it made a new subscription in place of
+// an older one. That address is dead from then on – its entry (only if it is the user's own:
+// the address comes from the browser) becomes the new one and keeps its name and its switch,
+// instead of staying in the list as a device that no longer exists.
+export function addDevice(
+	userId: number,
+	sub: NewSubscription,
+	userAgent: string,
+	replaces?: string
+) {
 	const db = getDb();
 	const known = db
 		.select({ id: pushSubscriptions.id })
 		.from(pushSubscriptions)
 		.where(eq(pushSubscriptions.endpoint, sub.endpoint))
 		.get();
+	if (replaces && replaces !== sub.endpoint) {
+		const old = and(eq(pushSubscriptions.endpoint, replaces), eq(pushSubscriptions.userId, userId));
+		// The new address is listed already: only the dead entry has to go
+		if (known) db.delete(pushSubscriptions).where(old).run();
+		else {
+			const moved = db
+				.update(pushSubscriptions)
+				.set({ endpoint: sub.endpoint, p256dh: sub.keys.p256dh, auth: sub.keys.auth })
+				.where(old)
+				.run();
+			if (moved.changes > 0) return true;
+		}
+	}
 	if (!known && listDevices(userId).length >= MAX_DEVICES) return false;
 	// (A known device keeps its name – the user may have changed it.)
 	const values = { userId, p256dh: sub.keys.p256dh, auth: sub.keys.auth };
