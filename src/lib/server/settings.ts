@@ -18,6 +18,16 @@ const DEFAULTS = {
 	animeEpisodeTitles: 'on',
 	animeMappingAt: '',
 	animeMappingVersion: '', // MAPPING_VERSION of the code that read the stored list
+	// Notifications about new releases. Personal, like uiLanguage: with several users they move
+	// to the user (read in one place, prefsFor() in notifications.ts).
+	// 'off' | 'single' (one message per title) | 'digest' (one message a day)
+	notifyMode: 'off',
+	notifyHour: '9', // from this hour of the day on (0–23) the day's messages are sent
+	notifyFrom: '', // day the messages were switched on: nothing older is announced
+	// Key pair of this installation for push notifications (VAPID), created on first use. The
+	// public part goes to the browsers, the private part signs every message (see push.ts).
+	vapidPublicKey: '',
+	vapidPrivateKey: '',
 	// Reverse proxies whose X-Forwarded-For header is believed (see proxy.ts): addresses or
 	// ranges, comma-separated. Empty = none.
 	trustedProxies: '',

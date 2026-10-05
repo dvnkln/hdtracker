@@ -71,6 +71,27 @@
       "when": 1791031273943,
       "tag": "0009_anime_tmdb_map",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1791183231499,
+      "tag": "0010_push_subscriptions",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1791184769733,
+      "tag": "0011_notifications_sent",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1791186404357,
+      "tag": "0012_library_item_notify",
+      "breakpoints": true
     }
   ]
 }

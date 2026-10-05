@@ -38,15 +38,14 @@ function dashboardOrder(): { recent: Order; upcoming: Order } {
 	};
 }
 
-export function getDashboard(): {
-	recent: DashboardEntry[];
-	upcoming: DashboardEntry[];
-	order: { recent: Order; upcoming: Order };
-	libraryEmpty: boolean;
-} {
-	const order = dashboardOrder();
+type Item = typeof libraryItems.$inferSelect;
+
+// The dates that count for the user, per title – the one rule behind the dashboard and the
+// notifications: nothing of dropped titles and hidden areas; of watched or paused shows only
+// seasons after the last one watched (nothing for watched movies and finished games); no
+// episodes that are ticked off already.
+export function trackedEvents(): { item: Item; events: Row[] }[] {
 	const db = getDb();
-	// Not dropped, and only areas that are switched on in the settings.
 	const items = db
 		.select()
 		.from(libraryItems)
@@ -55,8 +54,7 @@ export function getDashboard(): {
 		)
 		.all();
 	const ids = items.map((i) => i.id);
-	if (ids.length === 0) return { recent: [], upcoming: [], order, libraryEmpty: true };
-
+	if (ids.length === 0) return [];
 	const rows = db.select().from(releases).where(inArray(releases.itemId, ids)).all();
 	const watched = db
 		.select()
@@ -78,15 +76,7 @@ export function getDashboard(): {
 	const rowsOf = group(rows);
 	const watchedOf = group(watched);
 
-	const now = today();
-	const recentStart = new Date();
-	recentStart.setDate(recentStart.getDate() - RECENT_DAYS);
-	const from = recentStart.toLocaleDateString('sv-SE');
-
-	const recent: DashboardEntry[] = [];
-	const upcoming: DashboardEntry[] = [];
-
-	for (const item of items) {
+	return items.map((item) => {
 		const itemWatched = watchedOf.get(item.id) ?? [];
 		const watchedKeys = new Set(itemWatched.map((w) => `${w.season}:${w.episode}`));
 		const isWatched = (r: Row) => watchedKeys.has(`${r.season}:${r.episode}`);
@@ -96,30 +86,55 @@ export function getDashboard(): {
 		let events = rowsOf.get(item.id) ?? [];
 		if (item.status === 'completed' || item.status === 'paused') {
 			// Only new seasons of shows (e.g. S2 watched, S3 announced); nothing for movies/games.
-			if (item.category !== 'series' && item.category !== 'anime') continue;
+			if (item.category !== 'series' && item.category !== 'anime') return { item, events: [] };
 			events = events.filter((r) => (r.season ?? 0) > lastWatchedSeason);
 		}
-		events = events.filter((r) => r.kind !== 'episode' || !isWatched(r));
+		return { item, events: events.filter((r) => r.kind !== 'episode' || !isWatched(r)) };
+	});
+}
 
-		const base = {
-			category: item.category,
-			externalId: item.externalId,
-			title: item.title,
-			originalTitle: item.originalTitle,
-			posterUrl: item.posterUrl,
-			status: item.status
-		};
-		const entry = (r: Row, last: Row = r): DashboardEntry => ({
-			...base,
-			kind: r.kind,
-			date: r.date,
-			season: r.season,
-			episode: r.episode,
-			lastSeason: last.season,
-			lastEpisode: last.episode
-		});
-		const byEpisode = (a: Row, b: Row) =>
-			(a.season ?? 0) - (b.season ?? 0) || (a.episode ?? 0) - (b.episode ?? 0);
+// Episodes in the order they air.
+export const byEpisode = (a: Row, b: Row) =>
+	(a.season ?? 0) - (b.season ?? 0) || (a.episode ?? 0) - (b.episode ?? 0);
+
+// One line for a date of a title; for several episodes, the first and the last one.
+export function toEntry(item: Item, r: Row, last: Row = r): DashboardEntry {
+	return {
+		category: item.category,
+		externalId: item.externalId,
+		title: item.title,
+		originalTitle: item.originalTitle,
+		posterUrl: item.posterUrl,
+		status: item.status,
+		kind: r.kind,
+		date: r.date,
+		season: r.season,
+		episode: r.episode,
+		lastSeason: last.season,
+		lastEpisode: last.episode
+	};
+}
+
+export function getDashboard(): {
+	recent: DashboardEntry[];
+	upcoming: DashboardEntry[];
+	order: { recent: Order; upcoming: Order };
+	libraryEmpty: boolean;
+} {
+	const order = dashboardOrder();
+	const tracked = trackedEvents();
+	if (tracked.length === 0) return { recent: [], upcoming: [], order, libraryEmpty: true };
+
+	const now = today();
+	const recentStart = new Date();
+	recentStart.setDate(recentStart.getDate() - RECENT_DAYS);
+	const from = recentStart.toLocaleDateString('sv-SE');
+
+	const recent: DashboardEntry[] = [];
+	const upcoming: DashboardEntry[] = [];
+
+	for (const { item, events } of tracked) {
+		const entry = (r: Row, last: Row = r) => toEntry(item, r, last);
 
 		// Movies and games: each date is its own entry.
 		for (const r of events.filter((e) => e.kind !== 'episode')) {

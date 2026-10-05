@@ -9,6 +9,10 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 
 ## Upcoming release
 
+### ✨ New
+
+- **Push notifications:** hdtracker tells you on your phone or computer when something from your library comes out – new episodes and seasons, cinema and home releases, game releases (what shows up under “Recently released” on the dashboard). No extra app or account: switch it on per device under Settings → Notifications (needs HTTPS; on iPhone and iPad hdtracker must be installed to the home screen). Choose one message per title or one summary a day and the hour they are sent from; opened up, a message shows the poster of the title in front of its backdrop, a summary the posters of the day side by side. A test button shows what a message looks like, and the bell on a title's page mutes that title
+
 ### 🔧 Improved
 
 - Settings → About names the icon set (Lucide) and the font of the wordmark (Outfit)

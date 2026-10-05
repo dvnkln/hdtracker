@@ -1,4 +1,5 @@
 import { error, fail } from '@sveltejs/kit';
+import { eq } from 'drizzle-orm';
 import type { Category } from '$lib/categories';
 import type { Status } from '$lib/status';
 import {
@@ -8,8 +9,11 @@ import {
 	setEpisodes,
 	watchedKeys
 } from '$lib/server/episodes';
+import { getDb } from '$lib/server/db';
+import { libraryItems } from '$lib/server/db/schema';
 import { detailsFor } from '$lib/server/itemDetails';
 import { libraryStatusFor } from '$lib/server/library';
+import { prefsFor } from '$lib/server/notifications';
 import { ProviderError, type Details, type ShowDetails } from '$lib/server/providers/types';
 import { serverMessages } from '$lib/server/i18n';
 import { getSetting } from '$lib/server/settings';
@@ -40,7 +44,7 @@ async function loadDetails(params: { category: string; id: string }) {
 	return { category, details: show };
 }
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
 	const category = params.category as Category;
 	if (!ID_PATTERN.test(params.id)) error(404, serverMessages().common.notFound);
 
@@ -60,6 +64,8 @@ export const load: PageServerLoad = async ({ params }) => {
 			// The data source no longer knows this title: what is shown is the stored copy
 			sourceMissing: !!item?.sourceMissingSince,
 			placeholder: false,
+			// The bell: only for titles of the library, and only while notifications are on
+			notify: item && prefsFor(locals.user!.id).mode !== 'off' ? item.notify : null,
 			watched: [...watchedKeys(item?.id)],
 			similarStatus: Object.fromEntries(similarStatus),
 			hideSpoilers: getSetting('hideSpoilers') === 'on'
@@ -115,7 +121,8 @@ function placeholderFor(item: NonNullable<ReturnType<typeof findItem>>) {
 		similarStatus: {} as Record<string, Status>,
 		hideSpoilers: getSetting('hideSpoilers') === 'on',
 		sourceMissing: true,
-		placeholder: true
+		placeholder: true,
+		notify: null as boolean | null
 	};
 }
 
@@ -125,6 +132,15 @@ function readInt(data: FormData, name: string) {
 }
 
 export const actions: Actions = {
+	// The bell: notifications about this title on or off.
+	notify: async ({ params, request }) => {
+		const item = findItem(params.category as Category, params.id);
+		if (!item) return fail(400, { error: serverMessages().common.invalidData });
+		const on = (await request.formData()).get('notify') === '1';
+		getDb().update(libraryItems).set({ notify: on }).where(eq(libraryItems.id, item.id)).run();
+		return { notify: on };
+	},
+
 	// Tap on a single episode: watched <-> not watched.
 	toggle: async ({ params, request }) => {
 		const { category, details } = await loadDetails(params);

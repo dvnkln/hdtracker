@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import {
 	mkdir,
 	readdir,
@@ -11,6 +11,7 @@ import {
 } from 'node:fs/promises';
 import { join } from 'node:path';
 import { imageSource, type ImageSource } from '$lib/images';
+import { env } from '$env/dynamic/private';
 import { IMAGES_DIR } from './config';
 
 // Images from TMDB, IGDB and AniList are fetched by the server and kept on disk, so browsers
@@ -51,6 +52,64 @@ const PARALLEL = 8;
 const RETRY_MS = 10 * 60 * 1000;
 
 export type Image = { body: Buffer; type: string };
+
+// ---- Images for notifications ----
+
+// A notification shows its picture without the app being open, so the device fetches it
+// without the login cookie. Such an address carries a signature made with SECRET: it opens
+// exactly this one image and nothing else (see hooks.server.ts).
+function signatureOf(address: string) {
+	return createHmac('sha256', env.SECRET ?? '')
+		.update(`image:${address}`)
+		.digest('base64url');
+}
+
+export function signedImagePath(address: string | null) {
+	if (!address || !imageSource(address)) return null;
+	return `/img?u=${encodeURIComponent(address)}&s=${signatureOf(address)}`;
+}
+
+// ---- Several posters in one picture (see collage.ts) ----
+
+// Such an address names the posters and the layout; the picture is only put together when a
+// device asks for it. It stops working after a week, so old notifications cannot keep the
+// server busy forever.
+const COLLAGE_DAYS = 7;
+const collageSignature = (layout: string, expires: string, addresses: string[]) =>
+	createHmac('sha256', env.SECRET ?? '')
+		.update(`collage:${layout}:${expires}:${addresses.join('\n')}`)
+		.digest('base64url');
+
+export function signedCollagePath(addresses: string[], layout: string, now = Date.now()) {
+	const expires = String(Math.floor(now / 1000) + COLLAGE_DAYS * 24 * 60 * 60);
+	const query = new URLSearchParams({ l: layout, e: expires });
+	for (const address of addresses) query.append('u', address);
+	query.set('s', collageSignature(layout, expires, addresses));
+	return `/img/collage?${query}`;
+}
+
+// The posters and the layout of a collage address – null if the signature is wrong, the
+// address has expired or names an image from somewhere else.
+export function readCollageAddress(url: URL, now = Date.now()) {
+	const layout = url.searchParams.get('l') ?? '';
+	const expires = url.searchParams.get('e') ?? '';
+	const addresses = url.searchParams.getAll('u');
+	if (!env.SECRET || addresses.length === 0 || addresses.length > 8) return null;
+	const given = Buffer.from(url.searchParams.get('s') ?? '');
+	const expected = Buffer.from(collageSignature(layout, expires, addresses));
+	if (given.length !== expected.length || !timingSafeEqual(given, expected)) return null;
+	if (!(Number(expires) * 1000 > now)) return null;
+	if (!addresses.every((address) => imageSource(address))) return null;
+	return { layout, addresses };
+}
+
+export function isSignedImage(url: URL) {
+	const address = url.searchParams.get('u');
+	const given = Buffer.from(url.searchParams.get('s') ?? '');
+	if (!address || !env.SECRET) return false;
+	const expected = Buffer.from(signatureOf(address));
+	return given.length === expected.length && timingSafeEqual(given, expected);
+}
 
 // Tells the image type from the first bytes, so only real images are stored and served.
 function typeOf(body: Buffer) {

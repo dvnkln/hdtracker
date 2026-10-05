@@ -26,6 +26,60 @@ export const sessions = sqliteTable('sessions', {
 	expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull()
 });
 
+// A browser or installed app that receives push notifications (Web Push). `endpoint` is the
+// address at the browser maker's push service, the two keys encrypt the message for this
+// device only. Belongs to the user who switched it on.
+export const pushSubscriptions = sqliteTable(
+	'push_subscriptions',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		userId: integer('user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		endpoint: text('endpoint').notNull().unique(),
+		p256dh: text('p256dh').notNull(),
+		auth: text('auth').notNull(),
+		// Shown in the list of devices, e.g. "Chrome · Android"
+		label: text('label').notNull(),
+		createdAt: integer('created_at', { mode: 'timestamp' })
+			.notNull()
+			.$defaultFn(() => new Date()),
+		// Last time the push service accepted a message for this device
+		lastOkAt: integer('last_ok_at', { mode: 'timestamp' })
+	},
+	(t) => [index('push_subscriptions_user').on(t.userId)]
+);
+
+// What a user was already notified about (a date of a title), so nothing is announced twice.
+// Kept apart from `releases`, whose rows are rewritten with every refresh of a title.
+export const notificationsSent = sqliteTable(
+	'notifications_sent',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		userId: integer('user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		itemId: integer('item_id')
+			.notNull()
+			.references(() => libraryItems.id, { onDelete: 'cascade' }),
+		kind: text('kind').$type<ReleaseKind>().notNull(),
+		// 0 where a date has no season or episode (movies, games)
+		season: integer('season').notNull(),
+		episode: integer('episode').notNull(),
+		date: text('date').notNull()
+	},
+	(t) => [
+		uniqueIndex('notifications_sent_once').on(
+			t.userId,
+			t.itemId,
+			t.kind,
+			t.season,
+			t.episode,
+			t.date
+		)
+	]
+);
+
 // A title the user tracks. Metadata is copied from the API when added.
 export const libraryItems = sqliteTable(
 	'library_items',
@@ -57,7 +111,9 @@ export const libraryItems = sqliteTable(
 		metadataUpdatedAt: integer('metadata_updated_at', { mode: 'timestamp' }),
 		// Set when the data source no longer knows the title (deleted or merged there). What is
 		// stored stays; the source is only asked again once a month. Empty = all fine.
-		sourceMissingSince: integer('source_missing_since', { mode: 'timestamp' })
+		sourceMissingSince: integer('source_missing_since', { mode: 'timestamp' }),
+		// Off: no notifications about this title (the bell on its page)
+		notify: integer('notify', { mode: 'boolean' }).notNull().default(true)
 	},
 	(t) => [uniqueIndex('library_items_unique').on(t.category, t.source, t.externalId)]
 );

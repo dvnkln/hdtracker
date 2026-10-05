@@ -1,0 +1,1 @@
+ALTER TABLE `library_items` ADD `notify` integer DEFAULT true NOT NULL;

@@ -1,4 +1,13 @@
-import { Database, Info, Palette, Server, Settings2, UserRound, Wrench } from '@lucide/svelte';
+import {
+	Bell,
+	Database,
+	Info,
+	Palette,
+	Server,
+	Settings2,
+	UserRound,
+	Wrench
+} from '@lucide/svelte';
 import { m } from '$lib/i18n/index.svelte';
 
 // Areas of the settings, in display order. "personal": for each user; "admin": for the whole
@@ -26,6 +35,13 @@ export function settingsSections() {
 			icon: UserRound,
 			label: m.settings.account,
 			hint: m.settings.accountHint
+		},
+		{
+			href: '/settings/notifications',
+			group: 'personal',
+			icon: Bell,
+			label: m.notifications.title,
+			hint: m.notifications.navHint
 		},
 		{
 			href: '/settings/data',

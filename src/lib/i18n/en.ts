@@ -362,6 +362,62 @@ export const en: Messages = {
 		cleared: (n) => `${n} ${n === 1 ? 'entry' : 'entries'} deleted ✓`
 	},
 
+	notifications: {
+		title: 'Notifications',
+		navHint: 'Push messages to your devices',
+		thisDevice: 'This device',
+		on: 'Switched on',
+		off: 'Switched off',
+		blocked: 'Blocked in the browser',
+		blockedHint:
+			'You declined notifications for this site. Allow them in your browser settings and reload the page.',
+		needsHttps: 'Needs HTTPS',
+		needsHttpsHint:
+			'Push messages only work over an https:// address. Open hdtracker through your reverse proxy.',
+		unsupported: 'Not possible here',
+		unsupportedHint:
+			'This browser cannot receive push messages. On iPhone and iPad it only works in the installed app (Share → Add to Home Screen).',
+		notReady: 'App files are not ready yet – reload the page.',
+		enable: 'Switch on for this device',
+		disable: 'Switch off for this device',
+		enabled: 'Switched on ✓',
+		failed: 'Switching on failed. Please try again.',
+		refused: 'This device was not accepted (unknown push service or too many devices).',
+		devices: 'Your devices',
+		noDevices: 'No device switched on yet.',
+		here: 'this device',
+		added: (date: string) => `since ${date}`,
+		lastReached: (date: string) => `last reached ${date}`,
+		neverReached: 'no message yet',
+		remove: 'Remove',
+		removed: 'Removed ✓',
+		rename: 'Rename',
+		name: 'Name of the device',
+		bell: 'Notifications about this title',
+		mute: 'Switch off notifications about this title',
+		unmute: 'Switch on notifications about this title',
+		test: 'Send test',
+		testMark: 'Test',
+		testTitle: 'hdtracker',
+		testBody: 'This is a test message. It works ✓',
+		testSent: (count: number) =>
+			count === 1 ? 'Sent to 1 device ✓' : `Sent to ${count} devices ✓`,
+		testFailed: (labels: string) => `Not delivered: ${labels}`,
+		learnMore: 'How push messages work',
+		releases: 'New releases',
+		mode: 'Notify me',
+		modes: {
+			off: 'Off',
+			single: 'One by one – a message per title',
+			digest: 'Together – one message a day'
+		},
+		hour: 'From',
+		oclock: (hour: number) => `${String(hour).padStart(2, '0')}:00`,
+		what: 'On the day of release you are told what shows up under “Recently released” on the dashboard.',
+		digestTitle: (titles: number) =>
+			titles === 1 ? 'New today: 1 title' : `New today: ${titles} titles`,
+		more: (count: number) => `… and ${count} more`
+	},
 	maintenance: {
 		title: 'Maintenance',
 		intro: (timeZone) =>
@@ -383,6 +439,11 @@ export const en: Messages = {
 			sessions: {
 				name: 'Delete expired logins',
 				description: 'Removes logins that are no longer valid anyway.'
+			},
+			notifications: {
+				name: 'Send notifications',
+				description:
+					'Sends push messages about new releases to everyone who switched them on – from the hour chosen there. Always runs; with nobody having them on, nothing happens.'
 			},
 			cache: {
 				name: 'Clean up cache',

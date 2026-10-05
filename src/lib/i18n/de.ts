@@ -382,6 +382,62 @@ export const de = {
 		cleared: (n: number) => `${n} ${n === 1 ? 'Eintrag' : 'Einträge'} gelöscht ✓`
 	},
 
+	notifications: {
+		title: 'Benachrichtigungen',
+		navHint: 'Push-Nachrichten auf deine Geräte',
+		thisDevice: 'Dieses Gerät',
+		on: 'Eingeschaltet',
+		off: 'Ausgeschaltet',
+		blocked: 'Im Browser blockiert',
+		blockedHint:
+			'Du hast Benachrichtigungen für diese Seite abgelehnt. Erlaube sie in den Einstellungen des Browsers und lade die Seite neu.',
+		needsHttps: 'Braucht HTTPS',
+		needsHttpsHint:
+			'Push-Nachrichten gibt es nur über eine https://-Adresse. Öffne hdtracker über deinen Reverse Proxy.',
+		unsupported: 'Hier nicht möglich',
+		unsupportedHint:
+			'Dieser Browser kann keine Push-Nachrichten. Auf iPhone und iPad geht es nur in der installierten App (Teilen → Zum Home-Bildschirm).',
+		notReady: 'App-Dateien noch nicht bereit – lade die Seite neu.',
+		enable: 'Auf diesem Gerät einschalten',
+		disable: 'Auf diesem Gerät ausschalten',
+		enabled: 'Eingeschaltet ✓',
+		failed: 'Einschalten fehlgeschlagen. Versuche es erneut.',
+		refused: 'Dieses Gerät wurde nicht angenommen (unbekannter Push-Dienst oder zu viele Geräte).',
+		devices: 'Deine Geräte',
+		noDevices: 'Noch kein Gerät eingeschaltet.',
+		here: 'dieses Gerät',
+		added: (date: string) => `seit ${date}`,
+		lastReached: (date: string) => `zuletzt erreicht ${date}`,
+		neverReached: 'noch keine Nachricht',
+		remove: 'Entfernen',
+		removed: 'Entfernt ✓',
+		rename: 'Umbenennen',
+		name: 'Name des Geräts',
+		bell: 'Benachrichtigungen zu diesem Titel',
+		mute: 'Benachrichtigungen zu diesem Titel ausschalten',
+		unmute: 'Benachrichtigungen zu diesem Titel einschalten',
+		test: 'Test senden',
+		testMark: 'Test',
+		testTitle: 'hdtracker',
+		testBody: 'Das ist eine Testnachricht. Es funktioniert ✓',
+		testSent: (count: number) =>
+			count === 1 ? 'An 1 Gerät gesendet ✓' : `An ${count} Geräte gesendet ✓`,
+		testFailed: (labels: string) => `Nicht zugestellt: ${labels}`,
+		learnMore: 'Wie Push-Nachrichten funktionieren',
+		releases: 'Neuerscheinungen',
+		mode: 'Melden',
+		modes: {
+			off: 'Aus',
+			single: 'Einzeln – eine Nachricht je Titel',
+			digest: 'Gesammelt – eine Nachricht am Tag'
+		},
+		hour: 'Ab wann',
+		oclock: (hour: number) => `${hour} Uhr`,
+		what: 'Gemeldet wird am Erscheinungstag, was im Dashboard unter „Kürzlich erschienen“ auftaucht.',
+		digestTitle: (titles: number) =>
+			titles === 1 ? 'Heute neu: 1 Titel' : `Heute neu: ${titles} Titel`,
+		more: (count: number) => `… und ${count} weitere`
+	},
 	maintenance: {
 		title: 'Wartung',
 		intro: (timeZone: string) =>
@@ -403,6 +459,11 @@ export const de = {
 			sessions: {
 				name: 'Abgelaufene Anmeldungen löschen',
 				description: 'Entfernt Anmeldungen, die ohnehin nicht mehr gültig sind.'
+			},
+			notifications: {
+				name: 'Benachrichtigungen senden',
+				description:
+					'Schickt Push-Nachrichten über Neuerscheinungen an alle, die sie eingeschaltet haben – jeweils ab der Uhrzeit, die dort gewählt ist. Läuft immer; hat niemand Meldungen eingeschaltet, passiert nichts.'
 			},
 			cache: {
 				name: 'Zwischenspeicher aufräumen',

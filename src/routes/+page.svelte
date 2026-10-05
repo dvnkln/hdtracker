@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { CATEGORIES } from '$lib/categories';
 	import { sortByDate, type DashboardSection, type Order } from '$lib/dashboardOrder';
+	import { eventLabel } from '$lib/eventLabel';
 	import { m } from '$lib/i18n/index.svelte';
 	import { img } from '$lib/images';
 	import { titles } from '$lib/titles.svelte';
@@ -48,34 +49,6 @@
 		startOfToday.setHours(0, 0, 0, 0);
 		const days = Math.round((localDate(iso).getTime() - startOfToday.getTime()) / 86_400_000);
 		return new Intl.RelativeTimeFormat(m.locale, { numeric: 'auto' }).format(days, 'day');
-	}
-
-	// What happens, e.g. "Kinostart", "S03E01 · Staffelstart", "S02E03–E05", "Folgen 3–5".
-	function eventLabel(e: DashboardEntry) {
-		// Games only know "Early Access" and "Release" (the finished game, with or without
-		// early access before it).
-		if (e.category === 'games' && e.kind === 'release') return m.home.kinds.fullRelease;
-		if (e.kind !== 'episode') return m.home.kinds[e.kind];
-		const first = e.episode ?? 1;
-		const last = e.lastEpisode ?? first;
-		let label: string;
-		if (e.category === 'anime') {
-			label = m.home.animeEpisodes(first, last);
-		} else {
-			label = m.home.episodeCode(e.season ?? 1, first);
-			if (e.lastSeason !== e.season) label += `–${m.home.episodeCode(e.lastSeason ?? 1, last)}`;
-			else if (last !== first) label += `–E${String(last).padStart(2, '0')}`;
-		}
-		if (first === 1 && last === 1) {
-			const start =
-				e.category === 'anime'
-					? m.home.animeStart
-					: e.season === 1
-						? m.home.seriesStart
-						: m.home.seasonStart;
-			label += ` · ${start}`;
-		}
-		return label;
 	}
 
 	// Order of each list: what the server remembers, or what was just tapped (so the list
@@ -147,7 +120,7 @@
 						</p>
 						<p class="flex items-center gap-1.5 text-sm text-zinc-400">
 							<cat.icon size={14} class="shrink-0 text-(--accent)" />
-							<span class="truncate">{eventLabel(entry)}</span>
+							<span class="truncate">{eventLabel(entry, m)}</span>
 						</p>
 					</div>
 				</a>

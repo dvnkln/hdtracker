@@ -7,6 +7,7 @@ import { getDb } from '../db';
 import { pruneImages } from '../images';
 import { pruneWikidataLinks } from '../providers/wikidata';
 import { tasks } from '../db/schema';
+import { prepareNotificationPictures, sendDueNotifications } from '../notifications';
 import { prepareAnimeTitles, refreshAll, refreshPending } from '../releases';
 import { createBackup } from './backups';
 
@@ -32,6 +33,15 @@ export const TASKS = {
 		run: refreshAll,
 		usesApi: true,
 		defaults: { enabled: true, frequency: 'daily', time: '04:30', weekday: 0 }
+	},
+	notifications: {
+		// Push messages about what came out today, to everyone who switched them on. Always on:
+		// whether messages are sent is decided by each user (Settings → Notifications), not
+		// here – with nobody having them on, a run reads a few settings and is done.
+		run: sendDueNotifications,
+		required: true,
+		usesApi: false,
+		defaults: { enabled: true, frequency: 'hourly', time: '00:00', weekday: 0 }
 	},
 	cache: {
 		run: () => {
@@ -136,7 +146,7 @@ export function nextSlot(task: TaskRow, now = new Date()) {
 // Due if a planned time has passed since the last run (or since the schedule was changed).
 // Several missed times still lead to only one run.
 function isDue(task: TaskRow, now: Date) {
-	if (!task.enabled) return false;
+	if (!task.enabled && !isRequired(task.key as TaskKey)) return false;
 	const since = Math.max(task.lastRunAt?.getTime() ?? 0, task.changedAt.getTime());
 	return latestSlot(task, now).getTime() > since;
 }
@@ -244,6 +254,7 @@ export function startScheduler() {
 	setTimeout(() => {
 		refreshPending();
 		void prepareAnimeTitles();
+		prepareNotificationPictures();
 	}, 5_000).unref();
 	setInterval(safeTick, 60_000).unref();
 }

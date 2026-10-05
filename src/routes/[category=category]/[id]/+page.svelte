@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import Notice from '$lib/components/Notice.svelte';
 	import { CATEGORIES } from '$lib/categories';
 	import { hasEpisodes } from '$lib/status';
@@ -9,7 +10,7 @@
 	import ItemSheet from '$lib/components/ItemSheet.svelte';
 	import PosterCard from '$lib/components/PosterCard.svelte';
 	import Episodes from '$lib/components/Episodes.svelte';
-	import { ArrowLeft, ExternalLink, ImageOff, Plus, Star } from '@lucide/svelte';
+	import { ArrowLeft, Bell, BellOff, ExternalLink, ImageOff, Plus, Star } from '@lucide/svelte';
 
 	let { data } = $props();
 
@@ -139,6 +140,22 @@
 							{m.detail.addToLibrary}
 						{/if}
 					</button>
+					{#if data.notify !== null}
+						<!-- The bell: notifications about this title on or off -->
+						<form method="POST" action="?/notify" use:enhance>
+							<input type="hidden" name="notify" value={data.notify ? '0' : '1'} />
+							<button
+								class="ui-btn inline-flex items-center rounded-full border border-zinc-600 bg-zinc-900/80 p-2 transition hover:bg-zinc-800 {data.notify
+									? ''
+									: 'text-zinc-500'}"
+								aria-pressed={data.notify}
+								title={data.notify ? m.notifications.mute : m.notifications.unmute}
+								aria-label={m.notifications.bell}
+							>
+								{#if data.notify}<Bell size={16} />{:else}<BellOff size={16} />{/if}
+							</button>
+						</form>
+					{/if}
 					{#if info.externalUrl}
 						<a
 							href={info.externalUrl}

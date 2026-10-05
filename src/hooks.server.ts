@@ -1,4 +1,5 @@
 import type { Handle, RequestEvent, ServerInit } from '@sveltejs/kit';
+import { isSignedImage, readCollageAddress } from '$lib/server/images';
 import { runMigrations } from '$lib/server/db';
 import {
 	SESSION_COOKIE,
@@ -82,7 +83,12 @@ const respond: Handle = async ({ event, resolve }) => {
 	}
 	if (path === '/setup') return redirectTo('/');
 
-	if (!event.locals.user && !PUBLIC_PATHS.includes(path)) return redirectTo('/login');
+	// The picture of a notification is loaded without a login; its address is signed.
+	const open =
+		PUBLIC_PATHS.includes(path) ||
+		(path === '/img' && isSignedImage(event.url)) ||
+		(path === '/img/collage' && readCollageAddress(event.url) !== null);
+	if (!event.locals.user && !open) return redirectTo('/login');
 	if (event.locals.user && path === '/login') return redirectTo('/');
 
 	return resolveWithLang(event, resolve);
