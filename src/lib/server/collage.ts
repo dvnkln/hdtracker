@@ -1,6 +1,8 @@
 // Builds the large picture of a notification – the one shown when it is opened up. It is
-// wide, a poster is upright: so a single title gets a kind of film card (its poster in front
-// of its backdrop), and the message that sums up a day gets the posters side by side.
+// wide, a poster is upright: so a single title gets a kind of film card (its poster in the
+// middle of a soft, dark blow-up of itself), and the message that sums up a day gets the
+// posters side by side. (The film card once used the backdrop of the title behind the
+// poster; the two often did not go together, so the user chose the poster for both.)
 //
 // Done with sharp (libvips), the usual tool for this: it computes outside the server's own
 // thread, so the server keeps answering meanwhile, and it reads pictures already shrunk, so
@@ -10,9 +12,8 @@
 export const LAYOUTS = {
 	// Up to four posters in a row
 	wide: { width: 720, height: 360, max: 4, min: 2 },
-	// One title: [poster] or [poster, backdrop] – the whole poster in front of the darkened
-	// backdrop; without a backdrop in front of a soft, dark blow-up of itself
-	banner: { width: 720, height: 360, max: 2, min: 1 }
+	// One title: the whole poster in the middle of a soft, dark blow-up of itself
+	banner: { width: 720, height: 360, max: 1, min: 1 }
 } as const;
 export type Layout = keyof typeof LAYOUTS;
 export const isLayout = (value: string): value is Layout => Object.hasOwn(LAYOUTS, value);
@@ -60,8 +61,8 @@ export const preparePictures = () => loadSharp().then((sharp) => sharp !== null)
 export const picturesPrepared = () => loading !== undefined;
 
 // The given files (as stored) as one wide JPEG in the given layout. `wide`: the posters side
-// by side, files that cannot be read are left out. `banner`: the first file is the poster,
-// the second (optional) the backdrop. Null if there is too little to show.
+// by side, files that cannot be read are left out. `banner`: the first file is the poster.
+// Null if there is too little to show.
 export async function composePosters(
 	bodies: (Buffer | null)[],
 	layout: Layout
@@ -91,22 +92,18 @@ export async function composePosters(
 
 	try {
 		if (layout === 'banner') {
-			const [poster, backdrop] = bodies;
+			const [poster] = bodies;
 			const size = await sizeOf(poster);
 			if (!poster || !size) return null;
-			const behind = backdrop && (await sizeOf(backdrop)) ? backdrop : null;
-			// Behind: the darkened backdrop – or the poster itself, blown up, soft and dark
-			const back = behind
-				? dim(fill(behind, width, height), 0.6)
-				: dim(fill(poster, width, height).blur(20), 0.45);
-			// In front: the whole poster with a light rim; on the left if there is a backdrop
-			// to look at, otherwise in the middle
+			// Behind: the poster itself, blown up, soft and dark – so the colours always match
+			const back = dim(fill(poster, width, height).blur(20), 0.45);
+			// In front, in the middle: the whole poster with a light rim
 			const posterHeight = height - 2 * MARGIN;
 			const posterWidth = Math.min(
 				width - 2 * MARGIN,
 				Math.round((posterHeight * size.width) / size.height)
 			);
-			const left = behind ? MARGIN + 8 : Math.floor((width - posterWidth) / 2);
+			const left = Math.floor((width - posterWidth) / 2);
 			const front = await fill(poster, posterWidth, posterHeight)
 				.extend({ top: RIM, bottom: RIM, left: RIM, right: RIM, background: RIM_COLOUR })
 				.toBuffer();

@@ -20,7 +20,7 @@ import {
 	savePrefs,
 	sendDueNotifications
 } from './notifications';
-import { addDevice } from './push';
+import { addDevice, listDevices, setDeviceEnabled } from './push';
 import { setSettings } from './settings';
 import { TASKS, isRequired } from './tasks/scheduler';
 
@@ -187,7 +187,7 @@ describe('buildMessages', () => {
 		expect(messages[1].image).toBeUndefined();
 	});
 
-	it('the film card shows the poster in front of the stored backdrop', () => {
+	it('the film card is made of the poster alone; the backdrop only stands in without one', () => {
 		const posterUrl = 'https://image.tmdb.org/t/p/w342/poster.jpg';
 		const backdropUrl = 'https://image.tmdb.org/t/p/w1280/backdrop.jpg';
 		const details = (itemId: number) =>
@@ -201,13 +201,13 @@ describe('buildMessages', () => {
 		const [message] = buildMessages(dueEvents(me, TODAY), 'single', TODAY);
 		expect(readCollageAddress(picture(message.image!))).toEqual({
 			layout: 'banner',
-			addresses: [posterUrl, backdropUrl]
+			addresses: [posterUrl]
 		});
 		// A summary with this one title shows the same picture
 		const [digest] = buildMessages(dueEvents(me, TODAY), 'digest', TODAY);
-		expect(readCollageAddress(picture(digest.image!))?.addresses).toEqual([posterUrl, backdropUrl]);
+		expect(readCollageAddress(picture(digest.image!))?.addresses).toEqual([posterUrl]);
 
-		// Without a poster: just the backdrop
+		// Without a poster: the backdrop as it is
 		details(title({ title: 'No poster' }, [['cinema', day(0)]]).id);
 		const plain = picture(buildMessages(dueEvents(me, TODAY), 'single', TODAY)[1].image!);
 		expect(plain.pathname).toBe('/img');
@@ -296,6 +296,19 @@ describe('notifyUser', () => {
 		expect(await notifyUser(me, at(10))).toBe(1);
 	});
 
+	it('a device that is switched off gets nothing, and counts as nobody there', async () => {
+		title({ title: 'Movie' }, [['cinema', day(0)]]);
+		device(me, 'phone');
+		const [phone] = listDevices(me);
+		setDeviceEnabled(me, phone.id, false);
+		accept();
+		expect(await notifyUser(me, at(9))).toBe(0);
+		expect(fetch).not.toHaveBeenCalled();
+		// ... and nothing was saved up for when it is switched on again
+		setDeviceEnabled(me, phone.id, true);
+		expect(await notifyUser(me, at(10))).toBe(0);
+	});
+
 	it('does nothing when switched off, and saves nothing up without a device', async () => {
 		title({ title: 'Movie' }, [['cinema', day(0)]]);
 		accept();
@@ -330,18 +343,19 @@ describe('notifyUser', () => {
 describe('sampleMessage (test button)', () => {
 	const today = () => new Date().toLocaleDateString('sv-SE');
 	it('looks like a real message in the chosen form, marked as a test', () => {
-		expect(sampleMessage(me)).toBeNull();
+		// Nothing in the dashboard: a plain sentence
+		expect(sampleMessage(me)).toMatchObject({ title: 'hdtracker', tag: 'test', test: true });
 		title({ title: 'Older', externalId: '5' }, [['cinema', '2000-01-01']]);
 		title({ title: 'Newest', externalId: '6' }, [['home', today()]]);
 		title({ title: 'Also new', externalId: '7' }, [['cinema', today()]]);
-		const single = sampleMessage(me)!;
+		const single = sampleMessage(me);
 		expect(single).toMatchObject({ tag: 'test' });
 		expect(single.title).toMatch(/^Test · (Newest|Also new)$/);
 		// Also when the messages are still switched off
 		setSettings({ notifyMode: 'off' });
 		expect(sampleMessage(me)?.title).toMatch(/^Test · /);
 		setSettings({ notifyMode: 'digest' });
-		const digest = sampleMessage(me)!;
+		const digest = sampleMessage(me);
 		expect(digest.title).toBe('Test · New today: 2 titles');
 		expect(digest.url).toBe('/');
 		// Nothing is remembered as announced

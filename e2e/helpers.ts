@@ -27,9 +27,18 @@ export async function addTitle(page: Page, area: string, title: string, status: 
 }
 
 // Settings without a "Save" button: do something and wait until the server has stored it.
-export async function saved(page: Page, action: string, change: () => Promise<unknown>) {
+// `sent` picks the request that counts when several are on their way (what the form sent).
+export async function saved(
+	page: Page,
+	action: string,
+	change: () => Promise<unknown>,
+	sent: (body: string) => boolean = () => true
+) {
 	const answer = page.waitForResponse(
-		(res) => res.request().method() === 'POST' && res.url().includes(`?/${action}`)
+		(res) =>
+			res.request().method() === 'POST' &&
+			res.url().includes(`?/${action}`) &&
+			sent(res.request().postData() ?? '')
 	);
 	await change();
 	expect((await answer).ok()).toBe(true);

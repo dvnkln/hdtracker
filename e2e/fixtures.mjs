@@ -152,6 +152,9 @@ export const ANIME_MAPPING = {
 	'anilist:301': { 'tmdb_show:202:s1': { '1-12': '1-12' } }
 };
 
+// ---- Pushover: the one application token the fake service accepts ----
+export const PUSHOVER_TOKEN = 'tokentokentokentokentokentoken';
+
 // ---- IGDB: one game that is out ----
 export const GAMES = [
 	{

@@ -2,20 +2,13 @@ import { and, eq, lt } from 'drizzle-orm';
 import { eventLabel } from '$lib/eventLabel';
 import { byEpisode, getDashboard, toEntry, trackedEvents, type DashboardEntry } from './dashboard';
 import { getDb } from './db';
-import {
-	itemDetails,
-	libraryItems,
-	notificationsSent,
-	pushSubscriptions,
-	releases,
-	users
-} from './db/schema';
+import { itemDetails, libraryItems, notificationsSent, releases, users } from './db/schema';
 import { serverMessages } from './i18n';
 import { imageSource } from '$lib/images';
-import { LAYOUTS, preparePictures } from './collage';
+import { LAYOUTS, preparePictures, type Layout } from './collage';
 import { signedCollagePath, signedImagePath } from './images';
 import { today } from './providers/types';
-import { sendPush, type PushMessage } from './push';
+import { deliver, hasEnabledTarget, type Notice, type PictureSource } from './targets';
 import { getSetting, setSettings } from './settings';
 
 // Tells the user about what came out today: new episodes and seasons, cinema and home
@@ -125,10 +118,15 @@ const ICON = '/icons/notify.png';
 // So many titles are listed in a digest; the rest is counted.
 const DIGEST_LINES = 6;
 
-// The large picture of a title for the opened-up notification: a film card – its poster in
-// front of its backdrop (the one stored with its details), see collage.ts. Without a poster
-// just the backdrop; with neither, no picture.
-function bigPicture(entry: DashboardEntry) {
+// The large picture of a title for the opened-up notification: a film card made of its
+// poster (see collage.ts). A title without a poster gets its backdrop instead, if one is
+// stored with its details; with neither, no picture. `image` is the signed address the
+// devices load it from, `source` says what it is made of (for channels that take a file).
+function bigPicture(entry: DashboardEntry): { image?: string; source: PictureSource | null } {
+	const usable = (address: string | null | undefined) =>
+		address && imageSource(address) ? address : null;
+	const poster = usable(entry.posterUrl);
+	if (poster) return collage([poster], 'banner');
 	const stored = getDb()
 		.select({ info: itemDetails.info })
 		.from(itemDetails)
@@ -137,18 +135,19 @@ function bigPicture(entry: DashboardEntry) {
 			and(eq(libraryItems.category, entry.category), eq(libraryItems.externalId, entry.externalId))
 		)
 		.get();
-	const usable = (address: string | null | undefined) =>
-		address && imageSource(address) ? address : null;
-	const poster = usable(entry.posterUrl);
 	const backdrop = usable(stored?.info.backdropUrl);
-	if (!poster) return signedImagePath(backdrop) ?? undefined;
-	return signedCollagePath(backdrop ? [poster, backdrop] : [poster], 'banner');
+	if (!backdrop) return { source: null };
+	return { image: signedImagePath(backdrop) ?? undefined, source: { address: backdrop } };
 }
+const collage = (addresses: string[], layout: Layout) => ({
+	image: signedCollagePath(addresses, layout),
+	source: { layout, addresses }
+});
 
 // The messages for what is due: one per title, or one for all of them. The small picture is
 // always the calendar; the large one, shown when the notification is opened up, is the film
 // card of the title – for a summary of several titles their posters side by side.
-export function buildMessages(due: Due[], mode: NotifyMode, day = today()): PushMessage[] {
+export function buildMessages(due: Due[], mode: NotifyMode, day = today()): Notice[] {
 	const m = serverMessages();
 	if (due.length === 0 || mode === 'off') return [];
 
@@ -168,10 +167,10 @@ export function buildMessages(due: Due[], mode: NotifyMode, day = today()): Push
 				url: '/',
 				tag: `digest-${day}`,
 				icon: ICON,
-				image:
-					posters.length >= 2
-						? signedCollagePath(posters.slice(0, LAYOUTS.wide.max), 'wide')
-						: bigPicture(due[0].entry)
+				count: titles,
+				...(posters.length >= 2
+					? collage(posters.slice(0, LAYOUTS.wide.max), 'wide')
+					: bigPicture(due[0].entry))
 			}
 		];
 	}
@@ -185,13 +184,16 @@ export function buildMessages(due: Due[], mode: NotifyMode, day = today()): Push
 		url: `/${own[0].entry.category}/${own[0].entry.externalId}`,
 		tag: `item-${own[0].itemId}`,
 		icon: ICON,
-		image: bigPicture(own[0].entry)
+		count: 1,
+		...bigPicture(own[0].entry)
 	}));
 }
 
-// For the test button: a message that looks like a real one – in the form the user chose,
-// made from the newest releases of the dashboard (marked as a test). Null if there are none.
-export function sampleMessage(userId: number): PushMessage | null {
+// For the test of a target: a message that looks like a real one – in the form the user
+// chose, made from the newest releases of the dashboard, marked as a test. With an empty
+// dashboard a plain sentence.
+export function sampleMessage(userId: number): Notice {
+	const m = serverMessages().notifications;
 	const { mode } = prefsFor(userId);
 	const recent = getDashboard().recent.filter((entry) => entry.date !== null);
 	const newest = recent.sort((a, b) => b.date!.localeCompare(a.date!)).slice(0, 3);
@@ -200,12 +202,18 @@ export function sampleMessage(userId: number): PushMessage | null {
 		mode === 'digest' ? due : due.slice(0, 1),
 		mode === 'digest' ? 'digest' : 'single'
 	);
-	if (!message) return null;
-	return {
-		...message,
-		title: `${serverMessages().notifications.testMark} · ${message.title}`,
-		tag: 'test'
-	};
+	if (!message) {
+		return {
+			title: m.testTitle,
+			body: m.testBody,
+			url: '/settings/notifications',
+			tag: 'test',
+			source: null,
+			count: 0,
+			test: true
+		};
+	}
+	return { ...message, title: `${m.testMark} · ${message.title}`, tag: 'test', test: true };
 }
 
 function markSent(userId: number, due: Due[]) {
@@ -236,21 +244,16 @@ export async function notifyUser(userId: number, now = new Date()) {
 	const due = dueEvents(userId, day);
 	if (due.length === 0) return 0;
 
-	const devices = getDb()
-		.select({ id: pushSubscriptions.id })
-		.from(pushSubscriptions)
-		.where(eq(pushSubscriptions.userId, userId))
-		.all();
-	// Nobody to tell: do not save it up for the day a device is switched on.
-	if (devices.length === 0) {
+	// Nobody to tell: do not save it up for the day a target is switched on.
+	if (!hasEnabledTarget(userId)) {
 		markSent(userId, due);
 		return 0;
 	}
 
 	let sentMessages = 0;
 	for (const message of buildMessages(due, mode, day)) {
-		const results = await sendPush(userId, message);
-		// Reached no device at all: try again with the next run (for as long as it is fresh).
+		const results = await deliver(userId, message);
+		// Reached no target at all: try again with the next run (for as long as it is fresh).
 		if (!results.some((r) => r.ok)) continue;
 		sentMessages++;
 		const covered = mode === 'digest' ? due : due.filter((d) => `item-${d.itemId}` === message.tag);

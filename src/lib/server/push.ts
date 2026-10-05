@@ -113,7 +113,8 @@ export function listDevices(userId: number) {
 			endpoint: pushSubscriptions.endpoint,
 			label: pushSubscriptions.label,
 			createdAt: pushSubscriptions.createdAt,
-			lastOkAt: pushSubscriptions.lastOkAt
+			lastOkAt: pushSubscriptions.lastOkAt,
+			enabled: pushSubscriptions.enabled
 		})
 		.from(pushSubscriptions)
 		.where(eq(pushSubscriptions.userId, userId))
@@ -155,6 +156,17 @@ export function renameDevice(userId: number, id: number, label: string) {
 	);
 }
 
+// Switches one of the user's own devices off or on again. Returns whether there was one.
+export function setDeviceEnabled(userId: number, id: number, enabled: boolean) {
+	return (
+		getDb()
+			.update(pushSubscriptions)
+			.set({ enabled })
+			.where(and(eq(pushSubscriptions.id, id), eq(pushSubscriptions.userId, userId)))
+			.run().changes > 0
+	);
+}
+
 // Removes one of the user's own devices. Returns whether there was one.
 export function removeDevice(userId: number, id: number) {
 	return (
@@ -179,23 +191,30 @@ export type PushMessage = {
 	// Large picture shown when the notification is opened up (Android, Chrome on computers)
 	image?: string;
 };
-export type PushResult = { id: number; label: string; ok: boolean };
+export type PushResult = { id: number; label: string; ok: boolean; gone: boolean };
 
-// Sends a message to all devices of a user, one after the other. A device the push service
-// no longer knows (the app was removed, the permission withdrawn) is deleted.
-export async function sendPush(userId: number, message: PushMessage): Promise<PushResult[]> {
+// Sends a message to the devices of a user that are switched on, one after the other – or,
+// with `only`, to that one device whether it is switched on or not (test). A device the push
+// service no longer knows (the app was removed, the permission withdrawn) is deleted.
+export async function sendPush(
+	userId: number,
+	message: PushMessage,
+	only?: number
+): Promise<PushResult[]> {
 	const db = getDb();
 	const devices = db
 		.select()
 		.from(pushSubscriptions)
 		.where(eq(pushSubscriptions.userId, userId))
 		.orderBy(pushSubscriptions.id)
-		.all();
+		.all()
+		.filter((device) => (only === undefined ? device.enabled : device.id === only));
 	const vapidDetails = { subject: CONTACT, ...vapidKeys() };
 	const results: PushResult[] = [];
 
 	for (const device of devices) {
 		let ok = false;
+		let gone = false;
 		try {
 			// Checked again when sending: the list of services may have changed since it was stored.
 			if (!isPushService(device.endpoint)) throw new Error('not a known push service');
@@ -211,6 +230,7 @@ export async function sendPush(userId: number, message: PushMessage): Promise<Pu
 				signal: AbortSignal.timeout(TIMEOUT_MS)
 			});
 			if (res.status === 404 || res.status === 410) {
+				gone = true;
 				db.delete(pushSubscriptions).where(eq(pushSubscriptions.id, device.id)).run();
 				console.log(`Push: "${device.label}" is no longer registered, removed`);
 			} else if (res.ok) {
@@ -225,7 +245,7 @@ export async function sendPush(userId: number, message: PushMessage): Promise<Pu
 		} catch (err) {
 			console.error(`Push to "${device.label}" failed`, err);
 		}
-		results.push({ id: device.id, label: device.label, ok });
+		results.push({ id: device.id, label: device.label, ok, gone });
 	}
 	return results;
 }

@@ -10,6 +10,7 @@ import {
 	ANIME_SHOWS,
 	GAMES,
 	MOVIES,
+	PUSHOVER_TOKEN,
 	SERIES
 } from './fixtures.mjs';
 
@@ -80,6 +81,24 @@ globalThis.fetch = async (input, init) => {
 	if (url.host === 'graphql.anilist.co') return anilist(body);
 	if (url.href.startsWith('https://github.com/anibridge/anibridge-mappings/releases/')) {
 		return new Response(zstdCompressSync(JSON.stringify(ANIME_MAPPING)));
+	}
+	if (url.host === 'api.pushover.net') {
+		// "Pushover": one application token is known, its account has two devices
+		const token = init?.body instanceof FormData ? init.body.get('token') : null;
+		if (token !== PUSHOVER_TOKEN) {
+			return json({ status: 0, errors: ['application token is invalid'] }, 400);
+		}
+		return json({ status: 1, devices: ['phone', 'tablet'] });
+	}
+	if (url.host === 'ntfy.sh') {
+		// "ntfy": every topic is open, except the one called "locked"
+		return url.pathname === '/locked'
+			? json({ code: 40301, http: 403, error: 'forbidden' }, 403)
+			: json({ id: 'abc', event: 'message' });
+	}
+	if (url.host === 'hook.test') {
+		// A webhook somebody set up: takes everything, except under /denied
+		return url.pathname === '/denied' ? json({ error: 'no' }, 403) : json({ ok: true });
 	}
 	if (url.host === 'query.wikidata.org') {
 		// The same for many titles at once (background refresh)

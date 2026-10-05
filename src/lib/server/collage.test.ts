@@ -70,24 +70,16 @@ describe('composePosters', () => {
 		expect(b).toBeLessThan(60);
 	});
 
-	it('banner with a backdrop: poster on the left, the darkened backdrop beside it', async () => {
-		const backdrop = await poster(BLUE, 'jpeg', 160, 90);
-		const image = (await composePosters([await poster(RED), backdrop], 'banner'))!;
-		// Six fields across: the poster covers the second one, the right half shows the backdrop
-		expect(near(await colourOfField(image, 1, 6), RED)).toBe(true);
-		const [r, g, b] = await colourOfField(image, 4, 6);
-		expect(b).toBeGreaterThan(r + 60);
-		expect(b).toBeLessThan(BLUE[2] * 0.8);
-		expect(g).toBeLessThan(80);
-	});
-
-	it('banner needs the poster; a backdrop that cannot be read is simply left out', async () => {
+	it('banner needs a poster it can read; anything after it is ignored', async () => {
 		const text = Buffer.from('this is no picture at all');
 		expect(await composePosters([], 'banner')).toBeNull();
 		expect(await composePosters([null, await poster(BLUE)], 'banner')).toBeNull();
 		expect(await composePosters([text, await poster(BLUE)], 'banner')).toBeNull();
-		const alone = (await composePosters([await poster(RED), text], 'banner'))!;
-		expect(near(await colourOfField(alone, 1, 3), RED)).toBe(true);
+		// Only the poster counts: the result is the same with or without a second file
+		const alone = (await composePosters([await poster(RED)], 'banner'))!;
+		const withMore = (await composePosters([await poster(RED), await poster(BLUE)], 'banner'))!;
+		expect(withMore.equals(alone)).toBe(true);
+		expect(near(await colourOfField(alone, 0, 3), BLUE)).toBe(false);
 	});
 });
 
