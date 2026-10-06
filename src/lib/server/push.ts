@@ -244,7 +244,10 @@ export async function sendPush(
 			const request = webpush.generateRequestDetails(
 				{ endpoint: device.endpoint, keys: { p256dh: device.p256dh, auth: device.auth } },
 				JSON.stringify(message),
-				{ vapidDetails, TTL: KEEP_SECONDS }
+				// "high": deliver now, also while the app is closed. With the default ("normal")
+				// Android only delivers at once to an app that is open – a message due at six in
+				// the morning then only showed when the app was opened, on a phone in use.
+				{ vapidDetails, TTL: KEEP_SECONDS, urgency: 'high' }
 			);
 			const res = await fetch(request.endpoint, {
 				method: 'POST',

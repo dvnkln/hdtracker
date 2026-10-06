@@ -200,6 +200,8 @@ describe('sendPush', () => {
 		const headers = init.headers as Record<string, string>;
 		expect(init.method).toBe('POST');
 		expect(headers['Content-Encoding']).toBe('aes128gcm');
+		// Delivered at once, also while the app is closed
+		expect(headers.Urgency).toBe('high');
 		expect(headers.Authorization).toContain(`k=${pushPublicKey()}`);
 		// The text itself is not readable in what is sent
 		expect(Buffer.from(init.body as Uint8Array).toString('latin1')).not.toContain('hdtracker');
