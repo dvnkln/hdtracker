@@ -12,7 +12,7 @@
 
 	const forms = new FormFeedback();
 	const { card, heading, label, labelText, hint, pageTitle } = ui;
-	const WIKI = 'https://github.com/dvnkln/hdtracker/wiki/Privacy-and-security#push-notifications';
+	const WIKI = 'https://github.com/dvnkln/hdtracker/wiki/Privacy-and-security#notifications';
 	const MODES = ['off', 'single', 'digest'] as const;
 	const HOURS = Array.from({ length: 24 }, (_, hour) => hour);
 	// What is chosen right now (decides whether the hour is shown)
