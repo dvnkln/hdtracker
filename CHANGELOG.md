@@ -7,17 +7,23 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
-## Upcoming release
+## 0.7.0 – 2026-10-06
+
+hdtracker can now tell you when something from your library comes out.
 
 ### ✨ New
 
-- **Push notifications:** hdtracker tells you on your phone or computer when something from your library comes out – new episodes and seasons, cinema and home releases, game releases (what shows up under “Recently released” on the dashboard). No extra app or account: switch it on per device under Settings → Notifications (needs HTTPS; on iPhone and iPad hdtracker must be installed to the home screen). Choose one message per title or one summary a day and the hour they are sent from; opened up, a message shows the poster of the title, a summary the posters of the day side by side. A test button shows what a message looks like, and the bell on a title's page mutes that title
+- **Push notifications:** hdtracker tells you on your phone or computer when something from your library comes out – new episodes and seasons, cinema and home releases, game releases (what shows up under “Recently released” on the dashboard). No extra app or account: switch it on per device under Settings → Notifications (needs HTTPS; on iPhone and iPad hdtracker must be installed to the home screen). Choose one message per title or one summary a day and the hour they are sent from; opened up, a message shows the poster of the title, a summary the posters of the day side by side. The bell on a title's page mutes that title
 - **More ways to be notified:** besides your own devices, messages can go to [Pushover](https://pushover.net) (with your own application token, optionally only to some of your devices, with the picture attached), to [ntfy](https://ntfy.sh) (ntfy.sh or your own server, with picture and icon) and to a **webhook** – an address of your choice with content you write yourself, using placeholders like `{{title}}` (works with Gotify, Home Assistant and similar). All of them are one list of targets under Settings → Notifications: each has a name, a switch that keeps its settings when off, and its own test button; several of a kind are possible
 
 ### 🔧 Improved
 
 - Settings are saved the moment you choose: General, Notifications and the anime switch under Server no longer need a “Save” button (content language and region keep theirs, because changing them loads the whole library again)
 - Settings → About names the icon set (Lucide) and the font of the wordmark (Outfit)
+
+### ⬆️ Updating
+
+Just pull the new image – the database is updated on start. Notifications are off until you switch them on; how to set them up, and who can read a message with each kind of target: [Notifications](https://github.com/dvnkln/hdtracker/wiki/Notifications).
 
 ## 0.6.1 – 2026-10-04
 
