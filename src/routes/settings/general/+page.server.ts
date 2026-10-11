@@ -8,7 +8,7 @@ import { enabledCategories, getSetting, setSettings } from '$lib/server/settings
 import type { Actions, PageServerLoad } from './$types';
 
 // Personal preferences: how hdtracker looks and behaves.
-export const load: PageServerLoad = () => ({
+export const load: PageServerLoad = ({ locals }) => ({
 	values: {
 		uiLanguage: getSetting('uiLanguage'),
 		animeTitle: getSetting('animeTitle'),
@@ -16,7 +16,7 @@ export const load: PageServerLoad = () => ({
 		autoStatus: getSetting('autoStatus') === 'on'
 	},
 	// Entries per area (hint when an area with entries is hidden)
-	libraryCounts: countByCategory()
+	libraryCounts: countByCategory(locals.user!.id)
 });
 
 export const actions: Actions = {

@@ -1,5 +1,4 @@
 import { error, fail } from '@sveltejs/kit';
-import { eq } from 'drizzle-orm';
 import type { Category } from '$lib/categories';
 import type { Status } from '$lib/status';
 import {
@@ -9,10 +8,8 @@ import {
 	setEpisodes,
 	watchedKeys
 } from '$lib/server/episodes';
-import { getDb } from '$lib/server/db';
-import { libraryItems } from '$lib/server/db/schema';
 import { detailsFor } from '$lib/server/itemDetails';
-import { libraryStatusFor } from '$lib/server/library';
+import { libraryStatusFor, setNotify } from '$lib/server/library';
 import { prefsFor } from '$lib/server/notifications';
 import { ProviderError, type Details, type ShowDetails } from '$lib/server/providers/types';
 import { serverMessages } from '$lib/server/i18n';
@@ -51,8 +48,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	try {
 		// Titles of the library come from the database, everything else from the API.
 		const { info, show } = await detailsFor(category, params.id);
-		const item = findItem(category, info.item.externalId);
+		const item = findItem(locals.user!.id, category, info.item.externalId);
 		const similarStatus = libraryStatusFor(
+			locals.user!.id,
 			category,
 			info.similar.map((s) => s.externalId)
 		);
@@ -66,14 +64,14 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			placeholder: false,
 			// The bell: only for titles of the library, and only while notifications are on
 			notify: item && prefsFor(locals.user!.id).mode !== 'off' ? item.notify : null,
-			watched: [...watchedKeys(item?.id)],
+			watched: [...watchedKeys(item?.trackingId)],
 			similarStatus: Object.fromEntries(similarStatus),
 			hideSpoilers: getSetting('hideSpoilers') === 'on'
 		};
 	} catch (err) {
 		// A title of the library that its data source no longer knows and that has no stored
 		// details (e.g. imported with a dead ID): show what the library has instead of an error.
-		const item = findItem(category, params.id);
+		const item = findItem(locals.user!.id, category, params.id);
 		if (item && err instanceof ProviderError && err.status === 404) return placeholderFor(item);
 		failLoading(err);
 	}
@@ -117,7 +115,7 @@ function placeholderFor(item: NonNullable<ReturnType<typeof findItem>>) {
 		info,
 		show: null,
 		status: item.status,
-		watched: [...watchedKeys(item.id)],
+		watched: [...watchedKeys(item.trackingId)],
 		similarStatus: {} as Record<string, Status>,
 		hideSpoilers: getSetting('hideSpoilers') === 'on',
 		sourceMissing: true,
@@ -133,40 +131,53 @@ function readInt(data: FormData, name: string) {
 
 export const actions: Actions = {
 	// The bell: notifications about this title on or off.
-	notify: async ({ params, request }) => {
-		const item = findItem(params.category as Category, params.id);
+	notify: async ({ params, request, locals }) => {
+		const item = findItem(locals.user!.id, params.category as Category, params.id);
 		if (!item) return fail(400, { error: serverMessages().common.invalidData });
 		const on = (await request.formData()).get('notify') === '1';
-		getDb().update(libraryItems).set({ notify: on }).where(eq(libraryItems.id, item.id)).run();
+		setNotify(locals.user!.id, item.id, on);
 		return { notify: on };
 	},
 
 	// Tap on a single episode: watched <-> not watched.
-	toggle: async ({ params, request }) => {
+	toggle: async ({ params, request, locals }) => {
+		const me = locals.user!.id;
 		const { category, details } = await loadDetails(params);
 		const data = await request.formData();
 		const season = readInt(data, 'season');
 		const episode = readInt(data, 'episode');
 		if (season === null || episode === null) return fail(400);
 
-		const item = findItem(category, details.item.externalId);
-		const isWatched = watchedKeys(item?.id).has(`${season}:${episode}`);
-		setEpisodes(category, details, [{ season, episode }], !isWatched);
+		const item = findItem(me, category, details.item.externalId);
+		const isWatched = watchedKeys(item?.trackingId).has(`${season}:${episode}`);
+		setEpisodes(me, category, details, [{ season, episode }], !isWatched);
 	},
 
 	// Whole season watched / not watched.
-	season: async ({ params, request }) => {
+	season: async ({ params, request, locals }) => {
 		const { category, details } = await loadDetails(params);
 		const data = await request.formData();
 		const season = readInt(data, 'season');
 		if (season === null) return fail(400);
-		setEpisodes(category, details, airedEpisodes(details, season), data.get('watched') === '1');
+		setEpisodes(
+			locals.user!.id,
+			category,
+			details,
+			airedEpisodes(details, season),
+			data.get('watched') === '1'
+		);
 	},
 
 	// Whole show (without specials) watched / not watched.
-	all: async ({ params, request }) => {
+	all: async ({ params, request, locals }) => {
 		const { category, details } = await loadDetails(params);
 		const data = await request.formData();
-		setEpisodes(category, details, airedEpisodes(details), data.get('watched') === '1');
+		setEpisodes(
+			locals.user!.id,
+			category,
+			details,
+			airedEpisodes(details),
+			data.get('watched') === '1'
+		);
 	}
 };

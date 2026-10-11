@@ -9,6 +9,14 @@ Self-hosted Media-Tracker, Single-User, Deployment per Docker Compose.
 - Nach jedem MVP-Punkt stoppen und erklären, wie man testet.
 - **Seit v0.1.0 veröffentlicht:** Datenbank-Änderungen nur noch über neue Migrationen (`npm run db:generate`), die bestehende Daten erhalten – nie alte Migrationen ändern oder löschen, kein „Volume neu anlegen“ mehr. Alle bis v0.1.0 sind in `drizzle/0000_init.sql` zusammengefasst.
 
+## Mehrere Benutzer (in Arbeit, Ziel 0.8.0 und 0.9.0)
+
+- Plan und alle Entscheidungen des Users: `/home/cc/.claude/plans/ok-da-wir-ja-wondrous-wind.md`. Zwei Versionen: 0.8.0 Konten (Admin legt an, Rollen, eigene Bibliothek und Einstellungen je Konto, Anzeigename, Profilbild), 0.9.0 gemeinsames Tracken (Einladungen, Bereich „Gemeinsam“, Symbol auf der Titelseite, Profilbilder als Kennzeichnung).
+- **Etappe 1 (Unterbau) ist gebaut:** Ein Titel (`library_items`) ist nur noch das, was die Datenquelle sagt – einmal für alle. Der **Stand** (Status, gesehene Folgen) liegt in `trackings`, wem er gehört in `tracking_members` (`user_id`, `item_id` eindeutig → je Benutzer ein Stand je Titel; dort auch `added_at` und die Glocke `notify`). `watched_episodes` hängt am Stand (`tracking_id`). Allein tracken = ein Mitglied, gemeinsam = mehrere Mitglieder desselben Stands. Migration `0014_trackings.sql` ist von Hand um das Umziehen der Daten ergänzt (Stand-ID = Titel-ID) und auf einer Kopie echter Daten geprüft.
+- **Der Benutzer wird ausdrücklich mitgegeben, nie erraten:** `listLibrary(userId, …)`, `findItem(userId, …)`, `saveItem(userId, …)`, `removeItem`, `clearLibrary`, `setNotify`, `countByCategory`, `setEpisodes(userId, …)`, `getDashboard(userId)`, `trackedEvents(userId)`, `exportYamtrack(userId)`, `importYamtrack(userId, …)`. `LibraryItem` = Titel + Stand dieses Benutzers (`trackingId`, `status`, `addedAt`, `statusChangedAt`, `notify`); `Title` = nur der Titel (`findTitle()`, alles rund ums Aktualisieren). Wer eine neue Abfrage auf Status oder Folgen schreibt, geht über `library.ts`, nicht direkt an die Tabellen.
+- Entfernen = Mitgliedschaft löschen; `removeOrphans()` räumt Stände ohne Mitglied und Titel ohne Stand weg (samt Details und Terminen). Rhythmus der Aktualisierung: je Titel zählt der Stand, der die frischesten Daten braucht (`busiestStatus()`).
+- Noch offen aus dem Plan: persönliche Einstellungen je Konto (heute noch gemeinsam in `settings`), Konten/Rollen, Profil, dann das Teilen.
+
 ## Stack
 
 SvelteKit (adapter-node, Svelte 5 Runes), TypeScript, Drizzle ORM, better-sqlite3, Tailwind v4. Mobile-first.

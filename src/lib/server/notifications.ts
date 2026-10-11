@@ -86,7 +86,7 @@ export function dueEvents(userId: number, day = today()): Due[] {
 			.map(sentKey)
 	);
 	const due: Due[] = [];
-	for (const { item, events } of trackedEvents()) {
+	for (const { item, events } of trackedEvents(userId)) {
 		if (!item.notify) continue; // muted with the bell on its page
 		const fresh = events.filter(
 			(r) => r.date !== null && r.date >= since && r.date <= day && !sent.has(sentKey(r))
@@ -195,7 +195,7 @@ export function buildMessages(due: Due[], mode: NotifyMode, day = today()): Noti
 export function sampleMessage(userId: number): Notice {
 	const m = serverMessages().notifications;
 	const { mode } = prefsFor(userId);
-	const recent = getDashboard().recent.filter((entry) => entry.date !== null);
+	const recent = getDashboard(userId).recent.filter((entry) => entry.date !== null);
 	const newest = recent.sort((a, b) => b.date!.localeCompare(a.date!)).slice(0, 3);
 	const due = newest.map((entry, index) => ({ entry, itemId: index, rows: [] }));
 	const [message] = buildMessages(

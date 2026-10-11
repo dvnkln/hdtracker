@@ -4,7 +4,7 @@ import { getDb } from './db';
 import { itemDetails, libraryItems } from './db/schema';
 import { getDetails } from './details';
 import { getShowDetails } from './episodes';
-import { findItem } from './library';
+import { findTitle } from './library';
 import { today, type Details, type ShowDetails } from './providers/types';
 import { refreshSoon } from './releases';
 import { enabledCategories } from './settings';
@@ -42,10 +42,10 @@ function withAiredToday(show: ShowDetails): ShowDetails {
 }
 
 // What a detail page needs. The one place that decides between "stored" and "live":
-// a title of the library with stored details comes from the database, everything else
+// a title of somebody's library with stored details comes from the database, everything else
 // (search results, similar titles, a title that is still loading) is asked from the API.
 export async function detailsFor(category: Category, externalId: string) {
-	const item = findItem(category, externalId);
+	const item = findTitle(category, externalId);
 	const stored = item
 		? getDb().select().from(itemDetails).where(eq(itemDetails.itemId, item.id)).get()
 		: undefined;

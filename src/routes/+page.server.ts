@@ -6,7 +6,7 @@ import { setSettings } from '$lib/server/settings';
 import type { Actions, PageServerLoad } from './$types';
 
 // Dashboard: recent and upcoming releases of planned and current titles.
-export const load: PageServerLoad = () => getDashboard();
+export const load: PageServerLoad = ({ locals }) => getDashboard(locals.user!.id);
 
 export const actions: Actions = {
 	// Remembers the order of one of the two lists.

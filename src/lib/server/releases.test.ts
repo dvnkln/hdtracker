@@ -14,33 +14,36 @@ describe('isDue: how often the nightly refresh asks for a title', () => {
 		...addItem({ externalId: String(Math.random()), ...values }),
 		metadataUpdatedAt: daysAgo === null ? null : new Date(now - daysAgo * DAY)
 	});
+	// Whether a title in that state is due
+	const due = (subject: ReturnType<typeof item>, ended: boolean) =>
+		isDue(subject, subject.status, ended, now);
 
 	it('never loaded: always', () => {
-		expect(isDue(item({ status: 'completed' }, null), false, now)).toBe(true);
+		expect(due(item({ status: 'completed' }, null), false)).toBe(true);
 	});
 	it('planned, watching and paused: every night', () => {
 		for (const status of ['planned', 'active', 'paused'] as const) {
-			expect(isDue(item({ category: 'series', status }, 1), true, now)).toBe(true);
+			expect(due(item({ category: 'series', status }, 1), true)).toBe(true);
 		}
 	});
 	it('a watched series that still runs: every night', () => {
-		expect(isDue(item({ category: 'series', status: 'completed' }, 1), false, now)).toBe(true);
+		expect(due(item({ category: 'series', status: 'completed' }, 1), false)).toBe(true);
 	});
 	it('a watched series that has ended: once a week', () => {
 		const series = { category: 'series', status: 'completed' } as const;
-		expect(isDue(item(series, 1), true, now)).toBe(false);
-		expect(isDue(item(series, 6), true, now)).toBe(false);
-		expect(isDue(item(series, 7), true, now)).toBe(true);
+		expect(due(item(series, 1), true)).toBe(false);
+		expect(due(item(series, 6), true)).toBe(false);
+		expect(due(item(series, 7), true)).toBe(true);
 	});
 	it('watched movies and anime, finished games: once a week', () => {
 		for (const category of ['movies', 'anime', 'games'] as const) {
-			expect(isDue(item({ category, status: 'completed' }, 3), false, now)).toBe(false);
-			expect(isDue(item({ category, status: 'completed' }, 7), false, now)).toBe(true);
+			expect(due(item({ category, status: 'completed' }, 3), false)).toBe(false);
+			expect(due(item({ category, status: 'completed' }, 7), false)).toBe(true);
 		}
 	});
 	it('dropped: once a month', () => {
-		expect(isDue(item({ status: 'dropped' }, 29), false, now)).toBe(false);
-		expect(isDue(item({ status: 'dropped' }, 30), false, now)).toBe(true);
+		expect(due(item({ status: 'dropped' }, 29), false)).toBe(false);
+		expect(due(item({ status: 'dropped' }, 30), false)).toBe(true);
 	});
 });
 
@@ -94,8 +97,8 @@ describe('refreshBatch', () => {
 		const gone = getDb().select().from(libraryItems).where(eq(libraryItems.id, items[2].id)).get()!;
 		expect(gone.sourceMissingSince).not.toBeNull();
 		expect(gone.metadataUpdatedAt).not.toBeNull();
-		expect(isDue(gone, false, Date.now())).toBe(false);
-		expect(isDue(gone, false, Date.now() + 31 * DAY)).toBe(true);
+		expect(isDue(gone, 'planned', false, Date.now())).toBe(false);
+		expect(isDue(gone, 'planned', false, Date.now() + 31 * DAY)).toBe(true);
 
 		const db = getDb();
 		const saved = db.select().from(libraryItems).where(eq(libraryItems.id, items[0].id)).get()!;

@@ -17,13 +17,14 @@ import { refreshPending } from '$lib/server/releases';
 import { serverMessages } from '$lib/server/i18n';
 import type { Actions, PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params, url }) => {
+export const load: PageServerLoad = async ({ params, url, locals }) => {
+	const me = locals.user!.id;
 	const category = params.category as Category;
 	const q = url.searchParams.get('q')?.trim() ?? '';
 
 	// No search term: show the library.
 	if (!q) {
-		return { category, q, library: listLibrary(category), results: [], error: null };
+		return { category, q, library: listLibrary(me, category), results: [], error: null };
 	}
 
 	let results: (SearchResult & { status: Status | null })[] = [];
@@ -31,6 +32,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
 	try {
 		const hits = await searchCategory(category, q);
 		const statuses = libraryStatusFor(
+			me,
 			category,
 			hits.map((h) => h.externalId)
 		);
@@ -44,7 +46,8 @@ export const load: PageServerLoad = async ({ params, url }) => {
 
 export const actions: Actions = {
 	// Add to library or change status.
-	save: async ({ params, request }) => {
+	save: async ({ params, request, locals }) => {
+		const me = locals.user!.id;
 		const category = params.category as Category;
 		const data = await request.formData();
 		const status = String(data.get('status') ?? '');
@@ -60,19 +63,19 @@ export const actions: Actions = {
 		}
 		// Not released yet: only "planned" – unless the user insisted (second tap on a locked
 		// status), for the case that the release date from the API is wrong.
-		const existing = findItem(category, item.externalId);
+		const existing = findItem(me, category, item.externalId);
 		const released = isReleased(item, today()) || (!!existing && isReleased(existing, today()));
 		if (!allowedStatuses(category, released).includes(status) && data.get('force') !== '1') {
 			return fail(400, { error: serverMessages().common.invalidStatus });
 		}
-		saveItem(category, item, status);
+		saveItem(me, category, item, status);
 		refreshPending(); // new titles: load release dates for the dashboard
 
 		// "Gesehen" for a series/anime also ticks all aired episodes.
 		if (status === 'completed' && hasEpisodes(category)) {
 			try {
 				const details = await getShowDetails(category, item.externalId);
-				setEpisodes(category, details, airedEpisodes(details), true);
+				setEpisodes(me, category, details, airedEpisodes(details), true);
 			} catch (err) {
 				console.error('Could not mark episodes as watched', err);
 			}
@@ -80,12 +83,12 @@ export const actions: Actions = {
 		return { success: true };
 	},
 
-	remove: async ({ params, request }) => {
+	remove: async ({ params, request, locals }) => {
 		const category = params.category as Category;
 		const data = await request.formData();
 		const externalId = String(data.get('externalId') ?? '');
 		if (!externalId) return fail(400, { error: serverMessages().common.invalidData });
-		removeItem(category, externalId);
+		removeItem(locals.user!.id, category, externalId);
 		return { success: true };
 	}
 };

@@ -106,7 +106,8 @@ export const notificationsSent = sqliteTable(
 	]
 );
 
-// A title the user tracks. Metadata is copied from the API when added.
+// A title somebody tracks: what the data source says about it, once for everyone. Who tracks
+// it and how far they are is in `trackings` and `tracking_members`.
 export const libraryItems = sqliteTable(
 	'library_items',
 	{
@@ -125,23 +126,59 @@ export const libraryItems = sqliteTable(
 		malId: integer('mal_id'),
 		posterUrl: text('poster_url'),
 		overview: text('overview'),
-		status: text('status').$type<Status>().notNull(),
-		addedAt: integer('added_at', { mode: 'timestamp' })
-			.notNull()
-			.$defaultFn(() => new Date()),
-		statusChangedAt: integer('status_changed_at', { mode: 'timestamp' })
-			.notNull()
-			.$defaultFn(() => new Date()),
 		// When title, poster and release dates were last loaded from the API. Empty = still to
 		// be loaded (e.g. right after an import); the refresh queue picks these up.
 		metadataUpdatedAt: integer('metadata_updated_at', { mode: 'timestamp' }),
 		// Set when the data source no longer knows the title (deleted or merged there). What is
 		// stored stays; the source is only asked again once a month. Empty = all fine.
-		sourceMissingSince: integer('source_missing_since', { mode: 'timestamp' }),
-		// Off: no notifications about this title (the bell on its page)
-		notify: integer('notify', { mode: 'boolean' }).notNull().default(true)
+		sourceMissingSince: integer('source_missing_since', { mode: 'timestamp' })
 	},
 	(t) => [uniqueIndex('library_items_unique').on(t.category, t.source, t.externalId)]
+);
+
+// One state of a title: its status and (in watched_episodes) the episodes ticked off. Somebody
+// who tracks a title alone has a tracking of their own; people who track it together share one.
+export const trackings = sqliteTable(
+	'trackings',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		itemId: integer('item_id')
+			.notNull()
+			.references(() => libraryItems.id, { onDelete: 'cascade' }),
+		status: text('status').$type<Status>().notNull(),
+		statusChangedAt: integer('status_changed_at', { mode: 'timestamp' })
+			.notNull()
+			.$defaultFn(() => new Date())
+	},
+	(t) => [index('trackings_item').on(t.itemId)]
+);
+
+// Who a tracking belongs to. `itemId` repeats the title of the tracking, so the database
+// itself guarantees that a user has one state per title.
+export const trackingMembers = sqliteTable(
+	'tracking_members',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		trackingId: integer('tracking_id')
+			.notNull()
+			.references(() => trackings.id, { onDelete: 'cascade' }),
+		userId: integer('user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		itemId: integer('item_id')
+			.notNull()
+			.references(() => libraryItems.id, { onDelete: 'cascade' }),
+		// When this user added the title (or joined the tracking)
+		addedAt: integer('added_at', { mode: 'timestamp' })
+			.notNull()
+			.$defaultFn(() => new Date()),
+		// Off: no notifications about this title for this user (the bell on its page)
+		notify: integer('notify', { mode: 'boolean' }).notNull().default(true)
+	},
+	(t) => [
+		uniqueIndex('tracking_members_once').on(t.userId, t.itemId),
+		index('tracking_members_tracking').on(t.trackingId)
+	]
 );
 
 // Everything the detail page of a library item shows, kept so the page opens without asking
@@ -182,21 +219,21 @@ export const animeTmdbMap = sqliteTable(
 	(t) => [index('anime_tmdb_map_anilist').on(t.anilistId)]
 );
 
-// One row per watched episode. Anime use season 1.
+// One row per watched episode of a tracking. Anime use season 1.
 export const watchedEpisodes = sqliteTable(
 	'watched_episodes',
 	{
 		id: integer('id').primaryKey({ autoIncrement: true }),
-		itemId: integer('item_id')
+		trackingId: integer('tracking_id')
 			.notNull()
-			.references(() => libraryItems.id, { onDelete: 'cascade' }),
+			.references(() => trackings.id, { onDelete: 'cascade' }),
 		season: integer('season').notNull(),
 		episode: integer('episode').notNull(),
 		watchedAt: integer('watched_at', { mode: 'timestamp' })
 			.notNull()
 			.$defaultFn(() => new Date())
 	},
-	(t) => [uniqueIndex('watched_episodes_unique').on(t.itemId, t.season, t.episode)]
+	(t) => [uniqueIndex('watched_episodes_unique').on(t.trackingId, t.season, t.episode)]
 );
 
 // Background tasks (backup, cleanup, ...): schedule and result of the last run.

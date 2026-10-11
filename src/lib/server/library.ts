@@ -1,11 +1,21 @@
-import { and, count, eq, inArray } from 'drizzle-orm';
+import { and, count, eq, inArray, notExists } from 'drizzle-orm';
 import type { Category, Status } from '$lib/status';
 import { getDb } from './db';
-import { libraryItems } from './db/schema';
+import { libraryItems, trackingMembers, trackings } from './db/schema';
 import { getSetting } from './settings';
 import type { SearchResult } from './providers/types';
 
-export type LibraryItem = typeof libraryItems.$inferSelect;
+// A title as the data source describes it – stored once, whoever tracks it.
+export type Title = typeof libraryItems.$inferSelect;
+// A title in somebody's library: the title plus that user's state of it. Several users may
+// share one state (`trackingId`); the bell (`notify`) is always their own.
+export type LibraryItem = Title & {
+	trackingId: number;
+	status: Status;
+	statusChangedAt: Date;
+	addedAt: Date;
+	notify: boolean;
+};
 
 // Which API each area uses.
 export const SOURCE_FOR: Record<Category, SearchResult['source']> = {
@@ -15,14 +25,43 @@ export const SOURCE_FOR: Record<Category, SearchResult['source']> = {
 	games: 'igdb'
 };
 
+type Db = Pick<ReturnType<typeof getDb>, 'select' | 'insert' | 'update' | 'delete'>;
+
+// The titles of one user with their state. `where` narrows it down further.
+function libraryOf(userId: number, where?: Parameters<typeof and>[0], db: Db = getDb()) {
+	return db
+		.select({
+			item: libraryItems,
+			trackingId: trackings.id,
+			status: trackings.status,
+			statusChangedAt: trackings.statusChangedAt,
+			addedAt: trackingMembers.addedAt,
+			notify: trackingMembers.notify
+		})
+		.from(trackingMembers)
+		.innerJoin(trackings, eq(trackings.id, trackingMembers.trackingId))
+		.innerJoin(libraryItems, eq(libraryItems.id, trackingMembers.itemId))
+		.where(and(eq(trackingMembers.userId, userId), where))
+		.all()
+		.map(({ item, ...state }): LibraryItem => ({ ...item, ...state }));
+}
+
+const isTitle = (category: Category, externalId: string) =>
+	and(
+		eq(libraryItems.category, category),
+		eq(libraryItems.source, SOURCE_FOR[category]),
+		eq(libraryItems.externalId, externalId)
+	);
+
+// The whole library of a user, in the order the titles were stored.
+export function allItems(userId: number) {
+	return libraryOf(userId).sort((a, b) => a.id - b.id);
+}
+
 // All items of a category, sorted A–Z (German rules, so "Ä" sorts like "A").
 // Anime are sorted by the title shown on top (English or Romaji, see settings).
-export function listLibrary(category: Category) {
-	const items = getDb()
-		.select()
-		.from(libraryItems)
-		.where(eq(libraryItems.category, category))
-		.all();
+export function listLibrary(userId: number, category: Category) {
+	const items = libraryOf(userId, eq(libraryItems.category, category));
 	const romaji = category === 'anime' && getSetting('animeTitle') === 'romaji';
 	const sortTitle = (i: LibraryItem) => (romaji && i.originalTitle) || i.title;
 	return items.sort((a, b) =>
@@ -30,70 +69,134 @@ export function listLibrary(category: Category) {
 	);
 }
 
-// Status of the given search hits that are already in the library (externalId -> status).
-export function libraryStatusFor(category: Category, externalIds: string[]) {
+// Status of the given search hits that are already in the user's library (externalId -> status).
+export function libraryStatusFor(userId: number, category: Category, externalIds: string[]) {
 	if (externalIds.length === 0) return new Map<string, Status>();
-	const rows = getDb()
-		.select({ externalId: libraryItems.externalId, status: libraryItems.status })
-		.from(libraryItems)
-		.where(
-			and(
-				eq(libraryItems.category, category),
-				eq(libraryItems.source, SOURCE_FOR[category]),
-				inArray(libraryItems.externalId, externalIds)
-			)
+	const rows = libraryOf(
+		userId,
+		and(
+			eq(libraryItems.category, category),
+			eq(libraryItems.source, SOURCE_FOR[category]),
+			inArray(libraryItems.externalId, externalIds)
 		)
-		.all();
+	);
 	return new Map(rows.map((r) => [r.externalId, r.status]));
 }
 
-// Adds an item, or only changes its status if it is already in the library.
-export function saveItem(category: Category, item: SearchResult, status: Status) {
+// A title as it is stored, whoever tracks it (e.g. to reuse what is already loaded about it).
+export function findTitle(category: Category, externalId: string): Title | undefined {
+	return getDb().select().from(libraryItems).where(isTitle(category, externalId)).get();
+}
+
+// The user's library entry for a title, if it is in their library.
+export function findItem(
+	userId: number,
+	category: Category,
+	externalId: string,
+	db: Db = getDb()
+): LibraryItem | undefined {
+	return libraryOf(userId, isTitle(category, externalId), db)[0];
+}
+
+// Adds a title to the user's library, or only changes its status if it is there already (for
+// everybody who shares that state). The title itself is stored once: if somebody else tracks
+// it already, the user gets a state of their own for the same title.
+export function saveItem(
+	userId: number,
+	category: Category,
+	item: SearchResult,
+	status: Status,
+	db: Db = getDb()
+) {
 	const now = new Date();
-	getDb()
-		.insert(libraryItems)
-		.values({ ...item, category, status, addedAt: now, statusChangedAt: now })
-		.onConflictDoUpdate({
-			target: [libraryItems.category, libraryItems.source, libraryItems.externalId],
-			set: { status, statusChangedAt: now }
-		})
-		.run();
+	const run = (tx: Db) => {
+		const mine = findItem(userId, category, item.externalId, tx);
+		if (mine) {
+			tx.update(trackings)
+				.set({ status, statusChangedAt: now })
+				.where(eq(trackings.id, mine.trackingId))
+				.run();
+			return;
+		}
+		tx.insert(libraryItems)
+			.values({ ...item, category })
+			.onConflictDoNothing()
+			.run();
+		const title = tx.select().from(libraryItems).where(isTitle(category, item.externalId)).get()!;
+		const tracking = tx
+			.insert(trackings)
+			.values({ itemId: title.id, status, statusChangedAt: now })
+			.returning({ id: trackings.id })
+			.get();
+		tx.insert(trackingMembers)
+			.values({ trackingId: tracking.id, userId, itemId: title.id, addedAt: now })
+			.run();
+	};
+	if (db === getDb()) getDb().transaction((tx) => run(tx));
+	else run(db);
 }
 
-export function removeItem(category: Category, externalId: string) {
-	getDb()
-		.delete(libraryItems)
+// Tidies up after members left: states nobody belongs to any more (with their watched
+// episodes), then titles nobody tracks any more (with their details and release dates).
+export function removeOrphans(db: Db = getDb()) {
+	db.delete(trackings)
 		.where(
-			and(
-				eq(libraryItems.category, category),
-				eq(libraryItems.source, SOURCE_FOR[category]),
-				eq(libraryItems.externalId, externalId)
+			notExists(
+				db
+					.select({ id: trackingMembers.id })
+					.from(trackingMembers)
+					.where(eq(trackingMembers.trackingId, trackings.id))
+			)
+		)
+		.run();
+	db.delete(libraryItems)
+		.where(
+			notExists(
+				db.select({ id: trackings.id }).from(trackings).where(eq(trackings.itemId, libraryItems.id))
 			)
 		)
 		.run();
 }
 
-// Deletes all items of one category (or of all categories), including watched episodes.
-// Returns how many items were deleted.
-export function clearLibrary(category: Category | 'all') {
-	const query = getDb().delete(libraryItems);
-	return (category === 'all' ? query : query.where(eq(libraryItems.category, category))).run()
-		.changes;
+// Takes titles out of the user's library. Others who track the same title keep it – also
+// those who shared the state with this user. Returns how many titles were taken out.
+function leave(userId: number, itemIds: number[]) {
+	if (itemIds.length === 0) return 0;
+	return getDb().transaction((tx) => {
+		const removed = tx
+			.delete(trackingMembers)
+			.where(and(eq(trackingMembers.userId, userId), inArray(trackingMembers.itemId, itemIds)))
+			.run().changes;
+		removeOrphans(tx);
+		return removed;
+	});
 }
 
-// The library entry for a title, if it is in the library.
-export function findItem(category: Category, externalId: string): LibraryItem | undefined {
-	return getDb()
-		.select()
-		.from(libraryItems)
-		.where(
-			and(
-				eq(libraryItems.category, category),
-				eq(libraryItems.source, SOURCE_FOR[category]),
-				eq(libraryItems.externalId, externalId)
-			)
-		)
-		.get();
+export function removeItem(userId: number, category: Category, externalId: string) {
+	const item = findItem(userId, category, externalId);
+	if (item) leave(userId, [item.id]);
+}
+
+// Empties the user's library for one category (or all of them), including their watched
+// episodes. Returns how many items were removed.
+export function clearLibrary(userId: number, category: Category | 'all') {
+	const items = libraryOf(
+		userId,
+		category === 'all' ? undefined : eq(libraryItems.category, category)
+	);
+	return leave(
+		userId,
+		items.map((item) => item.id)
+	);
+}
+
+// The bell on a title's page: notifications about it for this user on or off.
+export function setNotify(userId: number, itemId: number, notify: boolean) {
+	getDb()
+		.update(trackingMembers)
+		.set({ notify })
+		.where(and(eq(trackingMembers.userId, userId), eq(trackingMembers.itemId, itemId)))
+		.run();
 }
 
 // ---- Validation of item data sent by the browser ----
@@ -144,14 +247,21 @@ export function parseItem(category: Category, json: string): SearchResult {
 	};
 }
 
-// Number of entries per area, e.g. { anime: 9 }.
-export function countByCategory() {
+// Number of entries per area in the user's library, e.g. { anime: 9 }.
+export function countByCategory(userId: number) {
 	const rows = getDb()
 		.select({ category: libraryItems.category, n: count() })
-		.from(libraryItems)
+		.from(trackingMembers)
+		.innerJoin(libraryItems, eq(libraryItems.id, trackingMembers.itemId))
+		.where(eq(trackingMembers.userId, userId))
 		.groupBy(libraryItems.category)
 		.all();
 	return Object.fromEntries(rows.map((r) => [r.category, r.n])) as Partial<
 		Record<Category, number>
 	>;
+}
+
+// Number of titles stored, whoever tracks them.
+export function countTitles() {
+	return getDb().select({ n: count() }).from(libraryItems).get()?.n ?? 0;
 }

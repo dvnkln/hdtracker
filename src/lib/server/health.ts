@@ -5,7 +5,7 @@ import { blockedAddresses, connectionOf } from './auth';
 import { getDb } from './db';
 import { libraryItems } from './db/schema';
 import { imageStats } from './images';
-import { countByCategory } from './library';
+import { countTitles } from './library';
 import { isHttps } from './origins';
 import { pendingStatus } from './releases';
 import { listBackups } from './tasks/backups';
@@ -94,7 +94,7 @@ export async function serverOverview(event: RequestEvent) {
 		checks,
 		info: {
 			startedAt: new Date(Date.now() - process.uptime() * 1000).toISOString(),
-			titles: Object.values(countByCategory()).reduce((sum, n) => sum + n, 0),
+			titles: countTitles(),
 			bytes: databaseSize() + images.bytes + backups
 		}
 	};

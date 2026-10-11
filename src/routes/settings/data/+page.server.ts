@@ -15,11 +15,14 @@ import type { Actions, PageServerLoad } from './$types';
 // Import, export and deleting your own data.
 // How many titles still wait for their details (shown after an import), and how many anime the
 // export has to leave out.
-export const load: PageServerLoad = () => ({ ...pendingStatus(), exportGaps: animeWithoutMalId() });
+export const load: PageServerLoad = ({ locals }) => ({
+	...pendingStatus(),
+	exportGaps: animeWithoutMalId(locals.user!.id)
+});
 
 export const actions: Actions = {
 	// Deletes all entries of one area (or all), including watched episodes.
-	clear: async ({ request }) => {
+	clear: async ({ request, locals }) => {
 		const t = serverMessages().settings;
 		const data = await request.formData();
 		const target = String(data.get('target') ?? '');
@@ -30,11 +33,11 @@ export const actions: Actions = {
 		if (confirm.toUpperCase() !== t.confirmWord) {
 			return fail(400, { section: 'clear', error: t.confirmWrong(t.confirmWord) });
 		}
-		const count = clearLibrary(target);
+		const count = clearLibrary(locals.user!.id, target);
 		return { section: 'clear', message: t.cleared(count) };
 	},
 
-	yamtrack: async ({ request }) => {
+	yamtrack: async ({ request, locals }) => {
 		const t = serverMessages().importData;
 		const data = await request.formData();
 		const file = data.get('file');
@@ -45,7 +48,7 @@ export const actions: Actions = {
 			: undefined;
 
 		try {
-			return { report: await importYamtrack(await file.text(), hiddenChoice) };
+			return { report: await importYamtrack(locals.user!.id, await file.text(), hiddenChoice) };
 		} catch (err) {
 			if (err instanceof ImportError) return fail(400, { error: t.invalidFile });
 			// Titles of hidden areas: ask the user (the chosen file stays selected).

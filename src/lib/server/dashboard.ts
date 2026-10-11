@@ -1,8 +1,9 @@
-import { and, inArray, ne } from 'drizzle-orm';
+import { inArray } from 'drizzle-orm';
 import { isOrder, sortByDate, type Order } from '$lib/dashboardOrder';
 import type { Category, Status } from '$lib/status';
 import { getDb } from './db';
-import { libraryItems, releases, watchedEpisodes, type ReleaseKind } from './db/schema';
+import { releases, watchedEpisodes, type ReleaseKind } from './db/schema';
+import { allItems, type LibraryItem } from './library';
 import { today } from './providers/types';
 import { enabledCategories, getSetting } from './settings';
 
@@ -38,46 +39,48 @@ function dashboardOrder(): { recent: Order; upcoming: Order } {
 	};
 }
 
-type Item = typeof libraryItems.$inferSelect;
+type Item = LibraryItem;
 
 // The dates that count for the user, per title – the one rule behind the dashboard and the
 // notifications: nothing of dropped titles and hidden areas; of watched or paused shows only
 // seasons after the last one watched (nothing for watched movies and finished games); no
 // episodes that are ticked off already.
-export function trackedEvents(): { item: Item; events: Row[] }[] {
+export function trackedEvents(userId: number): { item: Item; events: Row[] }[] {
 	const db = getDb();
-	const items = db
-		.select()
-		.from(libraryItems)
-		.where(
-			and(ne(libraryItems.status, 'dropped'), inArray(libraryItems.category, enabledCategories()))
-		)
-		.all();
+	const shown = enabledCategories();
+	const items = allItems(userId).filter(
+		(item) => item.status !== 'dropped' && shown.includes(item.category)
+	);
 	const ids = items.map((i) => i.id);
 	if (ids.length === 0) return [];
 	const rows = db.select().from(releases).where(inArray(releases.itemId, ids)).all();
 	const watched = db
 		.select()
 		.from(watchedEpisodes)
-		.where(inArray(watchedEpisodes.itemId, ids))
+		.where(
+			inArray(
+				watchedEpisodes.trackingId,
+				items.map((i) => i.trackingId)
+			)
+		)
 		.all();
 
 	// Grouped once by item: looking them up per item in the full lists made the dashboard slow
 	// for large libraries (thousands of titles).
-	const group = <T extends { itemId: number }>(list: T[]) => {
-		const byItem = new Map<number, T[]>();
+	const group = <T>(list: T[], keyOf: (entry: T) => number) => {
+		const byKey = new Map<number, T[]>();
 		for (const entry of list) {
-			const own = byItem.get(entry.itemId);
+			const own = byKey.get(keyOf(entry));
 			if (own) own.push(entry);
-			else byItem.set(entry.itemId, [entry]);
+			else byKey.set(keyOf(entry), [entry]);
 		}
-		return byItem;
+		return byKey;
 	};
-	const rowsOf = group(rows);
-	const watchedOf = group(watched);
+	const rowsOf = group(rows, (row) => row.itemId);
+	const watchedOf = group(watched, (row) => row.trackingId);
 
 	return items.map((item) => {
-		const itemWatched = watchedOf.get(item.id) ?? [];
+		const itemWatched = watchedOf.get(item.trackingId) ?? [];
 		const watchedKeys = new Set(itemWatched.map((w) => `${w.season}:${w.episode}`));
 		const isWatched = (r: Row) => watchedKeys.has(`${r.season}:${r.episode}`);
 		// Highest season with a watched episode (0 = none).
@@ -115,14 +118,14 @@ export function toEntry(item: Item, r: Row, last: Row = r): DashboardEntry {
 	};
 }
 
-export function getDashboard(): {
+export function getDashboard(userId: number): {
 	recent: DashboardEntry[];
 	upcoming: DashboardEntry[];
 	order: { recent: Order; upcoming: Order };
 	libraryEmpty: boolean;
 } {
 	const order = dashboardOrder();
-	const tracked = trackedEvents();
+	const tracked = trackedEvents(userId);
 	if (tracked.length === 0) return { recent: [], upcoming: [], order, libraryEmpty: true };
 
 	const now = today();

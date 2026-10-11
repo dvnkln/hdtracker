@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 import { hasEpisodes, type Category, type Status } from '$lib/status';
 import { getDb } from './db';
-import { libraryItems, watchedEpisodes } from './db/schema';
+import { trackings, watchedEpisodes } from './db/schema';
 import { findItem, saveItem } from './library';
 import { getAnimeDetails } from './providers/anilist';
 import { getTvDetails } from './providers/tmdb';
@@ -19,13 +19,14 @@ export function getShowDetails(category: 'series' | 'anime', id: string) {
 
 const key = (season: number, episode: number) => `${season}:${episode}`;
 
-// Watched episodes of a library item as a set of "season:episode" keys.
-export function watchedKeys(itemId: number | undefined) {
-	if (itemId === undefined) return new Set<string>();
+// Watched episodes of a tracking (a library item's `trackingId`) as a set of
+// "season:episode" keys.
+export function watchedKeys(trackingId: number | undefined) {
+	if (trackingId === undefined) return new Set<string>();
 	const rows = getDb()
 		.select({ season: watchedEpisodes.season, episode: watchedEpisodes.episode })
 		.from(watchedEpisodes)
-		.where(eq(watchedEpisodes.itemId, itemId))
+		.where(eq(watchedEpisodes.trackingId, trackingId))
 		.all();
 	return new Set(rows.map((r) => key(r.season, r.episode)));
 }
@@ -39,8 +40,10 @@ export function airedEpisodes(details: ShowDetails, season?: number): EpisodeRef
 		);
 }
 
-// Marks episodes as watched or unwatched, then updates the status automatically.
+// Marks episodes as watched or unwatched in the user's state of the title (shared with
+// whoever tracks it together with them), then updates the status automatically.
 export function setEpisodes(
+	userId: number,
 	category: 'series' | 'anime',
 	details: ShowDetails,
 	targets: EpisodeRef[],
@@ -58,26 +61,26 @@ export function setEpisodes(
 	const db = getDb();
 	let added = false;
 	db.transaction((tx) => {
-		let item = findItem(category, details.item.externalId);
+		let item = findItem(userId, category, details.item.externalId, tx);
 		if (!item) {
 			if (!watched) return;
 			// First watched episode of a title that is not in the library yet: add it.
-			saveItem(category, details.item, 'active');
-			item = findItem(category, details.item.externalId)!;
+			saveItem(userId, category, details.item, 'active', tx);
+			item = findItem(userId, category, details.item.externalId, tx)!;
 			added = true;
 		}
 
 		for (const t of valid) {
 			if (watched) {
 				tx.insert(watchedEpisodes)
-					.values({ itemId: item.id, season: t.season, episode: t.episode })
+					.values({ trackingId: item.trackingId, season: t.season, episode: t.episode })
 					.onConflictDoNothing()
 					.run();
 			} else {
 				tx.delete(watchedEpisodes)
 					.where(
 						and(
-							eq(watchedEpisodes.itemId, item.id),
+							eq(watchedEpisodes.trackingId, item.trackingId),
 							eq(watchedEpisodes.season, t.season),
 							eq(watchedEpisodes.episode, t.episode)
 						)
@@ -89,12 +92,12 @@ export function setEpisodes(
 		// Auto-status can be switched off in the settings.
 		const next =
 			getSetting('autoStatus') === 'on'
-				? autoStatus(item.status, details, watchedKeys(item.id), watched)
+				? autoStatus(item.status, details, watchedKeys(item.trackingId), watched)
 				: item.status;
 		if (next !== item.status) {
-			tx.update(libraryItems)
+			tx.update(trackings)
 				.set({ status: next, statusChangedAt: new Date() })
-				.where(eq(libraryItems.id, item.id))
+				.where(eq(trackings.id, item.trackingId))
 				.run();
 		}
 	});

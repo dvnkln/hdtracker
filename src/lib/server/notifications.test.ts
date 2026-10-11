@@ -36,10 +36,7 @@ let me: number;
 let n = 0;
 type Kind = (typeof releases.$inferInsert)['kind'];
 // A title with its dates: [kind, date, season, episode]
-function title(
-	values: Partial<typeof libraryItems.$inferInsert>,
-	dates: [Kind, string, number?, number?][]
-) {
+function title(values: Parameters<typeof addItem>[0], dates: [Kind, string, number?, number?][]) {
 	const item = addItem({ externalId: String(++n), ...values });
 	if (dates.length) {
 		getDb()
@@ -113,13 +110,19 @@ describe('dueEvents', () => {
 			['episode', day(0), 1, 9],
 			['episode', day(0), 2, 1]
 		]);
-		getDb().insert(watchedEpisodes).values({ itemId: show.id, season: 1, episode: 8 }).run();
+		getDb()
+			.insert(watchedEpisodes)
+			.values({ trackingId: show.trackingId, season: 1, episode: 8 })
+			.run();
 		// An episode that is ticked off already
 		const running = title({ title: 'Running show', category: 'series', status: 'active' }, [
 			['episode', day(-1), 3, 4],
 			['episode', day(0), 3, 5]
 		]);
-		getDb().insert(watchedEpisodes).values({ itemId: running.id, season: 3, episode: 4 }).run();
+		getDb()
+			.insert(watchedEpisodes)
+			.values({ trackingId: running.trackingId, season: 3, episode: 4 })
+			.run();
 		setSettings({ categories: 'movies,series,anime' });
 
 		const due = dueEvents(me, TODAY);
@@ -388,6 +391,10 @@ describe('switching on and the task', () => {
 			.values({ username: 'other', passwordHash: 'x' })
 			.returning()
 			.get().id;
+		// Everybody is told about their own library only
+		title({ title: 'Their movie', userId: other }, [['cinema', day(0)]]);
+		expect(labels(me)).toEqual(['Movie']);
+		expect(labels(other)).toEqual(['Their movie']);
 		device(me, 'mine');
 		device(other, 'theirs');
 		accept();

@@ -3,11 +3,12 @@ import { hasEpisodes, type Category } from '$lib/status';
 import { getDb } from './db';
 import { getImage } from './images';
 import { deleteDetailsOfHiddenAreas, endedShowIds, saveDetails } from './itemDetails';
-import { libraryItems, releases, watchedEpisodes } from './db/schema';
+import { libraryItems, releases, trackings, watchedEpisodes } from './db/schema';
 import { getDetails } from './details';
 import { airedEpisodes, getShowDetails } from './episodes';
 import { serverMessages } from './i18n';
-import type { LibraryItem } from './library';
+import type { Title } from './library';
+import type { Status } from '$lib/status';
 import { MAPPING_VERSION, animeTitlesEnabled, ensureAnimeMapping } from './animeMapping';
 import { ANIME_PER_REQUEST, getAnimeReleases, preloadAnime } from './providers/anilist';
 import { GAMES_PER_REQUEST, getGameReleases, preloadGames } from './providers/igdb';
@@ -70,7 +71,7 @@ function fetchReleases(category: Category, externalId: string): Promise<ReleaseI
 // Loads everything about one library item and stores it: title and poster, release dates
 // (dashboard), all details of its detail page and the images shown there. After this, the
 // item's pages open without asking the API.
-export async function refreshItem(item: LibraryItem) {
+export async function refreshItem(item: Title) {
 	const { item: fresh, events } = await fetchReleases(item.category, item.externalId);
 	const info = await getDetails(item.category, item.externalId);
 	const show = hasEpisodes(item.category)
@@ -128,7 +129,7 @@ const isNotFound = (err: unknown) => err instanceof ProviderError && err.status 
 // Like refreshItem, but a title the data source no longer knows is not an error: it is marked
 // (see `sourceMissingSince`), keeps what is stored and is only asked for again once a month.
 // Returns false in that case.
-export async function refreshOrMarkMissing(item: LibraryItem) {
+export async function refreshOrMarkMissing(item: Title) {
 	try {
 		await refreshItem(item);
 		return true;
@@ -147,7 +148,7 @@ export async function refreshOrMarkMissing(item: LibraryItem) {
 	}
 }
 
-type Source = LibraryItem['source'];
+type Source = Title['source'];
 const SOURCES: Source[] = ['tmdb', 'igdb', 'anilist'];
 
 // Per service only one refresh runs at a time (queue, nightly task, "Run now"), so together
@@ -166,10 +167,10 @@ function exclusive<T>(source: Source, work: () => Promise<T>): Promise<T> {
 // Refreshes one item in the background, e.g. when its detail page shows an older stored copy.
 // Never twice at the same time for one item; waits its turn behind other work for the service.
 const refreshing = new Set<number>();
-export function refreshSoon(item: LibraryItem) {
+export function refreshSoon(item: Title) {
 	if (refreshing.has(item.id)) return;
 	// Missing at its source: asked again once a month only (see isDue)
-	if (item.sourceMissingSince && !isDue(item, false, Date.now())) return;
+	if (item.sourceMissingSince && !isDue(item, 'planned', false, Date.now())) return;
 	refreshing.add(item.id);
 	exclusive(item.source, () => refreshOrMarkMissing(item))
 		.catch((err) => console.error(`Refreshing ${item.category}/${item.externalId} failed`, err))
@@ -178,24 +179,31 @@ export function refreshSoon(item: LibraryItem) {
 
 const isRateLimited = (err: unknown) => err instanceof ProviderError && err.status === 429;
 
-// A finished series imported without single episodes: tick all aired episodes once.
-async function tickAllEpisodesIfImported(item: LibraryItem) {
-	if (item.category !== 'series' || item.status !== 'completed') return;
+// A finished series imported without single episodes: tick all aired episodes once – for
+// every state of the title that is "completed" and has no episode ticked.
+async function tickAllEpisodesIfImported(item: Title) {
+	if (item.category !== 'series') return;
 	const db = getDb();
-	const watched = db
-		.select()
-		.from(watchedEpisodes)
-		.where(eq(watchedEpisodes.itemId, item.id))
-		.get();
-	if (watched) return;
+	const untouched = () =>
+		db
+			.select({ id: trackings.id })
+			.from(trackings)
+			.where(and(eq(trackings.itemId, item.id), eq(trackings.status, 'completed')))
+			.all()
+			.filter(
+				({ id }) =>
+					!db.select().from(watchedEpisodes).where(eq(watchedEpisodes.trackingId, id)).get()
+			);
+	if (untouched().length === 0) return;
 	const details = await getShowDetails('series', item.externalId);
-	// Removed from the library while loading: nothing to tick.
-	if (!db.select().from(libraryItems).where(eq(libraryItems.id, item.id)).get()) return;
-	for (const e of airedEpisodes(details)) {
-		db.insert(watchedEpisodes)
-			.values({ itemId: item.id, season: e.season, episode: e.episode })
-			.onConflictDoNothing()
-			.run();
+	// Asked again: a state may have been removed or changed while loading.
+	for (const { id } of untouched()) {
+		for (const e of airedEpisodes(details)) {
+			db.insert(watchedEpisodes)
+				.values({ trackingId: id, season: e.season, episode: e.episode })
+				.onConflictDoNothing()
+				.run();
+		}
 	}
 }
 
@@ -203,8 +211,8 @@ async function tickAllEpisodesIfImported(item: LibraryItem) {
 // batch with one request, the items are then refreshed from that answer. TMDB has no such
 // request, its items are loaded one by one – but their direct links to streaming services
 // (Wikidata) are looked up for the whole batch at once.
-const idsOf = (items: LibraryItem[]) => items.map((item) => item.externalId);
-const BATCH: Record<Source, { size: number; preload: (items: LibraryItem[]) => Promise<void> }> = {
+const idsOf = (items: Title[]) => items.map((item) => item.externalId);
+const BATCH: Record<Source, { size: number; preload: (items: Title[]) => Promise<void> }> = {
 	tmdb: {
 		size: 25,
 		preload: (items) => preloadTmdb(items, getSetting('language'), getSetting('region'))
@@ -222,8 +230,8 @@ const BATCH: Record<Source, { size: number; preload: (items: LibraryItem[]) => P
 
 // Refreshes a batch of items of one service. Returns the items that failed; `stopped` means
 // the service still answered "too many requests" after waiting, so the rest was not tried.
-export async function refreshBatch(source: Source, batch: LibraryItem[]) {
-	const failed: LibraryItem[] = [];
+export async function refreshBatch(source: Source, batch: Title[]) {
+	const failed: Title[] = [];
 	// Anime take their episode titles from TMDB; the list that says where must be there first.
 	if (source === 'anilist') await ensureAnimeMapping();
 	try {
@@ -314,7 +322,7 @@ export function pendingStatus() {
 		)
 		.groupBy(libraryItems.source)
 		.all();
-	const perItem: Record<LibraryItem['source'], number> = { tmdb: 0.6, igdb: 0.4, anilist: 0.6 };
+	const perItem: Record<Title['source'], number> = { tmdb: 0.6, igdb: 0.4, anilist: 0.6 };
 	return {
 		pending: rows.reduce((sum, r) => sum + r.n, 0),
 		// The services load in parallel, so the slowest one decides.
@@ -329,15 +337,31 @@ export function pendingStatus() {
 // months TMDB allows.
 const HOUR = 60 * 60 * 1000;
 const WEEKLY: Category[] = ['movies', 'games', 'anime'];
-export function isDue(item: LibraryItem, ended: boolean, now: number) {
+export function isDue(item: Title, status: Status, ended: boolean, now: number) {
 	if (!item.metadataUpdatedAt) return true;
 	const age = now - item.metadataUpdatedAt.getTime();
 	// Dropped, or no longer known to the data source: a look once a month is enough.
-	if (item.status === 'dropped' || item.sourceMissingSince) return age >= 30 * 24 * HOUR;
+	if (status === 'dropped' || item.sourceMissingSince) return age >= 30 * 24 * HOUR;
 	// A few hours short of a week, so a run at the same time of day counts as "a week later".
-	if (item.status === 'completed' && (ended || WEEKLY.includes(item.category)))
+	if (status === 'completed' && (ended || WEEKLY.includes(item.category)))
 		return age >= 7 * 24 * HOUR - 6 * HOUR;
 	return true;
+}
+
+// A title can have several states (people tracking it on their own). For the rhythm of the
+// refresh the one that needs the freshest data counts: anything still open beats "completed",
+// which beats "dropped".
+const NEED: Record<Status, number> = { active: 2, planned: 2, paused: 2, completed: 1, dropped: 0 };
+export function busiestStatus() {
+	const byItem = new Map<number, Status>();
+	for (const { itemId, status } of getDb()
+		.select({ itemId: trackings.itemId, status: trackings.status })
+		.from(trackings)
+		.all()) {
+		const known = byItem.get(itemId);
+		if (!known || NEED[status] > NEED[known]) byItem.set(itemId, status);
+	}
+	return byItem;
 }
 
 // Background task "metadata": refreshes the items of all shown areas that are due (see isDue);
@@ -346,12 +370,13 @@ export async function refreshAll() {
 	deleteDetailsOfHiddenAreas();
 	const now = Date.now();
 	const ended = endedShowIds();
+	const status = busiestStatus();
 	const items = getDb()
 		.select()
 		.from(libraryItems)
 		.where(inArray(libraryItems.category, enabledCategories()))
 		.all()
-		.filter((item) => isDue(item, ended.has(item.id), now));
+		.filter((item) => isDue(item, status.get(item.id) ?? 'dropped', ended.has(item.id), now));
 	const failedPerSource = await Promise.all(
 		SOURCES.map((source) =>
 			exclusive(source, async () => {

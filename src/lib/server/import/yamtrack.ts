@@ -1,8 +1,9 @@
+import { and, eq } from 'drizzle-orm';
 import { CATEGORY_KEYS } from '$lib/categories';
 import { isStatusFor, type Category, type Status } from '$lib/status';
 import { getDb } from '../db';
-import { libraryItems, watchedEpisodes } from '../db/schema';
-import { findItem, SOURCE_FOR } from '../library';
+import { trackingMembers, trackings, watchedEpisodes } from '../db/schema';
+import { findItem, saveItem, SOURCE_FOR } from '../library';
 import { enabledCategories, setSettings } from '../settings';
 import { getAnimeByMalIds } from '../providers/anilist';
 import type { SearchResult } from '../providers/types';
@@ -97,6 +98,7 @@ export class ImportError extends Error {}
 // Posters, descriptions and release dates are loaded afterwards by the refresh queue.
 // If the file contains titles of hidden areas and no choice was made, HiddenAreasError is thrown.
 export async function importYamtrack(
+	userId: number,
 	text: string,
 	hiddenChoice?: HiddenChoice
 ): Promise<ImportReport> {
@@ -197,7 +199,7 @@ export async function importYamtrack(
 			const key = `${category}:${item.externalId}`;
 			if (seen.has(key)) continue;
 			seen.add(key);
-			if (findItem(category, item.externalId)) {
+			if (findItem(userId, category, item.externalId, tx)) {
 				report.existing++;
 				continue;
 			}
@@ -208,11 +210,17 @@ export async function importYamtrack(
 			const addedAt = parseDate(row.created_at) ?? new Date();
 			const changedAt = parseDate(row.end_date) ?? parseDate(row.progressed_at) ?? addedAt;
 
-			const inserted = tx
-				.insert(libraryItems)
-				.values({ ...item, category, status, addedAt, statusChangedAt: changedAt })
-				.returning()
-				.get();
+			saveItem(userId, category, item, status, tx);
+			const inserted = findItem(userId, category, item.externalId, tx)!;
+			// The dates of the export instead of "now"
+			tx.update(trackings)
+				.set({ statusChangedAt: changedAt })
+				.where(eq(trackings.id, inserted.trackingId))
+				.run();
+			tx.update(trackingMembers)
+				.set({ addedAt })
+				.where(and(eq(trackingMembers.userId, userId), eq(trackingMembers.itemId, inserted.id)))
+				.run();
 			report.imported[category]++;
 
 			// Watched episodes: series from the episode rows, anime from the progress number.
@@ -235,7 +243,7 @@ export async function importYamtrack(
 			}
 			for (const e of episodes) {
 				tx.insert(watchedEpisodes)
-					.values({ itemId: inserted.id, ...e })
+					.values({ trackingId: inserted.trackingId, ...e })
 					.onConflictDoNothing()
 					.run();
 			}

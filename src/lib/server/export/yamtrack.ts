@@ -1,6 +1,7 @@
 import type { Status } from '$lib/status';
 import { getDb } from '../db';
-import { itemDetails, libraryItems, watchedEpisodes } from '../db/schema';
+import { itemDetails, watchedEpisodes } from '../db/schema';
+import { allItems } from '../library';
 
 // Writes the library as a CSV file in the format of Yamtrack's own export, so Yamtrack (and
 // hdtracker's import) can read it. Only the database is read – nothing is asked from any API.
@@ -45,12 +46,8 @@ function toCsv(rows: Row[]) {
 }
 
 // Anime that cannot be exported: Yamtrack knows anime only by their MyAnimeList ID.
-export function animeWithoutMalId() {
-	const anime = getDb()
-		.select()
-		.from(libraryItems)
-		.all()
-		.filter((i) => i.category === 'anime');
+export function animeWithoutMalId(userId: number) {
+	const anime = allItems(userId).filter((i) => i.category === 'anime');
 	const missing = anime.filter((i) => i.malId === null);
 	return {
 		// Details still loading: the ID may arrive with them
@@ -60,9 +57,10 @@ export function animeWithoutMalId() {
 	};
 }
 
-export function exportYamtrack() {
+// The library of one user. A title tracked together with others is part of it like any other.
+export function exportYamtrack(userId: number) {
 	const db = getDb();
-	const items = db.select().from(libraryItems).orderBy(libraryItems.id).all();
+	const items = allItems(userId);
 	const shows = new Map(
 		db
 			.select({ itemId: itemDetails.itemId, show: itemDetails.show })
@@ -72,7 +70,7 @@ export function exportYamtrack() {
 	);
 	const watched = new Map<number, (typeof watchedEpisodes.$inferSelect)[]>();
 	for (const w of db.select().from(watchedEpisodes).all()) {
-		watched.set(w.itemId, [...(watched.get(w.itemId) ?? []), w]);
+		watched.set(w.trackingId, [...(watched.get(w.trackingId) ?? []), w]);
 	}
 	const first = (dates: Date[]) => (dates.length ? new Date(Math.min(...dates.map(Number))) : null);
 	const last = (dates: Date[]) => (dates.length ? new Date(Math.max(...dates.map(Number))) : null);
@@ -86,7 +84,7 @@ export function exportYamtrack() {
 
 	for (const item of items) {
 		const done = item.status === 'completed';
-		const seen = watched.get(item.id) ?? [];
+		const seen = watched.get(item.trackingId) ?? [];
 		const seenAt = seen.map((w) => w.watchedAt);
 		const base: Row = {
 			media_id: item.externalId,
