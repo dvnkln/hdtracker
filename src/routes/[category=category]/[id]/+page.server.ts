@@ -13,7 +13,7 @@ import { libraryStatusFor, setNotify } from '$lib/server/library';
 import { prefsFor } from '$lib/server/notifications';
 import { ProviderError, type Details, type ShowDetails } from '$lib/server/providers/types';
 import { serverMessages } from '$lib/server/i18n';
-import { getSetting } from '$lib/server/settings';
+import { getUserSetting } from '$lib/server/settings';
 import type { Actions, PageServerLoad } from './$types';
 
 const ID_PATTERN = /^\d{1,12}$/;
@@ -66,13 +66,15 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			notify: item && prefsFor(locals.user!.id).mode !== 'off' ? item.notify : null,
 			watched: [...watchedKeys(item?.trackingId)],
 			similarStatus: Object.fromEntries(similarStatus),
-			hideSpoilers: getSetting('hideSpoilers') === 'on'
+			hideSpoilers: getUserSetting(locals.user!.id, 'hideSpoilers') === 'on'
 		};
 	} catch (err) {
 		// A title of the library that its data source no longer knows and that has no stored
 		// details (e.g. imported with a dead ID): show what the library has instead of an error.
 		const item = findItem(locals.user!.id, category, params.id);
-		if (item && err instanceof ProviderError && err.status === 404) return placeholderFor(item);
+		if (item && err instanceof ProviderError && err.status === 404) {
+			return placeholderFor(item, getUserSetting(locals.user!.id, 'hideSpoilers') === 'on');
+		}
 		failLoading(err);
 	}
 };
@@ -80,7 +82,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 const SOURCE_LABELS = { tmdb: 'TMDB', igdb: 'IGDB', anilist: 'AniList' } as const;
 
 // A detail page made of the little the library row holds (title, maybe poster and year).
-function placeholderFor(item: NonNullable<ReturnType<typeof findItem>>) {
+function placeholderFor(item: NonNullable<ReturnType<typeof findItem>>, hideSpoilers: boolean) {
 	const info: Details = {
 		item: {
 			source: item.source,
@@ -117,7 +119,7 @@ function placeholderFor(item: NonNullable<ReturnType<typeof findItem>>) {
 		status: item.status,
 		watched: [...watchedKeys(item.trackingId)],
 		similarStatus: {} as Record<string, Status>,
-		hideSpoilers: getSetting('hideSpoilers') === 'on',
+		hideSpoilers,
 		sourceMissing: true,
 		placeholder: true,
 		notify: null as boolean | null

@@ -1,7 +1,7 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 import { getDb } from './db';
 import { users } from './db/schema';
-import { setSettings } from './settings';
+import { setUserSettings } from './settings';
 
 // The tool that builds pictures is loaded once per process, so every case starts with
 // freshly loaded modules.
@@ -18,12 +18,12 @@ beforeEach(() => {
 });
 
 it('at start, the picture tool is only loaded when notifications are switched on', async () => {
-	setSettings({ notifyMode: 'off' });
+	setUserSettings(me, { notifyMode: 'off' });
 	const off = await fresh();
 	off.prepareNotificationPictures();
 	expect(off.picturesPrepared()).toBe(false);
 
-	setSettings({ notifyMode: 'digest' });
+	setUserSettings(me, { notifyMode: 'digest' });
 	const on = await fresh();
 	on.prepareNotificationPictures();
 	expect(on.picturesPrepared()).toBe(true);
@@ -31,7 +31,7 @@ it('at start, the picture tool is only loaded when notifications are switched on
 });
 
 it('switching notifications on loads it, changing them later does nothing new', async () => {
-	setSettings({ notifyMode: 'off' });
+	setUserSettings(me, { notifyMode: 'off' });
 	const { savePrefs, picturesPrepared } = await fresh();
 	savePrefs(me, 'off', 8);
 	expect(picturesPrepared()).toBe(false);
@@ -41,7 +41,6 @@ it('switching notifications on loads it, changing them later does nothing new', 
 
 it('nobody there yet (fresh installation): nothing is loaded', async () => {
 	getDb().delete(users).run();
-	setSettings({ notifyMode: 'single' });
 	const { prepareNotificationPictures, picturesPrepared } = await fresh();
 	prepareNotificationPictures();
 	expect(picturesPrepared()).toBe(false);

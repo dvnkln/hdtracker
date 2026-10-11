@@ -3,9 +3,9 @@ import { fail, redirect } from '@sveltejs/kit';
 import { getDb } from '$lib/server/db';
 import { users } from '$lib/server/db/schema';
 import { createSession, hasAnyUser, hashPassword, setSessionCookie } from '$lib/server/auth';
-import { serverMessages } from '$lib/server/i18n';
+import { localeOf, rememberLocale, serverMessages } from '$lib/server/i18n';
 import { MIN_PASSWORD_LENGTH as MIN_PASSWORD, USERNAME_PATTERN } from '$lib/limits';
-import { rememberTheme } from '$lib/server/theme';
+import { rememberTheme, savedTheme } from '$lib/server/theme';
 import type { Actions } from './$types';
 
 export const actions: Actions = {
@@ -40,7 +40,9 @@ export const actions: Actions = {
 
 		const { token, expiresAt } = createSession(user.id);
 		setSessionCookie(cookies, isHttps(request, url), token, expiresAt);
-		rememberTheme(cookies, request, url); // the login page of this device follows the account
+		// The login page of this device follows the account from now on
+		rememberTheme(cookies, request, url, savedTheme(user.id));
+		rememberLocale(cookies, request, url, localeOf(user.id));
 		redirect(303, '/');
 	}
 };

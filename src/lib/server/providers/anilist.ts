@@ -1,5 +1,5 @@
 import { cached, remember } from '../cache';
-import { serverMessages } from '../i18n';
+import { contentMessages, serverMessages } from '../i18n';
 import { animeTextsFor, warmUpAnimeTexts } from './animeEpisodes';
 import {
 	ProviderError,
@@ -264,7 +264,7 @@ export async function getAnimeDetails(id: string): Promise<ShowDetails> {
 		seasons: [
 			{
 				number: 1,
-				name: serverMessages().detail.episodes,
+				name: contentMessages().detail.episodes,
 				special: false,
 				airDate: null,
 				episodes: Array.from({ length: total }, (_, i) => {

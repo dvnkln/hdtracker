@@ -1,8 +1,16 @@
-import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import {
+	index,
+	integer,
+	primaryKey,
+	sqliteTable,
+	text,
+	uniqueIndex
+} from 'drizzle-orm/sqlite-core';
 import type { Category, Status } from '../../status';
 import type { Details, SearchResult, ShowDetails } from '../providers/types';
 
-// Simple key/value store for app settings (region, language, ...).
+// Simple key/value store for the settings of the whole installation (region, content
+// language, ...). What every user sets for themselves is in `user_settings`.
 export const settings = sqliteTable('settings', {
 	key: text('key').primaryKey(),
 	value: text('value').notNull()
@@ -16,6 +24,20 @@ export const users = sqliteTable('users', {
 		.notNull()
 		.$defaultFn(() => new Date())
 });
+
+// What a user set for themselves (interface language, theme, shown areas, notifications, ...),
+// see server/settings.ts for the keys and their defaults.
+export const userSettings = sqliteTable(
+	'user_settings',
+	{
+		userId: integer('user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		key: text('key').notNull(),
+		value: text('value').notNull()
+	},
+	(t) => [primaryKey({ columns: [t.userId, t.key] })]
+);
 
 // One row per logged-in browser. `id` is the HMAC of the cookie token, never the token itself.
 export const sessions = sqliteTable('sessions', {

@@ -5,7 +5,7 @@ import { getDb } from './db';
 import { releases, watchedEpisodes, type ReleaseKind } from './db/schema';
 import { allItems, type LibraryItem } from './library';
 import { today } from './providers/types';
-import { enabledCategories, getSetting } from './settings';
+import { enabledCategories, getUserSetting } from './settings';
 
 // "Kürzlich erschienen" covers this many days up to today.
 const RECENT_DAYS = 28;
@@ -30,9 +30,9 @@ export type DashboardEntry = {
 type Row = typeof releases.$inferSelect;
 
 // The remembered order of both lists (see dashboardOrder.ts).
-function dashboardOrder(): { recent: Order; upcoming: Order } {
-	const recent = getSetting('dashboardRecent');
-	const upcoming = getSetting('dashboardUpcoming');
+function dashboardOrder(userId: number): { recent: Order; upcoming: Order } {
+	const recent = getUserSetting(userId, 'dashboardRecent');
+	const upcoming = getUserSetting(userId, 'dashboardUpcoming');
 	return {
 		recent: isOrder(recent) ? recent : 'desc',
 		upcoming: isOrder(upcoming) ? upcoming : 'asc'
@@ -47,7 +47,7 @@ type Item = LibraryItem;
 // episodes that are ticked off already.
 export function trackedEvents(userId: number): { item: Item; events: Row[] }[] {
 	const db = getDb();
-	const shown = enabledCategories();
+	const shown = enabledCategories(userId);
 	const items = allItems(userId).filter(
 		(item) => item.status !== 'dropped' && shown.includes(item.category)
 	);
@@ -124,7 +124,7 @@ export function getDashboard(userId: number): {
 	order: { recent: Order; upcoming: Order };
 	libraryEmpty: boolean;
 } {
-	const order = dashboardOrder();
+	const order = dashboardOrder(userId);
 	const tracked = trackedEvents(userId);
 	if (tracked.length === 0) return { recent: [], upcoming: [], order, libraryEmpty: true };
 

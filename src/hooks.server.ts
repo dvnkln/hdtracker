@@ -10,7 +10,7 @@ import {
 	validateSession
 } from '$lib/server/auth';
 import { allowedOrigins, isAllowedOrigin, isHttps } from '$lib/server/origins';
-import { getSetting } from '$lib/server/settings';
+import { localeFor, withLocale } from '$lib/server/i18n';
 import { themeFor } from '$lib/server/theme';
 import { barColors } from '$lib/themes';
 import { startScheduler } from '$lib/server/tasks/scheduler';
@@ -77,6 +77,17 @@ const respond: Handle = async ({ event, resolve }) => {
 		}
 	}
 
+	// Everything from here on runs in the language of whoever asked: of the logged-in user, or
+	// of the device (see localeFor).
+	event.locals.locale = localeFor(event);
+	return withLocale(event.locals.locale, () => route(event, resolve));
+};
+
+// Leads to /setup or /login if needed, otherwise answers the request.
+function route(event: RequestEvent, resolve: Parameters<Handle>[0]['resolve']) {
+	const { url } = event;
+	const path = url.pathname;
+
 	// No admin yet: everything leads to the first-run wizard.
 	if (!hasAnyUser()) {
 		return path === '/setup' ? resolveWithLang(event, resolve) : redirectTo('/setup');
@@ -92,12 +103,12 @@ const respond: Handle = async ({ event, resolve }) => {
 	if (event.locals.user && path === '/login') return redirectTo('/');
 
 	return resolveWithLang(event, resolve);
-};
+}
 
 // Fills in the placeholders of app.html: interface language and colour theme (set on the
 // server, so a page never flashes in the wrong theme while loading).
 function resolveWithLang(event: RequestEvent, resolve: Parameters<Handle>[0]['resolve']) {
-	const lang = getSetting('uiLanguage');
+	const lang = event.locals.locale;
 	const theme = themeFor(event);
 	const [dark, light] = barColors(theme);
 	return resolve(event, {

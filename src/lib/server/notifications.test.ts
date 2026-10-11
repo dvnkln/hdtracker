@@ -15,13 +15,16 @@ import { isSignedImage, readCollageAddress } from './images';
 import {
 	buildMessages,
 	dueEvents,
+	messagesFor,
 	notifyUser,
+	prefsFor,
 	sampleMessage,
 	savePrefs,
 	sendDueNotifications
 } from './notifications';
 import { addDevice, listDevices, setDeviceEnabled } from './push';
-import { setSettings } from './settings';
+import { localeOf, withLocale } from './i18n';
+import { setUserSettings } from './settings';
 import { TASKS, isRequired } from './tasks/scheduler';
 
 const TODAY = '2026-10-05';
@@ -81,7 +84,7 @@ beforeEach(() => {
 	db.delete(libraryItems).run();
 	db.delete(users).run();
 	me = db.insert(users).values({ username: 'me', passwordHash: 'x' }).returning().get().id;
-	setSettings({
+	setUserSettings(me, {
 		notifyMode: 'single',
 		notifyHour: '9',
 		notifyFrom: '',
@@ -123,7 +126,7 @@ describe('dueEvents', () => {
 			.insert(watchedEpisodes)
 			.values({ trackingId: running.trackingId, season: 3, episode: 4 })
 			.run();
-		setSettings({ categories: 'movies,series,anime' });
+		setUserSettings(me, { categories: 'movies,series,anime' });
 
 		const due = dueEvents(me, TODAY);
 		expect(due.map((d) => d.entry.title)).toEqual(['Running show', 'Watched show']);
@@ -140,7 +143,7 @@ describe('dueEvents', () => {
 	it('starts on the day the messages were switched on', () => {
 		title({ title: 'Yesterday' }, [['cinema', day(-1)]]);
 		title({ title: 'Today' }, [['cinema', day(0)]]);
-		setSettings({ notifyFrom: TODAY });
+		setUserSettings(me, { notifyFrom: TODAY });
 		expect(labels()).toEqual(['Today']);
 	});
 });
@@ -261,8 +264,10 @@ describe('buildMessages', () => {
 
 	it('uses the language and the anime title the user chose', () => {
 		library();
-		setSettings({ uiLanguage: 'de', animeTitle: 'romaji' });
-		const messages = buildMessages(dueEvents(me, TODAY), 'single', TODAY);
+		setUserSettings(me, { uiLanguage: 'de', animeTitle: 'romaji' });
+		const messages = withLocale(localeOf(me), () =>
+			messagesFor(me, dueEvents(me, TODAY), 'single', TODAY)
+		);
 		expect(messages.map((m) => [m.title, m.body])).toContainEqual(['Anime JP', 'Folge 1 · Start']);
 		expect(messages.map((m) => m.body)).toContain('Kinostart · Heimkino-Start');
 	});
@@ -315,13 +320,13 @@ describe('notifyUser', () => {
 	it('does nothing when switched off, and saves nothing up without a device', async () => {
 		title({ title: 'Movie' }, [['cinema', day(0)]]);
 		accept();
-		setSettings({ notifyMode: 'off' });
+		setUserSettings(me, { notifyMode: 'off' });
 		device(me, 'phone');
 		expect(await notifyUser(me, at(12))).toBe(0);
 		expect(fetch).not.toHaveBeenCalled();
 
 		// Switched on, but no device: nothing is kept for the day one is added
-		setSettings({ notifyMode: 'single' });
+		setUserSettings(me, { notifyMode: 'single' });
 		getDb().delete(pushSubscriptions).run();
 		expect(await notifyUser(me, at(12))).toBe(0);
 		device(me, 'phone');
@@ -335,7 +340,7 @@ describe('notifyUser', () => {
 		device(me, 'phone');
 		device(me, 'laptop');
 		accept();
-		setSettings({ notifyMode: 'digest' });
+		setUserSettings(me, { notifyMode: 'digest' });
 		expect(await notifyUser(me, at(9))).toBe(1);
 		// One message, to both devices
 		expect(fetch).toHaveBeenCalledTimes(2);
@@ -355,9 +360,9 @@ describe('sampleMessage (test button)', () => {
 		expect(single).toMatchObject({ tag: 'test' });
 		expect(single.title).toMatch(/^Test · (Newest|Also new)$/);
 		// Also when the messages are still switched off
-		setSettings({ notifyMode: 'off' });
+		setUserSettings(me, { notifyMode: 'off' });
 		expect(sampleMessage(me)?.title).toMatch(/^Test · /);
-		setSettings({ notifyMode: 'digest' });
+		setUserSettings(me, { notifyMode: 'digest' });
 		const digest = sampleMessage(me);
 		expect(digest.title).toBe('Test · New today: 2 titles');
 		expect(digest.url).toBe('/');
@@ -373,7 +378,7 @@ describe('switching on and the task', () => {
 	});
 
 	it('switching on starts today; changing the form later keeps that day', () => {
-		setSettings({ notifyMode: 'off', notifyFrom: '' });
+		setUserSettings(me, { notifyMode: 'off', notifyFrom: '' });
 		vi.useFakeTimers({ now: at(12), toFake: ['Date'] });
 		savePrefs(me, 'single', 7);
 		vi.setSystemTime(new Date(`${day(3)}T12:00:00`));
@@ -391,6 +396,12 @@ describe('switching on and the task', () => {
 			.values({ username: 'other', passwordHash: 'x' })
 			.returning()
 			.get().id;
+		// Everybody has their own settings: the other account starts with notifications off
+		expect(prefsFor(other).mode).toBe('off');
+		setUserSettings(other, { notifyMode: 'digest', notifyHour: '9', uiLanguage: 'de' });
+		expect(prefsFor(me).mode).toBe('single');
+		expect(localeOf(me)).toBe('en');
+		expect(localeOf(other)).toBe('de');
 		// Everybody is told about their own library only
 		title({ title: 'Their movie', userId: other }, [['cinema', day(0)]]);
 		expect(labels(me)).toEqual(['Movie']);

@@ -7,7 +7,7 @@ import { getShowDetails } from './episodes';
 import { findTitle } from './library';
 import { today, type Details, type ShowDetails } from './providers/types';
 import { refreshSoon } from './releases';
-import { enabledCategories } from './settings';
+import { shownCategories } from './settings';
 
 // Everything a detail page shows is kept in the database for the titles of the library, so
 // their pages open without asking TMDB, IGDB or AniList. refreshItem() (releases.ts) fills it:
@@ -68,7 +68,7 @@ export function deleteDetailsOfHiddenAreas() {
 		.select({ id: itemDetails.itemId })
 		.from(itemDetails)
 		.innerJoin(libraryItems, eq(libraryItems.id, itemDetails.itemId))
-		.where(notInArray(libraryItems.category, enabledCategories()))
+		.where(notInArray(libraryItems.category, shownCategories()))
 		.all();
 	for (const { id } of hidden) {
 		db.delete(itemDetails).where(eq(itemDetails.itemId, id)).run();

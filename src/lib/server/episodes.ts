@@ -7,7 +7,7 @@ import { getAnimeDetails } from './providers/anilist';
 import { getTvDetails } from './providers/tmdb';
 import type { ShowDetails } from './providers/types';
 import { refreshPending } from './releases';
-import { getSetting } from './settings';
+import { getSetting, getUserSetting } from './settings';
 
 export { findItem, hasEpisodes };
 
@@ -89,9 +89,10 @@ export function setEpisodes(
 			}
 		}
 
-		// Auto-status can be switched off in the settings.
+		// Auto-status can be switched off in the settings – what counts is the setting of whoever
+		// ticks the episode.
 		const next =
-			getSetting('autoStatus') === 'on'
+			getUserSetting(userId, 'autoStatus') === 'on'
 				? autoStatus(item.status, details, watchedKeys(item.trackingId), watched)
 				: item.status;
 		if (next !== item.status) {

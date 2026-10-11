@@ -20,7 +20,7 @@ import {
 	type ReleaseEvent,
 	type ReleaseInfo
 } from './providers/types';
-import { enabledCategories, getSetting } from './settings';
+import { shownCategories, getSetting } from './settings';
 
 // Episodes are kept from this many days ago on (the dashboard shows the last 4 weeks).
 const KEEP_DAYS = 60;
@@ -275,7 +275,7 @@ export function refreshPending() {
 					.where(
 						and(
 							eq(libraryItems.source, source),
-							inArray(libraryItems.category, enabledCategories()),
+							inArray(libraryItems.category, shownCategories()),
 							isNull(libraryItems.metadataUpdatedAt),
 							failed.length ? notInArray(libraryItems.id, failed) : undefined
 						)
@@ -315,10 +315,7 @@ export function pendingStatus() {
 		.select({ source: libraryItems.source, n: count() })
 		.from(libraryItems)
 		.where(
-			and(
-				isNull(libraryItems.metadataUpdatedAt),
-				inArray(libraryItems.category, enabledCategories())
-			)
+			and(isNull(libraryItems.metadataUpdatedAt), inArray(libraryItems.category, shownCategories()))
 		)
 		.groupBy(libraryItems.source)
 		.all();
@@ -374,7 +371,7 @@ export async function refreshAll() {
 	const items = getDb()
 		.select()
 		.from(libraryItems)
-		.where(inArray(libraryItems.category, enabledCategories()))
+		.where(inArray(libraryItems.category, shownCategories()))
 		.all()
 		.filter((item) => isDue(item, status.get(item.id) ?? 'dropped', ended.has(item.id), now));
 	const failedPerSource = await Promise.all(

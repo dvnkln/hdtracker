@@ -13,8 +13,8 @@ import {
 	verifyDummy,
 	verifyPassword
 } from '$lib/server/auth';
-import { serverMessages } from '$lib/server/i18n';
-import { rememberTheme } from '$lib/server/theme';
+import { localeOf, rememberLocale, serverMessages } from '$lib/server/i18n';
+import { rememberTheme, savedTheme } from '$lib/server/theme';
 import type { Actions } from './$types';
 
 export const actions: Actions = {
@@ -43,7 +43,9 @@ export const actions: Actions = {
 		clearLoginFailures(ip);
 		const { token, expiresAt } = createSession(user.id);
 		setSessionCookie(cookies, isHttps(request, url), token, expiresAt);
-		rememberTheme(cookies, request, url); // the login page of this device follows the account
+		// The login page of this device follows the account from now on
+		rememberTheme(cookies, request, url, savedTheme(user.id));
+		rememberLocale(cookies, request, url, localeOf(user.id));
 		redirect(303, '/');
 	}
 };

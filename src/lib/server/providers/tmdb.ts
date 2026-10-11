@@ -1,7 +1,7 @@
 import { env } from '$env/dynamic/private';
 import { cached, remember } from '../cache';
 import { getStreamingLinks, preloadStreamingLinks, type StreamingLinks } from './wikidata';
-import { serverMessages } from '../i18n';
+import { contentMessages } from '../i18n';
 import {
 	ProviderError,
 	fetchJson,
@@ -352,8 +352,8 @@ export async function getTvDetails(id: string, language: string): Promise<ShowDe
 			number: s.season_number,
 			name:
 				s.season_number === 0
-					? serverMessages().episodes.specials
-					: s.name || serverMessages().episodes.season(s.season_number),
+					? contentMessages().episodes.specials
+					: s.name || contentMessages().episodes.season(s.season_number),
 			special: s.season_number === 0,
 			airDate: s.air_date || null,
 			episodes: s.episodes.map((e) => toEpisode(e, now))

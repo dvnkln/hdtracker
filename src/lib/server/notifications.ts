@@ -3,13 +3,13 @@ import { eventLabel } from '$lib/eventLabel';
 import { byEpisode, getDashboard, toEntry, trackedEvents, type DashboardEntry } from './dashboard';
 import { getDb } from './db';
 import { itemDetails, libraryItems, notificationsSent, releases, users } from './db/schema';
-import { serverMessages } from './i18n';
+import { localeOf, serverMessages, withLocale } from './i18n';
 import { imageSource } from '$lib/images';
 import { LAYOUTS, preparePictures, type Layout } from './collage';
 import { signedCollagePath, signedImagePath } from './images';
 import { today } from './providers/types';
 import { deliver, hasEnabledTarget, type Notice, type PictureSource } from './targets';
-import { getSetting, setSettings } from './settings';
+import { getUserSetting, setUserSettings } from './settings';
 
 // Tells the user about what came out today: new episodes and seasons, cinema and home
 // releases, game releases – exactly what shows up under "recently released" on the dashboard
@@ -24,7 +24,7 @@ export const NOTIFY_MODES: NotifyMode[] = ['off', 'single', 'digest'];
 export function savePrefs(userId: number, mode: NotifyMode, hour: number) {
 	const before = prefsFor(userId);
 	const switchedOn = before.mode === 'off' && mode !== 'off';
-	setSettings({
+	setUserSettings(userId, {
 		notifyMode: mode,
 		notifyHour: String(hour),
 		...(switchedOn ? { notifyFrom: today() } : {})
@@ -39,16 +39,14 @@ export function prepareNotificationPictures() {
 	if (everyone.some(({ id }) => prefsFor(id).mode !== 'off')) void preparePictures();
 }
 
-// What a user wants. Today there is one set of settings (one account); with several users
-// this is the place that reads them per user (`userId` is not needed until then).
+// What a user wants – the one place that reads it.
 export function prefsFor(userId: number) {
-	void userId;
-	const mode = getSetting('notifyMode') as NotifyMode;
-	const hour = Number(getSetting('notifyHour'));
+	const mode = getUserSetting(userId, 'notifyMode') as NotifyMode;
+	const hour = Number(getUserSetting(userId, 'notifyHour'));
 	return {
 		mode: NOTIFY_MODES.includes(mode) ? mode : 'off',
 		hour: Number.isInteger(hour) && hour >= 0 && hour <= 23 ? hour : 9,
-		from: getSetting('notifyFrom')
+		from: getUserSetting(userId, 'notifyFrom')
 	};
 }
 
@@ -107,10 +105,9 @@ export function dueEvents(userId: number, day = today()): Due[] {
 }
 
 // The title as the user sees it everywhere (anime: English or Romaji on top, see settings).
-function shownTitle(entry: DashboardEntry) {
-	const romaji = entry.category === 'anime' && getSetting('animeTitle') === 'romaji';
-	return (romaji && entry.originalTitle) || entry.title;
-}
+const shownTitle = (entry: DashboardEntry, romaji: boolean) =>
+	(romaji && entry.category === 'anime' && entry.originalTitle) || entry.title;
+const prefersRomaji = (userId: number) => getUserSetting(userId, 'animeTitle') === 'romaji';
 
 // The small picture of every notification: a calendar in the colours of the logo.
 const ICON = '/icons/notify.png';
@@ -147,7 +144,14 @@ const collage = (addresses: string[], layout: Layout) => ({
 // The messages for what is due: one per title, or one for all of them. The small picture is
 // always the calendar; the large one, shown when the notification is opened up, is the film
 // card of the title – for a summary of several titles their posters side by side.
-export function buildMessages(due: Due[], mode: NotifyMode, day = today()): Notice[] {
+// Written in the language the work runs in (see i18n.ts); `romaji`: the receiver wants anime
+// under their Japanese title.
+export function buildMessages(
+	due: Due[],
+	mode: NotifyMode,
+	day = today(),
+	romaji = false
+): Notice[] {
 	const m = serverMessages();
 	if (due.length === 0 || mode === 'off') return [];
 
@@ -155,7 +159,7 @@ export function buildMessages(due: Due[], mode: NotifyMode, day = today()): Noti
 		const titles = [...new Set(due.map((d) => d.itemId))].length;
 		const lines = due
 			.slice(0, DIGEST_LINES)
-			.map((d) => `${shownTitle(d.entry)} – ${eventLabel(d.entry, m)}`);
+			.map((d) => `${shownTitle(d.entry, romaji)} – ${eventLabel(d.entry, m)}`);
 		if (due.length > DIGEST_LINES) lines.push(m.notifications.more(due.length - DIGEST_LINES));
 		const posters = [...new Set(due.map((d) => d.entry.posterUrl))].filter(
 			(address): address is string => !!address && imageSource(address) !== null
@@ -179,7 +183,7 @@ export function buildMessages(due: Due[], mode: NotifyMode, day = today()): Noti
 	const perItem = new Map<number, Due[]>();
 	for (const d of due) perItem.set(d.itemId, [...(perItem.get(d.itemId) ?? []), d]);
 	return [...perItem.values()].map((own) => ({
-		title: shownTitle(own[0].entry),
+		title: shownTitle(own[0].entry, romaji),
 		body: own.map((d) => eventLabel(d.entry, m)).join(' · '),
 		url: `/${own[0].entry.category}/${own[0].entry.externalId}`,
 		tag: `item-${own[0].itemId}`,
@@ -198,7 +202,8 @@ export function sampleMessage(userId: number): Notice {
 	const recent = getDashboard(userId).recent.filter((entry) => entry.date !== null);
 	const newest = recent.sort((a, b) => b.date!.localeCompare(a.date!)).slice(0, 3);
 	const due = newest.map((entry, index) => ({ entry, itemId: index, rows: [] }));
-	const [message] = buildMessages(
+	const [message] = messagesFor(
+		userId,
 		mode === 'digest' ? due : due.slice(0, 1),
 		mode === 'digest' ? 'digest' : 'single'
 	);
@@ -236,8 +241,16 @@ function markSent(userId: number, due: Due[]) {
 	}
 }
 
-// Sends what is due to one user. Returns how many messages went out.
-export async function notifyUser(userId: number, now = new Date()) {
+// Sends what is due to one user, in their language. Returns how many messages went out.
+export function notifyUser(userId: number, now = new Date()) {
+	return withLocale(localeOf(userId), () => notify(userId, now));
+}
+
+// The messages as this user wants to read them (anime title as they chose it).
+export const messagesFor = (userId: number, due: Due[], mode: NotifyMode, day = today()) =>
+	buildMessages(due, mode, day, prefersRomaji(userId));
+
+async function notify(userId: number, now: Date) {
 	const { mode, hour } = prefsFor(userId);
 	if (mode === 'off' || now.getHours() < hour) return 0;
 	const day = now.toLocaleDateString('sv-SE');
@@ -251,7 +264,7 @@ export async function notifyUser(userId: number, now = new Date()) {
 	}
 
 	let sentMessages = 0;
-	for (const message of buildMessages(due, mode, day)) {
+	for (const message of messagesFor(userId, due, mode, day)) {
 		const results = await deliver(userId, message);
 		// Reached no target at all: try again with the next run (for as long as it is fresh).
 		if (!results.some((r) => r.ok)) continue;

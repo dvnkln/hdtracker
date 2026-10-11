@@ -2,7 +2,7 @@ import { zstdDecompressSync } from 'node:zlib';
 import { eq } from 'drizzle-orm';
 import { getDb } from './db';
 import { animeTmdbMap } from './db/schema';
-import { enabledCategories, getSetting, setSettings } from './settings';
+import { shownCategories, getSetting, setSettings } from './settings';
 
 // Episode titles for anime come from TMDB, but AniList (our source for anime) has one entry per
 // season while TMDB has one show with seasons. Which TMDB season and episodes belong to an
@@ -23,7 +23,7 @@ const RETRY_MS = 60 * 60 * 1000;
 const TIMEOUT_MS = 60_000;
 
 export function animeTitlesEnabled() {
-	return getSetting('animeEpisodeTitles') === 'on' && enabledCategories().includes('anime');
+	return getSetting('animeEpisodeTitles') === 'on' && shownCategories().includes('anime');
 }
 
 // ---- Episode ranges ----

@@ -4,7 +4,7 @@ import { isStatusFor, type Category, type Status } from '$lib/status';
 import { getDb } from '../db';
 import { trackingMembers, trackings, watchedEpisodes } from '../db/schema';
 import { findItem, saveItem, SOURCE_FOR } from '../library';
-import { enabledCategories, setSettings } from '../settings';
+import { enabledCategories, setUserSettings } from '../settings';
 import { getAnimeByMalIds } from '../providers/anilist';
 import type { SearchResult } from '../providers/types';
 import { refreshPending } from '../releases';
@@ -111,7 +111,7 @@ export async function importYamtrack(
 	);
 
 	// Titles of hidden areas: ask first; then skip them, import them anyway or show the areas.
-	let enabled = enabledCategories();
+	let enabled = enabledCategories(userId);
 	const hiddenCounts: Partial<Record<Category, number>> = {};
 	const hiddenIds = new Set<string>();
 	for (const row of rows) {
@@ -123,10 +123,10 @@ export async function importYamtrack(
 	}
 	if (hiddenIds.size && !hiddenChoice) throw new HiddenAreasError(hiddenCounts);
 	if (hiddenIds.size && hiddenChoice === 'enable') {
-		setSettings({
+		setUserSettings(userId, {
 			categories: CATEGORY_KEYS.filter((c) => enabled.includes(c) || hiddenCounts[c]).join(',')
 		});
-		enabled = enabledCategories();
+		enabled = enabledCategories(userId);
 	}
 	const skipHidden = hiddenChoice === 'skip';
 

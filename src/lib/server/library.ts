@@ -2,7 +2,7 @@ import { and, count, eq, inArray, notExists } from 'drizzle-orm';
 import type { Category, Status } from '$lib/status';
 import { getDb } from './db';
 import { libraryItems, trackingMembers, trackings } from './db/schema';
-import { getSetting } from './settings';
+import { getUserSetting } from './settings';
 import type { SearchResult } from './providers/types';
 
 // A title as the data source describes it – stored once, whoever tracks it.
@@ -62,7 +62,7 @@ export function allItems(userId: number) {
 // Anime are sorted by the title shown on top (English or Romaji, see settings).
 export function listLibrary(userId: number, category: Category) {
 	const items = libraryOf(userId, eq(libraryItems.category, category));
-	const romaji = category === 'anime' && getSetting('animeTitle') === 'romaji';
+	const romaji = category === 'anime' && getUserSetting(userId, 'animeTitle') === 'romaji';
 	const sortTitle = (i: LibraryItem) => (romaji && i.originalTitle) || i.title;
 	return items.sort((a, b) =>
 		sortTitle(a).localeCompare(sortTitle(b), 'de', { sensitivity: 'base' })
