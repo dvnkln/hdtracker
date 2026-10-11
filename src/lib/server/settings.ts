@@ -22,7 +22,11 @@ const DEFAULTS = {
 	// ranges, comma-separated. Empty = none.
 	trustedProxies: '',
 	// Secret a reverse proxy sends to prove itself where addresses do not help (see proxy.ts)
-	proxyKey: ''
+	proxyKey: '',
+	// Who may add notification targets with an address of their own choice (webhook, ntfy):
+	// 'admins' | 'all'. Such a target makes the server send requests to that address – also
+	// into the network it runs in.
+	customTargets: 'admins'
 } as const;
 
 // What every user sets for themselves, with the values a new account starts with.

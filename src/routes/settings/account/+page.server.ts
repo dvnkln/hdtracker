@@ -14,6 +14,7 @@ import {
 import { getDb } from '$lib/server/db';
 import { users } from '$lib/server/db/schema';
 import { serverMessages } from '$lib/server/i18n';
+import { setOwnPassword } from '$lib/server/users';
 import type { Actions } from './$types';
 
 // Checks the current password (with the same brute-force protection as the login form).
@@ -67,8 +68,7 @@ export const actions: Actions = {
 		if (password !== String(data.get('confirm') ?? '')) return failWith(t.auth.passwordsDiffer);
 
 		const user = event.locals.user!;
-		const passwordHash = await hashPassword(password);
-		getDb().update(users).set({ passwordHash }).where(eq(users.id, user.id)).run();
+		await setOwnPassword(user.id, password);
 		deleteOtherSessions(user.id, event.cookies.get(SESSION_COOKIE) ?? '');
 		return { section: 'password', message: t.settings.passwordChanged };
 	},

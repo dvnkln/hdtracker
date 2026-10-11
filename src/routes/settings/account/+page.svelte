@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import NewPassword from '$lib/components/NewPassword.svelte';
 	import PasswordInput from '$lib/components/PasswordInput.svelte';
 	import { m } from '$lib/i18n/index.svelte';
 	import { MIN_PASSWORD_LENGTH } from '$lib/limits';
@@ -76,24 +77,10 @@
 			<span class={labelText}>{m.settings.currentPassword}</span>
 			<PasswordInput name="current" autocomplete="current-password" required />
 		</label>
-		<label class={label}>
-			<span class={labelText}>{m.settings.newPassword(MIN_PASSWORD_LENGTH)}</span>
-			<PasswordInput
-				name="password"
-				autocomplete="new-password"
-				minlength={MIN_PASSWORD_LENGTH}
-				required
-			/>
-		</label>
-		<label class={label}>
-			<span class={labelText}>{m.settings.repeatPassword}</span>
-			<PasswordInput
-				name="confirm"
-				autocomplete="new-password"
-				minlength={MIN_PASSWORD_LENGTH}
-				required
-			/>
-		</label>
+		<NewPassword
+			label={m.settings.newPassword(MIN_PASSWORD_LENGTH)}
+			repeatLabel={m.settings.repeatPassword}
+		/>
 		<div class={actions}>
 			<SubmitButton
 				text={m.settings.changePassword}

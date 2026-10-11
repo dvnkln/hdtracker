@@ -3,7 +3,8 @@
 //
 //   docker exec hdtracker node reset-password.js [username]
 //
-// Without a username the only account is used. All devices of the account are logged out;
+// Without a username the only account is used; with several accounts the name is needed (an
+// admin can also reset the password of another account under Settings → Users). All devices of the account are logged out;
 // the app does not need a restart.
 import { randomBytes, scryptSync } from 'node:crypto';
 import { existsSync } from 'node:fs';
@@ -45,8 +46,18 @@ const salt = randomBytes(16);
 const hash = scryptSync(password, salt, 64);
 const passwordHash = `scrypt$${salt.toString('hex')}$${hash.toString('hex')}`;
 
+// From version 0.8.0 on a temporary password has to be replaced right after logging in. (A
+// database that was never started with that version does not have the column yet.)
+const mustChange = db
+	.prepare('PRAGMA table_info(users)')
+	.all()
+	.some((column) => column.name === 'must_change_password');
+
 db.transaction(() => {
 	db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(passwordHash, user.id);
+	if (mustChange) {
+		db.prepare('UPDATE users SET must_change_password = 1 WHERE id = ?').run(user.id);
+	}
 	db.prepare('DELETE FROM sessions WHERE user_id = ?').run(user.id);
 })();
 db.close();
@@ -57,5 +68,5 @@ Password reset – all devices of this account were logged out.
   Username:           ${user.username}
   Temporary password: ${password}
 
-Log in and choose your own password under Settings → Account.
+${mustChange ? 'Log in with it – hdtracker then asks for a password of your own.' : 'Log in and choose your own password under Settings → Account.'}
 `);

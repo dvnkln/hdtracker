@@ -34,7 +34,7 @@ export const actions: Actions = {
 		if (hasAnyUser()) redirect(303, '/login');
 		const user = getDb()
 			.insert(users)
-			.values({ username, passwordHash })
+			.values({ username, passwordHash, role: 'admin', lastLoginAt: new Date() })
 			.returning({ id: users.id })
 			.get();
 

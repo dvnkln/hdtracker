@@ -1,5 +1,10 @@
 import { fail } from '@sveltejs/kit';
-import { removeChannel, saveChannel, setChannelEnabled } from '$lib/server/channels';
+import {
+	mayUseCustomTargets,
+	removeChannel,
+	saveChannel,
+	setChannelEnabled
+} from '$lib/server/channels';
 import { serverMessages } from '$lib/server/i18n';
 import {
 	NOTIFY_MODES,
@@ -23,7 +28,9 @@ import type { Actions, PageServerLoad } from './$types';
 export const load: PageServerLoad = ({ locals }) => ({
 	publicKey: pushPublicKey(),
 	prefs: prefsFor(locals.user!.id),
-	targets: listTargets(locals.user!.id)
+	targets: listTargets(locals.user!.id),
+	// Whether this user may add webhook and ntfy targets (admins always, see channels.ts)
+	customTargets: mayUseCustomTargets(locals.user!.id)
 });
 
 export const actions: Actions = {
@@ -91,9 +98,11 @@ export const actions: Actions = {
 		const reason =
 			result.error === 'gone'
 				? t.gone
-				: !result.error || result.error === 'unreachable'
-					? t.unreachable
-					: t.testFailed(result.error);
+				: result.error === 'notAllowed'
+					? t.channelErrors.notAllowed
+					: !result.error || result.error === 'unreachable'
+						? t.unreachable
+						: t.testFailed(result.error);
 		return fail(502, { error: reason });
 	},
 

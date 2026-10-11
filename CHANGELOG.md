@@ -7,6 +7,18 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
+## Upcoming release
+
+### ✨ New
+
+- **Several users:** an admin creates accounts under Settings → Users – nobody can register themselves. A new account gets a temporary password that is shown once; on the first login its owner chooses their own. Everybody has a library, a dashboard and settings of their own (language, theme, shown areas, notifications, …); what is set for the whole installation (content language, region, connection, maintenance) stays with the admins. Accounts can be made admin, locked (keeps everything, login refused) or deleted. The admin sees how many titles somebody tracks, never which
+
+### 🔧 Improved
+
+- Choosing a password tells you while typing whether it is long enough and whether both entries match
+- The login page of a device now also remembers the language last used there (as it already did the theme)
+- Webhook and ntfy targets for notifications are reserved for admins unless an admin allows them for everybody (Settings → Users) – they make the server call an address of the user's choice
+
 ## 0.7.0 – 2026-10-06
 
 hdtracker can now tell you when something from your library comes out.

@@ -55,8 +55,17 @@
 	// paused: notifications are switched off altogether – the switches of the targets then
 	// decide nothing, and a line above the list says so (the list itself stays as it is: it
 	// can still be worked with, so greying it out would be a contradiction)
-	type Props = { targets: Target[]; publicKey: string; paused: boolean };
-	let { targets, publicKey, paused }: Props = $props();
+	// custom: this user may add targets with an address of their own (webhook, ntfy) – admins
+	// always, everybody else only if an admin allowed it
+	type Props = { targets: Target[]; publicKey: string; paused: boolean; custom: boolean };
+	let { targets, publicKey, paused, custom }: Props = $props();
+	// The few reasons the server names by a code instead of in words
+	const reason = (error: string) =>
+		error === 'notAllowed'
+			? m.notifications.channelErrors.notAllowed
+			: error === 'unreachable'
+				? m.notifications.unreachable
+				: error;
 
 	const forms = new FormFeedback();
 	const { label, labelText, hint, actions } = ui;
@@ -424,7 +433,7 @@
 							class="block truncate text-xs {target.lastError ? 'text-red-400' : 'text-zinc-500'}"
 						>
 							{#if target.lastError}
-								{m.notifications.lastError(target.lastError)}
+								{m.notifications.lastError(reason(target.lastError))}
 							{:else if target.lastOkAt}
 								{m.notifications.lastReached(formatDateTime(target.lastOkAt))}
 							{:else}
@@ -570,28 +579,30 @@
 					<span class={hint}>{m.notifications.kindHints.pushover}</span>
 				</span>
 			</button>
-			<button
-				type="button"
-				class="ui-btn flex items-start gap-3 rounded-lg border border-zinc-800 p-3 text-left transition-colors hover:border-zinc-600"
-				onclick={() => (adding = 'ntfy')}
-			>
-				<Megaphone size={20} class="mt-0.5 shrink-0 text-zinc-400" />
-				<span>
-					<span class="block text-sm font-medium">{m.notifications.kinds.ntfy}</span>
-					<span class={hint}>{m.notifications.kindHints.ntfy}</span>
-				</span>
-			</button>
-			<button
-				type="button"
-				class="ui-btn flex items-start gap-3 rounded-lg border border-zinc-800 p-3 text-left transition-colors hover:border-zinc-600"
-				onclick={() => (adding = 'webhook')}
-			>
-				<Webhook size={20} class="mt-0.5 shrink-0 text-zinc-400" />
-				<span>
-					<span class="block text-sm font-medium">{m.notifications.kinds.webhook}</span>
-					<span class={hint}>{m.notifications.kindHints.webhook}</span>
-				</span>
-			</button>
+			{#if custom}
+				<button
+					type="button"
+					class="ui-btn flex items-start gap-3 rounded-lg border border-zinc-800 p-3 text-left transition-colors hover:border-zinc-600"
+					onclick={() => (adding = 'ntfy')}
+				>
+					<Megaphone size={20} class="mt-0.5 shrink-0 text-zinc-400" />
+					<span>
+						<span class="block text-sm font-medium">{m.notifications.kinds.ntfy}</span>
+						<span class={hint}>{m.notifications.kindHints.ntfy}</span>
+					</span>
+				</button>
+				<button
+					type="button"
+					class="ui-btn flex items-start gap-3 rounded-lg border border-zinc-800 p-3 text-left transition-colors hover:border-zinc-600"
+					onclick={() => (adding = 'webhook')}
+				>
+					<Webhook size={20} class="mt-0.5 shrink-0 text-zinc-400" />
+					<span>
+						<span class="block text-sm font-medium">{m.notifications.kinds.webhook}</span>
+						<span class={hint}>{m.notifications.kindHints.webhook}</span>
+					</span>
+				</button>
+			{/if}
 			<FeedbackText feedback={deviceFeedback} />
 			<div>
 				<button type="button" class={BUTTON_SECONDARY} onclick={() => (adding = null)}>

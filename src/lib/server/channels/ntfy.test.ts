@@ -147,7 +147,11 @@ describe('ntfy as a target', () => {
 		const db = getDb();
 		db.delete(notificationChannels).run();
 		db.delete(users).run();
-		me = db.insert(users).values({ username: 'me', passwordHash: 'x' }).returning().get().id;
+		me = db
+			.insert(users)
+			.values({ username: 'me', passwordHash: 'x', role: 'admin' })
+			.returning()
+			.get().id;
 	});
 
 	it('is saved without asking ntfy, and refuses what cannot work', async () => {

@@ -71,7 +71,59 @@ export const de = {
 			`Zu viele Fehlversuche. Bitte ${seconds >= 120 ? `${Math.ceil(seconds / 60)} min` : `${seconds} s`} warten.`,
 		usernameRule: 'Benutzername: 3–32 Zeichen, nur Buchstaben, Zahlen, _ . -',
 		passwordTooShort: (n: number) => `Passwort muss mindestens ${n} Zeichen lang sein`,
-		passwordsDiffer: 'Passwörter stimmen nicht überein'
+		passwordsDiffer: 'Passwörter stimmen nicht überein',
+		passwordMissing: (n: number) => (n === 1 ? 'noch 1 Zeichen' : `noch ${n} Zeichen`),
+		passwordLongEnough: 'lang genug',
+		passwordsMatch: 'stimmt überein',
+		passwordsNoMatchYet: 'stimmt noch nicht überein',
+		accountLocked: 'Dieses Konto ist gesperrt. Wende dich an den Admin.',
+		newPasswordTitle: 'Eigenes Passwort wählen',
+		newPasswordIntro:
+			'Du hast dich mit einem Übergangspasswort angemeldet. Wähle jetzt ein Passwort, das nur du kennst.',
+		saveNewPassword: 'Passwort speichern'
+	},
+	users: {
+		title: 'Benutzer',
+		navHint: 'Konten, Rollen',
+		accounts: 'Konten',
+		you: 'du',
+		roles: { admin: 'Admin', user: 'Benutzer' } as Record<string, string>,
+		titles: (n: number) => (n === 1 ? '1 Titel' : `${n} Titel`),
+		locked: 'gesperrt',
+		temporary: 'Übergangspasswort',
+		lastLogin: (date: string) => `zuletzt angemeldet ${date}`,
+		neverLoggedIn: 'noch nie angemeldet',
+		add: 'Benutzer anlegen',
+		create: 'Anlegen',
+		createHint:
+			'Ein neues Konto bekommt ein Übergangspasswort. Beim ersten Anmelden muss ein eigenes gewählt werden.',
+		passwordFor: (name: string) => `Für ${name} – gib es persönlich weiter.`,
+		temporaryHint:
+			'Wird nur jetzt angezeigt. Nach dem Anmelden damit muss ein eigenes Passwort gewählt werden.',
+		admin: 'Admin',
+		adminHint: 'Darf Konten verwalten und alles unter „Verwaltung“ ändern.',
+		lock: 'Gesperrt',
+		lockHint: 'Anmelden geht nicht mehr. Bibliothek und Einstellungen bleiben erhalten.',
+		reset: 'Passwort zurücksetzen',
+		resetHint: 'Zurücksetzen vergibt ein neues Übergangspasswort und meldet das Konto überall ab.',
+		delete: 'Konto löschen',
+		deleteWarning: (name: string, titles: number) =>
+			`${name} wird mit Bibliothek (${titles} Titel), Einstellungen und Geräten gelöscht. Das lässt sich nicht rückgängig machen.`,
+		confirmLabel: (name: string) => `Zur Bestätigung „${name}“ eintippen`,
+		confirmWrong: (name: string) => `Bitte genau „${name}“ eintippen.`,
+		deleteNow: 'Endgültig löschen',
+		deleted: (name: string) => `${name} gelöscht ✓`,
+		rights: 'Rechte',
+		customTargets: 'Webhook und ntfy für alle',
+		customTargetsHint:
+			'Aus: nur Admins. Solche Ziele lassen den Server Adressen deiner Wahl aufrufen – auch im eigenen Netz.',
+		errors: {
+			username: 'Benutzername: 3–32 Zeichen, nur Buchstaben, Zahlen, _ . -',
+			taken: 'Diesen Benutzernamen gibt es schon.',
+			unknown: 'Dieses Konto gibt es nicht (mehr).',
+			lastAdmin: 'Es muss mindestens ein Admin bleiben, der sich anmelden kann.',
+			self: 'Das eigene Konto lässt sich hier nicht sperren oder löschen.'
+		} as Record<string, string>
 	},
 
 	home: {
@@ -476,6 +528,7 @@ export const de = {
 		unreachable: 'Der Dienst ist gerade nicht erreichbar.',
 		rejected: (reason: string) => `Pushover lehnt die Angaben ab: ${reason}`,
 		channelErrors: {
+			notAllowed: 'Webhook und ntfy sind den Admins vorbehalten.',
 			unknown: 'Dieses Ziel gibt es nicht (mehr).',
 			tooMany: 'Mehr als 10 Ziele dieser Art gehen nicht.',
 			name: 'Bitte einen Namen angeben (höchstens 40 Zeichen).',

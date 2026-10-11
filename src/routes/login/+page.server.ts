@@ -15,6 +15,7 @@ import {
 } from '$lib/server/auth';
 import { localeOf, rememberLocale, serverMessages } from '$lib/server/i18n';
 import { rememberTheme, savedTheme } from '$lib/server/theme';
+import { recordLogin } from '$lib/server/users';
 import type { Actions } from './$types';
 
 export const actions: Actions = {
@@ -41,6 +42,11 @@ export const actions: Actions = {
 		}
 
 		clearLoginFailures(ip);
+		// Only told to whoever knows the password
+		if (user.disabled) {
+			return fail(403, { username, error: serverMessages().auth.accountLocked });
+		}
+		recordLogin(user.id);
 		const { token, expiresAt } = createSession(user.id);
 		setSessionCookie(cookies, isHttps(request, url), token, expiresAt);
 		// The login page of this device follows the account from now on

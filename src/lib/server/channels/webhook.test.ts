@@ -153,7 +153,11 @@ describe('a webhook as a target', () => {
 	beforeEach(() => {
 		getDb().delete(notificationChannels).run();
 		getDb().delete(users).run();
-		me = getDb().insert(users).values({ username: 'me', passwordHash: 'x' }).returning().get().id;
+		me = getDb()
+			.insert(users)
+			.values({ username: 'me', passwordHash: 'x', role: 'admin' })
+			.returning()
+			.get().id;
 	});
 
 	it('is saved without asking anybody, and refused if address, body or header are no good', async () => {

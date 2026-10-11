@@ -29,6 +29,9 @@ export const init: ServerInit = () => {
 // Pages reachable without being logged in.
 const PUBLIC_PATHS = ['/health', '/login', '/setup'];
 
+// What somebody with a temporary password may open: the page to choose their own, and out.
+const PASSWORD_PATHS = ['/new-password', '/logout'];
+
 const SAFE_METHODS = ['GET', 'HEAD', 'OPTIONS'];
 
 function redirectTo(location: string) {
@@ -101,6 +104,11 @@ function route(event: RequestEvent, resolve: Parameters<Handle>[0]['resolve']) {
 		(path === '/img/collage' && readCollageAddress(event.url) !== null);
 	if (!event.locals.user && !open) return redirectTo('/login');
 	if (event.locals.user && path === '/login') return redirectTo('/');
+
+	// Logged in with a temporary password: nothing else until they chose their own.
+	const mustChange = event.locals.user?.mustChangePassword === true;
+	if (mustChange && !PASSWORD_PATHS.includes(path)) return redirectTo('/new-password');
+	if (!mustChange && path === '/new-password') return redirectTo('/');
 
 	return resolveWithLang(event, resolve);
 }

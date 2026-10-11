@@ -24,7 +24,8 @@ import {
 	type NtfyConfig
 } from './channels/ntfy';
 import { getDb } from './db';
-import { notificationChannels } from './db/schema';
+import { notificationChannels, users } from './db/schema';
+import { getSetting } from './settings';
 import type { Image } from './images';
 
 // Further ways to notify a user besides their own devices: a Pushover account, an ntfy
@@ -35,6 +36,18 @@ export type ChannelKind = 'pushover' | 'ntfy' | 'webhook';
 export const CHANNEL_KINDS: ChannelKind[] = ['pushover', 'ntfy', 'webhook'];
 export const MAX_CHANNELS = 10;
 export const MAX_NAME_LENGTH = 40;
+
+// Webhook and ntfy send to an address the user chose, also into the network the server runs
+// in. Admins may always use them; everybody else only if an admin allowed it for all
+// (setting `customTargets`).
+const CUSTOM_KINDS: string[] = ['webhook', 'ntfy'];
+export function mayUseCustomTargets(userId: number) {
+	if (getSetting('customTargets') === 'all') return true;
+	const user = getDb().select({ role: users.role }).from(users).where(eq(users.id, userId)).get();
+	return user?.role === 'admin';
+}
+const allowed = (userId: number, kind: string) =>
+	!CUSTOM_KINDS.includes(kind) || mayUseCustomTargets(userId);
 
 // A message on its way out of hdtracker: what a channel may need of it.
 export type Outgoing = {
@@ -120,6 +133,7 @@ export async function saveChannel(userId: number, input: ChannelInput): Promise<
 	if (input.id !== null && !existing) return { ok: false, error: 'unknown' };
 	const kind = existing?.kind ?? input.kind;
 	if (!CHANNEL_KINDS.includes(kind as ChannelKind)) return { ok: false, error: 'unknown' };
+	if (!allowed(userId, kind)) return { ok: false, error: 'notAllowed' };
 	if (!existing && listChannels(userId).length >= MAX_CHANNELS) {
 		return { ok: false, error: 'tooMany' };
 	}
@@ -220,8 +234,10 @@ export function removeChannel(userId: number, id: number) {
 
 // Sends a message through one channel and remembers how it went (shown in the list).
 export async function sendToChannel(row: Row, message: Outgoing) {
-	const result =
-		row.kind === 'webhook'
+	const result = !allowed(row.userId, row.kind)
+		? // Set up while it was allowed (or while its owner was an admin): kept, but not used
+			{ ok: false as const, error: 'notAllowed' }
+		: row.kind === 'webhook'
 			? await sendWebhook(row.config as WebhookConfig, message)
 			: row.kind === 'ntfy'
 				? await sendNtfy(row.config as NtfyConfig, message)

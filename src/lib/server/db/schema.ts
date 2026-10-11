@@ -20,6 +20,14 @@ export const users = sqliteTable('users', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
 	username: text('username').notNull().unique(),
 	passwordHash: text('password_hash').notNull(),
+	// Admins manage the installation and its accounts; there is always at least one
+	role: text('role').$type<'admin' | 'user'>().notNull().default('user'),
+	// Locked: logging in is refused, everything else about the account stays
+	disabled: integer('disabled', { mode: 'boolean' }).notNull().default(false),
+	// Set while the account has a temporary password (new, or reset by an admin): the next
+	// page after logging in asks for a password of the user's own
+	mustChangePassword: integer('must_change_password', { mode: 'boolean' }).notNull().default(false),
+	lastLoginAt: integer('last_login_at', { mode: 'timestamp' }),
 	createdAt: integer('created_at', { mode: 'timestamp' })
 		.notNull()
 		.$defaultFn(() => new Date())

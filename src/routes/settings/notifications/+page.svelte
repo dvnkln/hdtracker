@@ -71,7 +71,12 @@
 <!-- Where to: devices, Pushover, ... as one list -->
 <section class={card}>
 	<h3 class={heading}><Send size={20} class="text-zinc-400" />{m.notifications.targets}</h3>
-	<TargetList targets={data.targets} publicKey={data.publicKey} paused={mode === 'off'} />
+	<TargetList
+		targets={data.targets}
+		publicKey={data.publicKey}
+		paused={mode === 'off'}
+		custom={data.customTargets}
+	/>
 	<p class="mt-4 {hint}">
 		<a class="underline" href={WIKI} target="_blank" rel="noreferrer">{m.notifications.learnMore}</a
 		>

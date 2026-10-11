@@ -30,7 +30,7 @@
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
-{#if data.user}
+{#if data.user && !data.user.mustChangePassword}
 	<!-- Stays at the top while scrolling -->
 	<header
 		data-chrome="header"

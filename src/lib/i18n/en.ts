@@ -67,7 +67,59 @@ export const en: Messages = {
 			`Too many failed attempts. Please wait ${seconds >= 120 ? `${Math.ceil(seconds / 60)} min` : `${seconds} s`}.`,
 		usernameRule: 'Username: 3–32 characters, only letters, digits, _ . -',
 		passwordTooShort: (n) => `Password must be at least ${n} characters long`,
-		passwordsDiffer: 'Passwords do not match'
+		passwordsDiffer: 'Passwords do not match',
+		passwordMissing: (n: number) => (n === 1 ? '1 more character' : `${n} more characters`),
+		passwordLongEnough: 'long enough',
+		passwordsMatch: 'matches',
+		passwordsNoMatchYet: 'does not match yet',
+		accountLocked: 'This account is locked. Ask the admin.',
+		newPasswordTitle: 'Choose your own password',
+		newPasswordIntro:
+			'You logged in with a temporary password. Now choose a password only you know.',
+		saveNewPassword: 'Save password'
+	},
+	users: {
+		title: 'Users',
+		navHint: 'Accounts, roles',
+		accounts: 'Accounts',
+		you: 'you',
+		roles: { admin: 'Admin', user: 'User' } as Record<string, string>,
+		titles: (n: number) => (n === 1 ? '1 title' : `${n} titles`),
+		locked: 'locked',
+		temporary: 'Temporary password',
+		lastLogin: (date: string) => `last login ${date}`,
+		neverLoggedIn: 'never logged in',
+		add: 'Add a user',
+		create: 'Create',
+		createHint:
+			'A new account gets a temporary password. On the first login a password of one’s own has to be chosen.',
+		passwordFor: (name: string) => `For ${name} – hand it over in person.`,
+		temporaryHint:
+			'Only shown now. After logging in with it, a password of one’s own has to be chosen.',
+		admin: 'Admin',
+		adminHint: 'May manage accounts and change everything under “Administration”.',
+		lock: 'Locked',
+		lockHint: 'Logging in is no longer possible. Library and settings are kept.',
+		reset: 'Reset password',
+		resetHint: 'Resetting gives a new temporary password and logs the account out everywhere.',
+		delete: 'Delete account',
+		deleteWarning: (name: string, titles: number) =>
+			`${name} is deleted with their library (${titles} ${titles === 1 ? 'title' : 'titles'}), settings and devices. This cannot be undone.`,
+		confirmLabel: (name: string) => `Type “${name}” to confirm`,
+		confirmWrong: (name: string) => `Please type exactly “${name}”.`,
+		deleteNow: 'Delete for good',
+		deleted: (name: string) => `${name} deleted ✓`,
+		rights: 'Rights',
+		customTargets: 'Webhook and ntfy for everyone',
+		customTargetsHint:
+			'Off: admins only. Such targets make the server call addresses of your choice – also in your own network.',
+		errors: {
+			username: 'Username: 3–32 characters, only letters, digits, _ . -',
+			taken: 'This username already exists.',
+			unknown: 'This account does not exist (any more).',
+			lastAdmin: 'At least one admin who can log in has to remain.',
+			self: 'Your own account cannot be locked or deleted here.'
+		} as Record<string, string>
 	},
 
 	home: {
@@ -452,6 +504,7 @@ export const en: Messages = {
 		unreachable: 'The service cannot be reached right now.',
 		rejected: (reason: string) => `Pushover refuses these details: ${reason}`,
 		channelErrors: {
+			notAllowed: 'Webhook and ntfy are reserved for admins.',
 			unknown: 'This target does not exist (any more).',
 			tooMany: 'No more than 10 targets of this kind.',
 			name: 'Please give it a name (40 characters at most).',

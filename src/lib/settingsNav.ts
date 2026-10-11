@@ -6,6 +6,7 @@ import {
 	Server,
 	Settings2,
 	UserRound,
+	Users,
 	Wrench
 } from '@lucide/svelte';
 import { m } from '$lib/i18n/index.svelte';
@@ -56,6 +57,13 @@ export function settingsSections() {
 			icon: Server,
 			label: m.settings.server,
 			hint: m.settings.serverHint
+		},
+		{
+			href: '/settings/users',
+			group: 'admin',
+			icon: Users,
+			label: m.users.title,
+			hint: m.users.navHint
 		},
 		{
 			href: '/settings/maintenance',

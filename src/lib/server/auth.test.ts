@@ -42,7 +42,12 @@ describe('passwords', () => {
 describe('sessions', () => {
 	it('finds the user for a valid token only', () => {
 		const { token } = createSession(userId);
-		expect(validateSession(token)?.user).toEqual({ id: userId, username: 'demo' });
+		expect(validateSession(token)?.user).toEqual({
+			id: userId,
+			username: 'demo',
+			role: 'user',
+			mustChangePassword: false
+		});
 		expect(validateSession('made-up-token')).toBeNull();
 	});
 	it('ends after 30 days without use', () => {

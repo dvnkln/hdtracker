@@ -23,7 +23,14 @@ export const SESSION_COOKIE = 'hdtracker_session';
 const DAY = 24 * 60 * 60 * 1000;
 const SESSION_DAYS = 30;
 
-export type SessionUser = { id: number; username: string };
+export type Role = 'admin' | 'user';
+export type SessionUser = {
+	id: number;
+	username: string;
+	role: Role;
+	// Has a temporary password: has to choose one of their own before anything else
+	mustChangePassword: boolean;
+};
 
 // ---- Secret ----
 
@@ -64,7 +71,7 @@ export async function verifyDummy(password: string) {
 
 let userExists = false;
 
-// True once the admin account was created (cached, users are never deleted).
+// True once the admin account was created (cached: the last admin cannot be removed).
 export function hasAnyUser() {
 	if (!userExists) {
 		const [row] = getDb().select({ n: count() }).from(users).all();
@@ -94,14 +101,22 @@ export function validateSession(token: string) {
 	const db = getDb();
 	const id = sessionId(token);
 	const row = db
-		.select({ id: users.id, username: users.username, expiresAt: sessions.expiresAt })
+		.select({
+			id: users.id,
+			username: users.username,
+			role: users.role,
+			disabled: users.disabled,
+			mustChangePassword: users.mustChangePassword,
+			expiresAt: sessions.expiresAt
+		})
 		.from(sessions)
 		.innerJoin(users, eq(sessions.userId, users.id))
 		.where(eq(sessions.id, id))
 		.get();
 	if (!row) return null;
 
-	if (row.expiresAt.getTime() < Date.now()) {
+	// Expired, or the account was locked meanwhile
+	if (row.expiresAt.getTime() < Date.now() || row.disabled) {
 		db.delete(sessions).where(eq(sessions.id, id)).run();
 		return null;
 	}
@@ -111,7 +126,12 @@ export function validateSession(token: string) {
 		renewedUntil = new Date(Date.now() + SESSION_DAYS * DAY);
 		db.update(sessions).set({ expiresAt: renewedUntil }).where(eq(sessions.id, id)).run();
 	}
-	const user: SessionUser = { id: row.id, username: row.username };
+	const user: SessionUser = {
+		id: row.id,
+		username: row.username,
+		role: row.role,
+		mustChangePassword: row.mustChangePassword
+	};
 	return { user, renewedUntil };
 }
 
@@ -238,10 +258,10 @@ export function pruneLoginFailures() {
 
 // ---- Permissions ----
 
-// Admins may change settings for the whole installation (server, maintenance). There is only
-// one account for now, and it is the admin; with several users this becomes a real check.
+// Admins may change settings for the whole installation (server, maintenance) and manage
+// its accounts.
 export function isAdmin(user: SessionUser | null): boolean {
-	return user !== null;
+	return user?.role === 'admin';
 }
 
 // For form actions and endpoints of admin pages (layout guards do not cover those).
