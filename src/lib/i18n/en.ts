@@ -79,6 +79,39 @@ export const en: Messages = {
 			'You logged in with a temporary password. Now choose a password only you know.',
 		saveNewPassword: 'Save password'
 	},
+	share: {
+		title: 'Track together',
+		// The symbol on a title's page, in its three states
+		alone: 'Track together – invite somebody',
+		invited: 'Track together – invitation not answered yet',
+		together: (names: string) => `Tracking together with ${names}`,
+		with: 'Together with',
+		invite: 'Invite',
+		inviteAction: 'Invite',
+		inviteName: (name: string) => `Invite ${name}`,
+		pending: 'Invited – no answer yet',
+		withdraw: 'Withdraw',
+		withdrawName: (name: string) => `Withdraw the invitation for ${name}`,
+		inviteHint:
+			'Who accepts takes over your status and watched episodes. From then on you keep them up to date together.',
+		leave: 'Stop tracking together',
+		leaveHint:
+			'You keep the title with the current status and watched episodes as your own copy. The others keep theirs.',
+		leaveNow: 'Track on my own',
+		// An invitation waiting on the page of its title
+		invitedBy: (name: string) => `${name} invites you to track this together`,
+		theirStatus: (status: string) => `Their status: ${status}`,
+		replaces: 'Your own status and watched episodes are replaced by theirs.',
+		accept: 'Accept',
+		decline: 'Decline',
+		errors: {
+			notYours: 'This title is not in your library.',
+			unknown: 'This is no longer possible – please reload the page.',
+			self: 'You cannot invite yourself.',
+			member: 'You already track this together.',
+			alone: 'You track this title on your own.'
+		} as Record<string, string>
+	},
 	profile: {
 		title: 'Profile',
 		upload: 'Upload a picture',

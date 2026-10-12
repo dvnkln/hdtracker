@@ -10,9 +10,21 @@
 	import ItemSheet from '$lib/components/ItemSheet.svelte';
 	import PosterCard from '$lib/components/PosterCard.svelte';
 	import Episodes from '$lib/components/Episodes.svelte';
-	import { ArrowLeft, Bell, BellOff, ExternalLink, ImageOff, Plus, Star } from '@lucide/svelte';
+	import Avatar from '$lib/components/Avatar.svelte';
+	import ShareSheet from '$lib/components/ShareSheet.svelte';
+	import { BUTTON_PRIMARY, BUTTON_SECONDARY } from '$lib/components/SubmitButton.svelte';
+	import {
+		ArrowLeft,
+		Bell,
+		BellOff,
+		ExternalLink,
+		ImageOff,
+		Plus,
+		Star,
+		UserPlus
+	} from '@lucide/svelte';
 
-	let { data } = $props();
+	let { data, form } = $props();
 
 	let cat = $derived(CATEGORIES[data.category]);
 	let info = $derived(data.info);
@@ -35,6 +47,21 @@
 	);
 
 	let sheetOpen = $state(false);
+
+	// Tracking together: the symbol next to the bell shows where things stand – alone, somebody
+	// invited, or together – and opens the window for it.
+	let shareOpen = $state(false);
+	let sharing = $derived(data.sharing);
+	let waiting = $derived(!!sharing?.candidates.some((c) => c.invitation !== null));
+	let shareLabel = $derived(
+		!sharing
+			? ''
+			: sharing.companions.length > 0
+				? m.share.together(sharing.companions.map((p) => p.name).join(', '))
+				: waiting
+					? m.share.invited
+					: m.share.alone
+	);
 	let showFullOverview = $state(false);
 
 	// Only offer "Mehr anzeigen" if the overview is really cut off (depends on screen width).
@@ -156,6 +183,37 @@
 							</button>
 						</form>
 					{/if}
+					{#if sharing}
+						<button
+							type="button"
+							onclick={() => (shareOpen = true)}
+							aria-label={shareLabel}
+							title={shareLabel}
+							class="ui-btn relative inline-flex items-center rounded-full border bg-zinc-900/80 transition hover:bg-zinc-800 {sharing
+								.companions.length > 0
+								? 'ui-keep border-(--accent) p-1'
+								: 'border-zinc-600 p-2 text-zinc-400'}"
+						>
+							{#if sharing.companions.length > 0}
+								<span class="flex -space-x-1.5">
+									{#each sharing.companions.slice(0, 3) as person (person.id)}
+										<Avatar {person} class="size-6 text-[10px] ring-2 ring-zinc-900" />
+									{/each}
+								</span>
+								{#if sharing.companions.length > 3}
+									<span class="px-1.5 text-xs font-medium">+{sharing.companions.length - 3}</span>
+								{/if}
+							{:else}
+								<UserPlus size={16} />
+								{#if waiting}
+									<!-- Somebody is invited and has not answered yet -->
+									<span
+										class="absolute -top-0.5 -right-0.5 size-2.5 rounded-full bg-amber-400 ring-2 ring-zinc-900"
+									></span>
+								{/if}
+							{/if}
+						</button>
+					{/if}
 					{#if info.externalUrl}
 						<a
 							href={info.externalUrl}
@@ -178,6 +236,37 @@
 					<span class="rounded-full bg-zinc-800 px-2.5 py-0.5 text-xs text-zinc-300">{genre}</span>
 				{/each}
 			</div>
+		{/if}
+
+		<!-- Somebody invited the user to track this title together -->
+		{#each data.invitations as invitation (invitation.id)}
+			<div
+				class="ui-card mt-4 flex max-w-3xl flex-wrap items-center gap-3 rounded-lg border border-(--accent)/60 bg-zinc-900 p-3"
+			>
+				<Avatar person={invitation.from} class="size-10 text-base" />
+				<div class="min-w-0 flex-1 basis-48 text-sm">
+					<p class="font-medium">{m.share.invitedBy(invitation.from.name)}</p>
+					<p class="text-zinc-400">
+						{m.share.theirStatus(statusLabel(data.category, invitation.status))}
+					</p>
+					{#if data.status}
+						<p class="mt-1 text-amber-400">{m.share.replaces}</p>
+					{/if}
+				</div>
+				<div class="flex gap-2">
+					<form method="POST" action="?/accept" use:enhance>
+						<input type="hidden" name="id" value={invitation.id} />
+						<button class="{BUTTON_PRIMARY} px-3 py-1.5 text-sm">{m.share.accept}</button>
+					</form>
+					<form method="POST" action="?/decline" use:enhance>
+						<input type="hidden" name="id" value={invitation.id} />
+						<button class="{BUTTON_SECONDARY} px-3 py-1.5 text-sm">{m.share.decline}</button>
+					</form>
+				</div>
+			</div>
+		{/each}
+		{#if form?.error}
+			<Notice kind="warning" class="mt-4 max-w-3xl">{form.error}</Notice>
 		{/if}
 
 		{#if data.sourceMissing}
@@ -334,5 +423,14 @@
 			actionPath="/{data.category}"
 			showDetailsLink={false}
 		/>
+		{#if sharing}
+			<ShareSheet
+				open={shareOpen}
+				title={shown.main}
+				companions={sharing.companions}
+				candidates={sharing.candidates}
+				onclose={() => (shareOpen = false)}
+			/>
+		{/if}
 	</main>
 </div>

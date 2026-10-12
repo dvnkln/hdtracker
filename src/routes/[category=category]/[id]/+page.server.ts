@@ -9,11 +9,22 @@ import {
 	watchedKeys
 } from '$lib/server/episodes';
 import { detailsFor } from '$lib/server/itemDetails';
-import { libraryStatusFor, setNotify } from '$lib/server/library';
+import { findTitle, libraryStatusFor, setNotify } from '$lib/server/library';
 import { prefsFor } from '$lib/server/notifications';
 import { ProviderError, type Details, type ShowDetails } from '$lib/server/providers/types';
 import { serverMessages } from '$lib/server/i18n';
 import { getUserSetting } from '$lib/server/settings';
+import {
+	accept,
+	companions,
+	decline,
+	incoming,
+	invitable,
+	invite,
+	leaveShared,
+	withdraw,
+	type SharingError
+} from '$lib/server/sharing';
 import type { Actions, PageServerLoad } from './$types';
 
 const ID_PATTERN = /^\d{1,12}$/;
@@ -59,6 +70,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			info,
 			show,
 			status: item?.status ?? null,
+			sharing: item ? sharingOf(locals.user!.id, item.id) : null,
+			invitations: invitationsFor(locals.user!.id, category, info.item.externalId),
 			// The data source no longer knows this title: what is shown is the stored copy
 			sourceMissing: !!item?.sourceMissingSince,
 			placeholder: false,
@@ -78,6 +91,23 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		failLoading(err);
 	}
 };
+
+// Tracking together: who shares the user's state of this title and who could be invited.
+// Null while there is nobody to share with (an installation with one account never sees it).
+function sharingOf(userId: number, itemId: number) {
+	const together = companions(userId, itemId);
+	const candidates = invitable(userId, itemId);
+	return together.length + candidates.length > 0 ? { companions: together, candidates } : null;
+}
+
+// Invitations for this title that wait for the user's answer.
+function invitationsFor(userId: number, category: Category, externalId: string) {
+	const title = findTitle(category, externalId);
+	if (!title) return [];
+	return incoming(userId)
+		.filter((invitation) => invitation.item.id === title.id)
+		.map(({ id, from, status }) => ({ id, from, status }));
+}
 
 const SOURCE_LABELS = { tmdb: 'TMDB', igdb: 'IGDB', anilist: 'AniList' } as const;
 
@@ -122,6 +152,8 @@ function placeholderFor(item: NonNullable<ReturnType<typeof findItem>>, hideSpoi
 		hideSpoilers,
 		sourceMissing: true,
 		placeholder: true,
+		sharing: null as ReturnType<typeof sharingOf>,
+		invitations: [] as ReturnType<typeof invitationsFor>,
 		notify: null as boolean | null
 	};
 }
@@ -131,7 +163,47 @@ function readInt(data: FormData, name: string) {
 	return Number.isInteger(value) && value >= 0 ? value : null;
 }
 
+// What went wrong, in the user's language.
+const refused = (error: SharingError) => fail(400, { error: serverMessages().share.errors[error] });
+
 export const actions: Actions = {
+	// Tracking together: invite somebody to the state the user has for this title.
+	invite: async ({ params, request, locals }) => {
+		const item = findItem(locals.user!.id, params.category as Category, params.id);
+		const to = readInt(await request.formData(), 'to');
+		if (!item || to === null) return fail(400, { error: serverMessages().common.invalidData });
+		const result = invite(locals.user!.id, item.id, to);
+		return result.ok ? { shared: true } : refused(result.error);
+	},
+
+	// Take back an invitation, or answer one.
+	withdraw: async ({ request, locals }) => {
+		const id = readInt(await request.formData(), 'id');
+		if (id === null) return fail(400, { error: serverMessages().common.invalidData });
+		const result = withdraw(locals.user!.id, id);
+		return result.ok ? { shared: true } : refused(result.error);
+	},
+	accept: async ({ request, locals }) => {
+		const id = readInt(await request.formData(), 'id');
+		if (id === null) return fail(400, { error: serverMessages().common.invalidData });
+		const result = accept(locals.user!.id, id);
+		return result.ok ? { shared: true } : refused(result.error);
+	},
+	decline: async ({ request, locals }) => {
+		const id = readInt(await request.formData(), 'id');
+		if (id === null) return fail(400, { error: serverMessages().common.invalidData });
+		const result = decline(locals.user!.id, id);
+		return result.ok ? { shared: true } : refused(result.error);
+	},
+
+	// Go on alone, with a copy of the shared state.
+	leave: async ({ params, locals }) => {
+		const item = findItem(locals.user!.id, params.category as Category, params.id);
+		if (!item) return fail(400, { error: serverMessages().common.invalidData });
+		const result = leaveShared(locals.user!.id, item.id);
+		return result.ok ? { shared: true } : refused(result.error);
+	},
+
 	// The bell: notifications about this title on or off.
 	notify: async ({ params, request, locals }) => {
 		const item = findItem(locals.user!.id, params.category as Category, params.id);

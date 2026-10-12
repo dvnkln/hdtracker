@@ -7,6 +7,16 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
+## Upcoming release
+
+### ✨ New
+
+- **Track together:** on the page of a title in your library, the new symbol next to the bell invites another user. Who accepts takes over your status and watched episodes – from then on both of you keep them up to date, and the symbol shows who tracks along. Anybody can go on alone again and keeps the state as a copy of their own
+
+### 🔧 Improved
+
+- After an update of the server, an app that was left open (a tab, the installed app) notices the new version and loads itself afresh on the next change of page – before, it kept showing the old interface until it was reloaded by hand
+
 ## 0.8.0 – 2026-10-12
 
 hdtracker is no longer for one person only: an admin can add accounts, and everybody gets a library of their own.

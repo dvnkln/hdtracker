@@ -83,6 +83,39 @@ export const de = {
 			'Du hast dich mit einem Übergangspasswort angemeldet. Wähle jetzt ein Passwort, das nur du kennst.',
 		saveNewPassword: 'Passwort speichern'
 	},
+	share: {
+		title: 'Gemeinsam tracken',
+		// The symbol on a title's page, in its three states
+		alone: 'Gemeinsam tracken – jemanden einladen',
+		invited: 'Gemeinsam tracken – Einladung noch offen',
+		together: (names: string) => `Gemeinsam mit ${names}`,
+		with: 'Gemeinsam mit',
+		invite: 'Einladen',
+		inviteAction: 'Einladen',
+		inviteName: (name: string) => `${name} einladen`,
+		pending: 'Eingeladen – noch keine Antwort',
+		withdraw: 'Zurückziehen',
+		withdrawName: (name: string) => `Einladung für ${name} zurückziehen`,
+		inviteHint:
+			'Wer annimmt, übernimmt deinen Status und deine gesehenen Folgen. Ab dann pflegt ihr beides gemeinsam.',
+		leave: 'Nicht mehr gemeinsam tracken',
+		leaveHint:
+			'Du behältst den Titel mit dem jetzigen Status und den gesehenen Folgen als eigene Kopie. Die anderen behalten ihren Stand.',
+		leaveNow: 'Allein weiter tracken',
+		// An invitation waiting on the page of its title
+		invitedBy: (name: string) => `${name} lädt dich ein, das gemeinsam zu tracken`,
+		theirStatus: (status: string) => `Status dort: ${status}`,
+		replaces: 'Dein eigener Status und deine gesehenen Folgen werden dadurch ersetzt.',
+		accept: 'Annehmen',
+		decline: 'Ablehnen',
+		errors: {
+			notYours: 'Dieser Titel ist nicht in deiner Bibliothek.',
+			unknown: 'Das geht nicht mehr – bitte die Seite neu laden.',
+			self: 'Du kannst dich nicht selbst einladen.',
+			member: 'Ihr trackt das schon gemeinsam.',
+			alone: 'Du trackst diesen Titel allein.'
+		} as Record<string, string>
+	},
 	profile: {
 		title: 'Profil',
 		upload: 'Bild hochladen',

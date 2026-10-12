@@ -1,0 +1,104 @@
+import { expect, test, type Page } from '@playwright/test';
+import { loginOk, sheet } from './helpers';
+
+// A second account, created by the admin in this test and removed again at its end.
+const MATE = { name: 'mate', password: 'mate-password-6789' };
+const SERIES = '/series/201'; // in the admin's library: "Watched", 4 of 4 episodes
+
+// Changes the status of the open title through its window.
+async function setStatus(page: Page, from: string, to: string) {
+	await page.getByRole('button', { name: from, exact: true }).click();
+	await sheet(page).getByRole('button', { name: to, exact: true }).click();
+	await expect(sheet(page)).toHaveCount(0);
+	await expect(page.getByRole('button', { name: to, exact: true })).toBeVisible();
+}
+
+test('tracking together: invite, accept, one state for both, leave with a copy', async ({
+	page,
+	browser
+}) => {
+	// The admin creates the account; its owner chooses a password
+	await loginOk(page);
+	await page.goto('/settings/users');
+	const accounts = page
+		.locator('section')
+		.filter({ has: page.getByRole('heading', { name: 'Accounts' }) });
+	await accounts.getByRole('button', { name: 'Add a user' }).click();
+	await accounts.getByLabel('Username').fill(MATE.name);
+	await accounts.getByRole('button', { name: 'Create' }).click();
+	const temporary = (await page
+		.locator('section')
+		.filter({ hasText: 'Temporary password' })
+		.locator('code')
+		.textContent())!;
+	const theirs = await browser.newContext();
+	const mate = await theirs.newPage();
+	await mate.goto('/login');
+	await mate.locator('input[name=username]').fill(MATE.name);
+	await mate.locator('input[name=password]').fill(temporary);
+	await mate.getByRole('button', { name: 'Log in' }).click();
+	await mate.locator('input[name=password]').fill(MATE.password);
+	await mate.locator('input[name=confirm]').fill(MATE.password);
+	await mate.getByRole('button', { name: 'Save password' }).click();
+	await expect(mate).toHaveURL('/');
+
+	// The symbol next to the status invites; the window lists who can be asked
+	await page.goto(SERIES);
+	await page.getByRole('button', { name: 'Track together – invite somebody' }).click();
+	await sheet(page).getByRole('button', { name: 'Invite mate' }).click();
+	await expect(sheet(page).getByText('Invited – no answer yet')).toBeVisible();
+	// Taking it back and asking again
+	await sheet(page).getByRole('button', { name: 'Withdraw the invitation for mate' }).click();
+	await sheet(page).getByRole('button', { name: 'Invite mate' }).click();
+	await expect(sheet(page).getByText('Invited – no answer yet')).toBeVisible();
+	await sheet(page).getByRole('button', { name: 'Close' }).click();
+	await expect(
+		page.getByRole('button', { name: 'Track together – invitation not answered yet' })
+	).toBeVisible();
+
+	// The invited one finds it on the page of the title, with the state they would take over
+	await mate.goto(SERIES);
+	await expect(mate.getByText('tester invites you to track this together')).toBeVisible();
+	await expect(mate.getByText('Their status: Watched')).toBeVisible();
+	await expect(mate.getByRole('button', { name: 'Add to library' })).toBeVisible();
+	await mate.getByRole('button', { name: 'Accept' }).click();
+	await expect(mate.getByText('tester invites you')).toHaveCount(0);
+	await expect(mate.getByRole('button', { name: 'Watched', exact: true })).toBeVisible();
+	await expect(mate.getByText('4 / 4 episodes watched')).toBeVisible();
+	await expect(mate.getByRole('button', { name: 'Tracking together with tester' })).toBeVisible();
+
+	// One state for both: what one changes, the other sees
+	await setStatus(mate, 'Watched', 'Paused');
+	await page.reload();
+	await expect(page.getByRole('button', { name: 'Paused', exact: true })).toBeVisible();
+	await page.getByRole('button', { name: 'Tracking together with mate' }).click();
+	await expect(sheet(page).getByText('mate')).toBeVisible();
+
+	// Leaving keeps a copy; from then on each has their own
+	await sheet(page).getByRole('button', { name: 'Stop tracking together' }).click();
+	await sheet(page).getByRole('button', { name: 'Track on my own' }).click();
+	await expect(sheet(page).getByRole('button', { name: 'Invite mate' })).toBeVisible();
+	await sheet(page).getByRole('button', { name: 'Close' }).click();
+	await expect(page.getByRole('button', { name: 'Paused', exact: true })).toBeVisible();
+	await expect(page.getByText('4 / 4 episodes watched')).toBeVisible();
+	await mate.reload();
+	await setStatus(mate, 'Paused', 'Dropped');
+	await page.reload();
+	await expect(page.getByRole('button', { name: 'Paused', exact: true })).toBeVisible();
+
+	// Back to how it was: the status, and one account
+	await setStatus(page, 'Paused', 'Watched');
+	await page.goto('/settings/users');
+	await accounts.getByRole('button', { name: /mate/ }).click();
+	const row = accounts.getByRole('listitem').filter({ hasText: 'mate' });
+	await row.getByRole('button', { name: 'Delete account' }).click();
+	await row.getByLabel(/to confirm/).fill(MATE.name);
+	await row.getByRole('button', { name: 'Delete for good' }).click();
+	await expect(accounts.getByRole('listitem')).toHaveCount(1);
+	await theirs.close();
+
+	// With nobody to share with, the symbol is gone
+	await page.goto(SERIES);
+	await expect(page.getByRole('button', { name: 'Watched', exact: true })).toBeVisible();
+	await expect(page.getByRole('button', { name: /Track together/ })).toHaveCount(0);
+});

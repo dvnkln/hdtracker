@@ -3,7 +3,8 @@
 	import '@fontsource/outfit/800.css';
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
-	import { page } from '$app/state';
+	import { afterNavigate, beforeNavigate } from '$app/navigation';
+	import { page, updated } from '$app/state';
 	import { CATEGORIES } from '$lib/categories';
 	import Brand from '$lib/components/Brand.svelte';
 	import HeaderSearch from '$lib/components/HeaderSearch.svelte';
@@ -24,11 +25,27 @@
 		setAnimeTitle(data.animeTitle);
 	});
 
+	// An app that stays open (a tab, the installed app) keeps running the version it was loaded
+	// with – after an update of the server it would show new data with the old interface. So it
+	// asks whether there is a new version (a small file of this server) after every change of
+	// page and when it comes back to the foreground; if there is, the next change of page
+	// loads the app afresh.
+	const checkVersion = () => void updated.check().catch(() => {});
+	afterNavigate(({ type }) => {
+		if (type !== 'enter') checkVersion();
+	});
+	beforeNavigate(({ willUnload, to }) => {
+		if (updated.current && !willUnload && to?.url) location.href = to.url.href;
+	});
+
 	// First part of the URL, e.g. "movies" for /movies?q=dune
 	let section = $derived(page.url.pathname.split('/')[1]);
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
+<svelte:document
+	onvisibilitychange={() => document.visibilityState === 'visible' && checkVersion()}
+/>
 
 {#if data.user && data.profile && !data.user.mustChangePassword}
 	<!-- Stays at the top while scrolling -->
