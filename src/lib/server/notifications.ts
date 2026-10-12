@@ -4,6 +4,7 @@ import { byEpisode, getDashboard, toEntry, trackedEvents, type DashboardEntry } 
 import { getDb } from './db';
 import { itemDetails, libraryItems, notificationsSent, releases, users } from './db/schema';
 import { localeOf, serverMessages, withLocale } from './i18n';
+import { collectReleases, pruneRead } from './notices';
 import { imageSource } from '$lib/images';
 import { LAYOUTS, preparePictures, type Layout } from './collage';
 import { signedCollagePath, signedImagePath } from './images';
@@ -280,12 +281,15 @@ export async function sendDueNotifications(now = new Date()) {
 	const everyone = getDb().select({ id: users.id }).from(users).all();
 	for (const { id } of everyone) {
 		try {
+			// The inbox gets its notices whether or not anything is sent
+			collectReleases(id, now.toLocaleDateString('sv-SE'));
 			await notifyUser(id, now);
 		} catch (err) {
 			console.error(`Notifications for user ${id} failed`, err);
 		}
 	}
 	pruneSent(now);
+	pruneRead(now);
 }
 
 // What was announced long ago can be forgotten (it is far outside the days looked at).

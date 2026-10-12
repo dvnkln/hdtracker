@@ -246,6 +246,48 @@ export const invitations = sqliteTable(
 	]
 );
 
+// What the user finds under "Inbox": something released (`kind` release, with what and when),
+// or what somebody did with a title tracked together (`actorId` accepted or declined an
+// invitation, or left). Unread until `readAt` is set; read ones are removed after a while.
+// Open invitations are not stored here – they are in `invitations` until answered.
+export type NoticeKind = 'release' | 'accepted' | 'declined' | 'left';
+export const notices = sqliteTable(
+	'notices',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		userId: integer('user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		kind: text('kind').$type<NoticeKind>().notNull(),
+		itemId: integer('item_id')
+			.notNull()
+			.references(() => libraryItems.id, { onDelete: 'cascade' }),
+		actorId: integer('actor_id').references(() => users.id, { onDelete: 'cascade' }),
+		// Releases only – a copy, because `releases` is rewritten with every refresh. Season and
+		// episode are 0 where a date has none (movies, games).
+		releaseKind: text('release_kind').$type<ReleaseKind>(),
+		season: integer('season'),
+		episode: integer('episode'),
+		date: text('date'),
+		createdAt: integer('created_at', { mode: 'timestamp' })
+			.notNull()
+			.$defaultFn(() => new Date()),
+		readAt: integer('read_at', { mode: 'timestamp' })
+	},
+	(t) => [
+		// A release is noted once per user (rows without a release never collide: NULLs differ)
+		uniqueIndex('notices_release_once').on(
+			t.userId,
+			t.itemId,
+			t.releaseKind,
+			t.season,
+			t.episode,
+			t.date
+		),
+		index('notices_user').on(t.userId)
+	]
+);
+
 // Everything the detail page of a library item shows, kept so the page opens without asking
 // the API (see server/itemDetails.ts). Removed together with the item.
 export const itemDetails = sqliteTable('item_details', {

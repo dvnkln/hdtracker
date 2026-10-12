@@ -2,6 +2,7 @@ import { fail } from '@sveltejs/kit';
 import { isDashboardSection, isOrder } from '$lib/dashboardOrder';
 import { getDashboard } from '$lib/server/dashboard';
 import { serverMessages } from '$lib/server/i18n';
+import { markRead } from '$lib/server/notices';
 import { setUserSettings } from '$lib/server/settings';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -9,6 +10,10 @@ import type { Actions, PageServerLoad } from './$types';
 export const load: PageServerLoad = ({ locals }) => getDashboard(locals.user!.id);
 
 export const actions: Actions = {
+	// The dashboard is on screen: what it lists as released counts as read in the inbox.
+	seen: ({ locals }) => {
+		markRead(locals.user!.id, 'release');
+	},
 	// Remembers the order of one of the two lists.
 	order: async ({ request, locals }) => {
 		const data = await request.formData();

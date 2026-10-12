@@ -10,7 +10,6 @@ import {
 } from '$lib/server/episodes';
 import { detailsFor } from '$lib/server/itemDetails';
 import { findTitle, libraryStatusFor, setNotify } from '$lib/server/library';
-import { prefsFor } from '$lib/server/notifications';
 import { ProviderError, type Details, type ShowDetails } from '$lib/server/providers/types';
 import { serverMessages } from '$lib/server/i18n';
 import { getUserSetting } from '$lib/server/settings';
@@ -75,8 +74,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			// The data source no longer knows this title: what is shown is the stored copy
 			sourceMissing: !!item?.sourceMissingSince,
 			placeholder: false,
-			// The bell: only for titles of the library, and only while notifications are on
-			notify: item && prefsFor(locals.user!.id).mode !== 'off' ? item.notify : null,
+			// The bell: for titles of the library. Off = nothing about this title, neither in the
+			// inbox nor as a push message
+			notify: item ? item.notify : null,
 			watched: [...watchedKeys(item?.trackingId)],
 			similarStatus: Object.fromEntries(similarStatus),
 			hideSpoilers: getUserSetting(locals.user!.id, 'hideSpoilers') === 'on'

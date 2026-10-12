@@ -11,10 +11,11 @@ test('notifications: choose form and hour, mute a single title', async ({ page }
 	const MOVIE = '/movies/101'; // in the library since 05-dashboard
 	const bell = page.getByRole('button', { name: 'Notifications about this title' });
 
-	// Switched off: no bell on the pages of titles
+	// Every title of the library has a bell, also while push messages are off: the inbox
+	// tells about releases either way
 	await page.goto(MOVIE);
 	await expect(page.getByRole('heading', { name: 'Test Movie Alpha' })).toBeVisible();
-	await expect(bell).toHaveCount(0);
+	await expect(bell).toHaveAttribute('aria-pressed', 'true');
 
 	await page.goto('/settings/notifications');
 	const prefs = page.locator('form[action="?/prefs"]');
@@ -28,7 +29,7 @@ test('notifications: choose form and hour, mute a single title', async ({ page }
 	await expect(prefs.locator('input[name=mode][value=single]')).toBeChecked();
 	await expect(prefs.locator('select[name=hour]')).toHaveValue('7');
 
-	// Now every title of the library has a bell; it mutes this title and remembers it
+	// The bell mutes this title and remembers it
 	await page.goto(MOVIE);
 	await expect(bell).toHaveAttribute('aria-pressed', 'true');
 	await bell.click();

@@ -11,6 +11,7 @@
 	import UserMenu from '$lib/components/UserMenu.svelte';
 	import { m, setLocale } from '$lib/i18n/index.svelte';
 	import { setAnimeTitle } from '$lib/titles.svelte';
+	import { Bell } from '@lucide/svelte';
 
 	let { data, children } = $props();
 
@@ -65,7 +66,26 @@
 			>
 			<HeaderSearch categories={data.categories} />
 			<!-- -mr-1: the picture itself (not its hover area) lines up with the content edge -->
-			<div class="-mr-1 flex items-center md:justify-self-end">
+			<div class="-mr-1 flex items-center gap-1 md:justify-self-end">
+				<!-- The inbox; the number is what is unread plus invitations waiting for an answer -->
+				<a
+					href="/inbox"
+					aria-label={m.inbox.open(data.open)}
+					title={m.inbox.title}
+					aria-current={section === 'inbox' ? 'page' : undefined}
+					class="relative rounded-lg p-2 transition-colors hover:bg-zinc-800 hover:text-zinc-100 {section ===
+					'inbox'
+						? 'text-zinc-100'
+						: 'text-zinc-400'}"
+				>
+					<Bell size={18} />
+					{#if data.open > 0}
+						<span
+							class="absolute -top-0.5 -right-0.5 flex min-w-4.5 items-center justify-center rounded-full bg-red-600 px-1 text-[11px] leading-4.5 font-semibold text-white"
+							>{data.open > 99 ? '99+' : data.open}</span
+						>
+					{/if}
+				</a>
 				<UserMenu person={data.profile} username={data.user.username} />
 			</div>
 		</div>

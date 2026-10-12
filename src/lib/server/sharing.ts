@@ -16,6 +16,7 @@ import {
 	watchedEpisodes
 } from './db/schema';
 import { removeOrphans, type Title } from './library';
+import { addNotice } from './noticeLog';
 import { toPerson } from './users';
 
 export type SharingError =
@@ -114,6 +115,8 @@ export function accept(userId: number, invitationId: number): Answered | Failed 
 
 		const mine = membership(userId, open.itemId, tx);
 		if (mine && mine.trackingId !== open.trackingId) {
+			// Coming from another group: those who stay there learn that the user left
+			addNotice(tx, 'left', open.itemId, userId, othersIn(mine.trackingId, userId, tx));
 			dropSent(userId, mine.trackingId, tx);
 			tx.delete(trackingMembers).where(eq(trackingMembers.id, mine.id)).run();
 		}
@@ -130,6 +133,7 @@ export function accept(userId: number, invitationId: number): Answered | Failed 
 		}
 		tx.delete(invitations).where(eq(invitations.id, open.id)).run();
 		removeOrphans(tx);
+		addNotice(tx, 'accepted', open.itemId, userId, [open.from]);
 		return { ok: true, itemId: open.itemId, from: open.from } as const;
 	});
 }
@@ -145,6 +149,7 @@ export function decline(userId: number, invitationId: number): Answered | Failed
 			.get();
 		if (!open) return { ok: false, error: 'unknown' } as const;
 		tx.delete(invitations).where(eq(invitations.id, open.id)).run();
+		addNotice(tx, 'declined', open.itemId, userId, [open.from]);
 		return { ok: true, itemId: open.itemId, from: open.from } as const;
 	});
 }
@@ -199,6 +204,7 @@ export function leaveShared(
 			.set({ trackingId: own.id })
 			.where(eq(trackingMembers.id, mine.id))
 			.run();
+		addNotice(tx, 'left', itemId, userId, others);
 		return { ok: true, others } as const;
 	});
 }
@@ -331,4 +337,15 @@ export function invitable(
 		.filter((user) => !inside.has(user.id))
 		.map((user) => ({ person: toPerson(user), invitation: open.get(user.id) ?? null }))
 		.sort((a, b) => a.person.name.localeCompare(b.person.name, 'de', { sensitivity: 'base' }));
+}
+
+// Whether there is anybody to track together with: another account that can log in. While
+// there is none, nothing about sharing is shown anywhere.
+export function canShare(userId: number) {
+	return !!getDb()
+		.select({ id: users.id })
+		.from(users)
+		.where(and(ne(users.id, userId), eq(users.disabled, false)))
+		.limit(1)
+		.get();
 }

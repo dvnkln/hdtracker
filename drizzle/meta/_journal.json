@@ -134,6 +134,13 @@
       "when": 1791781979948,
       "tag": "0018_invitations",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "6",
+      "when": 1791817867860,
+      "tag": "0019_notices",
+      "breakpoints": true
     }
   ]
 }

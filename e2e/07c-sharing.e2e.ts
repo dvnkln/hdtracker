@@ -56,8 +56,23 @@ test('tracking together: invite, accept, one state for both, leave with a copy',
 		page.getByRole('button', { name: 'Track together – invitation not answered yet' })
 	).toBeVisible();
 
-	// The invited one finds it on the page of the title, with the state they would take over
-	await mate.goto(SERIES);
+	// The invited one sees a number at the bell in the header; it leads to the invitation
+	await mate.goto('/');
+	await mate.getByRole('link', { name: 'Inbox – 1 new' }).click();
+	await expect(mate).toHaveURL('/inbox');
+	await expect(mate.getByRole('heading', { name: 'Invitations for you' })).toBeVisible();
+	await expect(mate.getByText('tester invites you · Watched')).toBeVisible();
+	// The one who asked sees it waiting, and could take it back there
+	await page.goto('/inbox');
+	await expect(page.getByRole('heading', { name: 'Waiting for an answer' })).toBeVisible();
+	await expect(page.getByText('Invited: mate')).toBeVisible();
+	await expect(
+		page.getByRole('button', { name: 'Withdraw the invitation for mate' })
+	).toBeVisible();
+
+	// It is also on the page of the title, with the state they would take over
+	await mate.getByRole('link', { name: /Test Series Gamma/ }).click();
+	await expect(mate).toHaveURL(SERIES);
 	await expect(mate.getByText('tester invites you to track this together')).toBeVisible();
 	await expect(mate.getByText('Their status: Watched')).toBeVisible();
 	await expect(mate.getByRole('button', { name: 'Add to library' })).toBeVisible();
@@ -67,9 +82,24 @@ test('tracking together: invite, accept, one state for both, leave with a copy',
 	await expect(mate.getByText('4 / 4 episodes watched')).toBeVisible();
 	await expect(mate.getByRole('button', { name: 'Tracking together with tester' })).toBeVisible();
 
+	// Answered: the number at the bell is gone, the inbox is empty again
+	await mate.getByRole('link', { name: 'Inbox', exact: true }).click();
+	await expect(mate.getByRole('heading', { name: 'Nothing new' })).toBeVisible();
+	await mate.goto(SERIES);
+	// Who asked finds the answer in their inbox – unread until they have seen it there
+	await page.goto('/inbox');
+	const answer = page.getByRole('link', { name: /mate accepted your invitation/ });
+	await expect(answer).toContainText('Test Series Gamma');
+	await expect(answer.getByText('new', { exact: true })).toBeAttached();
+	await expect(page.getByRole('heading', { name: 'Waiting for an answer' })).toHaveCount(0);
+	await page.goto(SERIES);
+	await page.goto('/inbox');
+	await expect(answer).toBeVisible();
+	await expect(answer.getByText('new', { exact: true })).toHaveCount(0);
+
 	// One state for both: what one changes, the other sees
 	await setStatus(mate, 'Watched', 'Paused');
-	await page.reload();
+	await page.goto(SERIES);
 	await expect(page.getByRole('button', { name: 'Paused', exact: true })).toBeVisible();
 	await page.getByRole('button', { name: 'Tracking together with mate' }).click();
 	await expect(sheet(page).getByText('mate')).toBeVisible();
@@ -97,7 +127,10 @@ test('tracking together: invite, accept, one state for both, leave with a copy',
 	await expect(accounts.getByRole('listitem')).toHaveCount(1);
 	await theirs.close();
 
-	// With nobody to share with, the symbol is gone
+	// With nobody to share with, the symbol on the page of a title is gone; what the deleted
+	// account did is no longer in the inbox
+	await page.goto('/inbox');
+	await expect(page.getByText(/mate/)).toHaveCount(0);
 	await page.goto(SERIES);
 	await expect(page.getByRole('button', { name: 'Watched', exact: true })).toBeVisible();
 	await expect(page.getByRole('button', { name: /Track together/ })).toHaveCount(0);

@@ -11,10 +11,12 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 
 ### ✨ New
 
-- **Track together:** on the page of a title in your library, the new symbol next to the bell invites another user. Who accepts takes over your status and watched episodes – from then on both of you keep them up to date, and the symbol shows who tracks along. Anybody can go on alone again and keeps the state as a copy of their own
+- **Inbox:** the bell in the header collects what is new for you, with a number while something is unread – releases of titles you track (the same ones the dashboard lists as recently released, whether or not you use push messages), invitations, and what others did with titles you track together. Opening it marks everything as read, a look at the dashboard marks the releases; what you have read disappears after a week
+- **Track together:** on the page of a title in your library, the new symbol next to the bell invites another user. Who accepts takes over your status and watched episodes – from then on both of you keep them up to date, and the symbol shows who tracks along. Anybody can go on alone again and keeps the state as a copy of their own. Invitations wait in the inbox until they are answered
 
 ### 🔧 Improved
 
+- The bell on the page of a title is always there for titles of your library: switched off, you hear nothing about this title – neither in the inbox nor as a push message
 - After an update of the server, an app that was left open (a tab, the installed app) notices the new version and loads itself afresh on the next change of page – before, it kept showing the old interface until it was reloaded by hand
 
 ## 0.8.0 – 2026-10-12

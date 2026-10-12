@@ -83,7 +83,25 @@ export const de = {
 			'Du hast dich mit einem Übergangspasswort angemeldet. Wähle jetzt ein Passwort, das nur du kennst.',
 		saveNewPassword: 'Passwort speichern'
 	},
+	inbox: {
+		title: 'Mitteilungen',
+		// The bell in the header
+		open: (n: number) => (n === 0 ? 'Mitteilungen' : `Mitteilungen – ${n} neu`),
+		news: 'Neuigkeiten',
+		unread: 'neu',
+		accepted: (name: string) => `${name} hat deine Einladung angenommen`,
+		declined: (name: string) => `${name} hat deine Einladung abgelehnt`,
+		left: (name: string) => `${name} trackt das nicht mehr mit dir`,
+		emptyTitle: 'Nichts Neues',
+		emptyHint: 'Neuerscheinungen und Einladungen landen hier.',
+		pushSettings: 'Auch als Push-Meldung'
+	},
 	share: {
+		// Invitations, as the inbox lists them
+		incoming: 'Einladungen für dich',
+		outgoing: 'Warten auf Antwort',
+		fromWithStatus: (name: string, status: string) => `${name} lädt dich ein · ${status}`,
+		waitingFor: (name: string) => `Eingeladen: ${name}`,
 		title: 'Gemeinsam tracken',
 		// The symbol on a title's page, in its three states
 		alone: 'Gemeinsam tracken – jemanden einladen',

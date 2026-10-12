@@ -1,10 +1,13 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { enhance } from '$app/forms';
+	import { page } from '$app/state';
 	import { CATEGORIES } from '$lib/categories';
 	import { sortByDate, type DashboardSection, type Order } from '$lib/dashboardOrder';
 	import { eventLabel } from '$lib/eventLabel';
 	import { m } from '$lib/i18n/index.svelte';
 	import { img } from '$lib/images';
+	import { reportSeen } from '$lib/seen';
 	import { titles } from '$lib/titles.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import type { DashboardEntry } from '$lib/server/dashboard';
@@ -19,6 +22,11 @@
 	} from '@lucide/svelte';
 
 	let { data } = $props();
+
+	// What is listed here as released counts as read in the inbox once it is on screen.
+	onMount(() => {
+		if (page.data.open > 0) reportSeen('/?/seen');
+	});
 
 	// Entries grouped by day (in the given order); entries without a date form the last group.
 	function byDay(entries: DashboardEntry[]) {

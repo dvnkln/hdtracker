@@ -7,6 +7,7 @@ import { watchedKeys } from './episodes';
 import { allItems, clearLibrary, findItem, removeItem, saveItem } from './library';
 import {
 	accept,
+	canShare,
 	companions,
 	companionsByItem,
 	countIncoming,
@@ -231,6 +232,13 @@ describe('leaving', () => {
 });
 
 describe('who tracks along', () => {
+	it('needs a second account that can log in', () => {
+		expect(canShare(ann)).toBe(true);
+		setDisabled(ben, true, ann);
+		setDisabled(cleo, true, ann);
+		expect(canShare(ann)).toBe(false);
+	});
+
 	it('is known for the whole library at once – only for shared titles, never oneself', () => {
 		const show1 = addItem({ ...show, userId: ann });
 		const film = addItem({ category: 'movies', externalId: '3', title: 'Film', userId: ann });

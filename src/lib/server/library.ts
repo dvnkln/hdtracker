@@ -1,7 +1,8 @@
-import { and, count, eq, inArray, notExists } from 'drizzle-orm';
+import { and, count, eq, inArray, ne, notExists } from 'drizzle-orm';
 import type { Category, Status } from '$lib/status';
 import { getDb } from './db';
 import { invitations, libraryItems, trackingMembers, trackings } from './db/schema';
+import { addNotice } from './noticeLog';
 import { getUserSetting } from './settings';
 import type { SearchResult } from './providers/types';
 
@@ -171,6 +172,13 @@ function leave(userId: number, itemIds: number[]) {
 			.all()
 			.map((row) => row.trackingId);
 		if (left.length > 0) {
+			// Those who tracked a title together with the user learn that they left
+			const others = tx
+				.select({ userId: trackingMembers.userId, itemId: trackingMembers.itemId })
+				.from(trackingMembers)
+				.where(and(inArray(trackingMembers.trackingId, left), ne(trackingMembers.userId, userId)))
+				.all();
+			for (const other of others) addNotice(tx, 'left', other.itemId, userId, [other.userId]);
 			tx.delete(invitations)
 				.where(and(eq(invitations.fromUserId, userId), inArray(invitations.trackingId, left)))
 				.run();

@@ -14,3 +14,5 @@ What is already done: [Changelog](CHANGELOG.md).
 - [x] **Episode titles for anime** – show episode titles and descriptions for anime where a matching TMDB entry is known.
 - [x] **Multiple users** – an admin manages accounts; every user has their own library and personal settings.
 - [ ] **Track together** – invite another user to a title: you share its status and watched episodes from then on, and both keep them up to date.
+- [ ] **Filters in the library** – for example only the titles you track together with somebody.
+- [ ] **Notices when dates change** in the inbox, next to the push message.

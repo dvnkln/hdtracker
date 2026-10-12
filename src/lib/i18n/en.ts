@@ -79,7 +79,25 @@ export const en: Messages = {
 			'You logged in with a temporary password. Now choose a password only you know.',
 		saveNewPassword: 'Save password'
 	},
+	inbox: {
+		title: 'Inbox',
+		// The bell in the header
+		open: (n: number) => (n === 0 ? 'Inbox' : `Inbox – ${n} new`),
+		news: 'News',
+		unread: 'new',
+		accepted: (name: string) => `${name} accepted your invitation`,
+		declined: (name: string) => `${name} declined your invitation`,
+		left: (name: string) => `${name} no longer tracks this with you`,
+		emptyTitle: 'Nothing new',
+		emptyHint: 'Releases and invitations show up here.',
+		pushSettings: 'Also as a push message'
+	},
 	share: {
+		// Invitations, as the inbox lists them
+		incoming: 'Invitations for you',
+		outgoing: 'Waiting for an answer',
+		fromWithStatus: (name: string, status: string) => `${name} invites you · ${status}`,
+		waitingFor: (name: string) => `Invited: ${name}`,
 		title: 'Track together',
 		// The symbol on a title's page, in its three states
 		alone: 'Track together – invite somebody',
