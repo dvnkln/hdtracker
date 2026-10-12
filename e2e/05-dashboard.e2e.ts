@@ -10,11 +10,16 @@ test('dashboard: recent and upcoming dates of the library, reversible order', as
 	await page.goto('/');
 	const section = (name: string) =>
 		page.locator('section').filter({ has: page.getByRole('heading', { name }) });
-	// Details are loaded in the background right after adding
-	await expect(section('Recently released').getByText('Test Movie Alpha')).toBeVisible();
-	await expect(section('Recently released').getByText('Test Anime Delta')).toBeVisible();
-	await expect(section('Coming up').getByText('Future Film Beta')).toBeVisible();
-	await expect(section('Coming up').getByText('Test Anime Delta')).toBeVisible();
+	// Details are loaded in the background right after adding. (By role: the page holds the
+	// entries twice, as a list for phones and as posters for wide screens – one is hidden.)
+	await expect(
+		section('Recently released').getByRole('link', { name: 'Test Movie Alpha' })
+	).toBeVisible();
+	await expect(
+		section('Recently released').getByRole('link', { name: 'Test Anime Delta' })
+	).toBeVisible();
+	await expect(section('Coming up').getByRole('link', { name: 'Future Film Beta' })).toBeVisible();
+	await expect(section('Coming up').getByRole('link', { name: 'Test Anime Delta' })).toBeVisible();
 
 	// Upcoming: next first (anime episode in 3 days before the film in 30) – then reversed
 	const titles = () => section('Coming up').getByRole('link').allInnerTexts();

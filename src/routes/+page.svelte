@@ -150,7 +150,65 @@
 	</ul>
 {/snippet}
 
-<main class="mx-auto max-w-screen-sm p-4">
+<!-- On a wide screen the same entries as posters, like in the library; the day stands on each -->
+{#snippet posterGrid(entries: DashboardEntry[])}
+	<ul class="mt-3 grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-3">
+		{#each entries as entry (`${entry.category}:${entry.externalId}:${entry.kind}`)}
+			{@const cat = CATEGORIES[entry.category]}
+			<li>
+				<a
+					href="/{entry.category}/{entry.externalId}"
+					style:--accent={cat.accent}
+					class="group/row block"
+				>
+					<div
+						class="relative aspect-[2/3] overflow-hidden rounded-lg bg-zinc-900 ring-1 ring-zinc-800 transition-shadow duration-100 group-hover/row:ring-(--accent)"
+					>
+						{#if img(entry.posterUrl)}
+							<img
+								src={img(entry.posterUrl)}
+								alt=""
+								loading="lazy"
+								referrerpolicy="no-referrer"
+								class="h-full w-full object-cover transition duration-100 group-hover/row:brightness-90"
+							/>
+						{:else}
+							<div class="flex h-full items-center justify-center text-zinc-600">
+								<ImageOff size={24} />
+							</div>
+						{/if}
+						{#if data.together[entry.itemId]}
+							<span
+								class="absolute top-1.5 right-1.5 flex -space-x-1.5"
+								title={m.share.together(data.together[entry.itemId].map((p) => p.name).join(', '))}
+							>
+								{#each data.together[entry.itemId].slice(0, 3) as person (person.id)}
+									<Avatar {person} class="size-6 text-[10px] ring-2 ring-zinc-950" />
+								{/each}
+							</span>
+						{/if}
+					</div>
+					<p
+						class="mt-1.5 truncate text-sm font-medium transition-colors duration-100 group-hover/row:text-(--accent)"
+					>
+						{titles(entry.category, entry).main}
+					</p>
+					<p class="flex items-center gap-1.5 text-xs text-zinc-400">
+						<cat.icon size={12} class="shrink-0 text-(--accent)" />
+						<span class="truncate">{eventLabel(entry, m)}</span>
+					</p>
+					{#if entry.date}
+						<p class="truncate text-xs text-zinc-500">
+							{dayLabel(entry.date)} · {relativeDay(entry.date)}
+						</p>
+					{/if}
+				</a>
+			</li>
+		{/each}
+	</ul>
+{/snippet}
+
+<main class="mx-auto max-w-screen-sm p-4 lg:max-w-screen-xl">
 	<!-- Main heading for screen readers (the two lists have visible headings of their own) -->
 	<h1 class="sr-only">{m.common.home}</h1>
 	{#if data.libraryEmpty}
@@ -174,7 +232,7 @@
 							use:enhance={() => {
 								tapped[section.key] = next;
 							}}
-							class="ml-auto self-center"
+							class="ml-auto self-center lg:ml-1"
 						>
 							<input type="hidden" name="section" value={section.key} />
 							<input type="hidden" name="order" value={next} />
@@ -195,13 +253,22 @@
 					<p class="mt-3 text-sm text-zinc-500">{section.empty}</p>
 				{/if}
 
+				<!-- Wide screens: one grid of posters; phones: a list by day -->
+				{#if section.entries.some((entry) => entry.date)}
+					<div class="hidden lg:block">
+						{@render posterGrid(section.entries.filter((entry) => entry.date))}
+					</div>
+				{/if}
+
 				{#each byDay(section.entries) as group (group.date)}
 					{#if group.date}
-						<h3 class="mt-4 flex justify-between text-sm font-medium">
-							<span class="text-zinc-300">{dayLabel(group.date)}</span>
-							<span class="text-zinc-500">{relativeDay(group.date)}</span>
-						</h3>
-						{@render entryList(group.entries)}
+						<div class="lg:hidden">
+							<h3 class="mt-4 flex justify-between text-sm font-medium">
+								<span class="text-zinc-300">{dayLabel(group.date)}</span>
+								<span class="text-zinc-500">{relativeDay(group.date)}</span>
+							</h3>
+							{@render entryList(group.entries)}
+						</div>
 					{:else}
 						<!-- Announced without a date: least urgent, so collapsed by default -->
 						<details class="group mt-4">
@@ -214,7 +281,8 @@
 								/>
 								<span class="text-zinc-300">{m.home.dateOpen}</span>
 							</summary>
-							{@render entryList(group.entries)}
+							<div class="lg:hidden">{@render entryList(group.entries)}</div>
+							<div class="hidden lg:block">{@render posterGrid(group.entries)}</div>
 						</details>
 					{/if}
 				{/each}
