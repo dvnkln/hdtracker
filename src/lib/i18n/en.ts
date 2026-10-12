@@ -663,9 +663,9 @@ export const en: Messages = {
 				description: 'Removes logins that are no longer valid anyway.'
 			},
 			notifications: {
-				name: 'Send notifications',
+				name: 'Announce new releases',
 				description:
-					'Sends push messages about new releases to everyone who switched them on – from the hour chosen there. Always runs; with nobody having them on, nothing happens.'
+					'Notes for everybody what came out from their library (the inbox under the bell) and sends it as a push message to those who switched that on – from the hour chosen there. Clears away notices that were read a week ago. Always runs.'
 			},
 			cache: {
 				name: 'Clean up cache',

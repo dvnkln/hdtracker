@@ -196,6 +196,7 @@ test('tracking together: invite, accept, one state for both, leave with a copy',
 	await page.keyboard.press('Control+a');
 	await expect(invite).toHaveCount(0);
 	await fold.click();
+	await expect(page.locator('main [class*="group/poster"]:visible')).toHaveCount(1);
 	await page.keyboard.press('Control+a');
 	await expect(page.getByText('1 title selected').first()).toBeVisible();
 	await page.keyboard.press('Escape');

@@ -686,9 +686,9 @@ export const de = {
 				description: 'Entfernt Anmeldungen, die ohnehin nicht mehr gültig sind.'
 			},
 			notifications: {
-				name: 'Benachrichtigungen senden',
+				name: 'Neuerscheinungen melden',
 				description:
-					'Schickt Push-Nachrichten über Neuerscheinungen an alle, die sie eingeschaltet haben – jeweils ab der Uhrzeit, die dort gewählt ist. Läuft immer; hat niemand Meldungen eingeschaltet, passiert nichts.'
+					'Legt für alle an, was aus ihrer Bibliothek erschienen ist (die Mitteilungen unter der Glocke), und schickt es als Push-Nachricht an alle, die das eingeschaltet haben – jeweils ab der Uhrzeit, die dort gewählt ist. Räumt Mitteilungen weg, die seit einer Woche gelesen sind. Läuft immer.'
 			},
 			cache: {
 				name: 'Zwischenspeicher aufräumen',

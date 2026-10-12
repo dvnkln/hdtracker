@@ -112,8 +112,23 @@ export const actions: Actions = {
 			if (!(Number.isInteger(keep) && keep >= 1 && keep <= MAX_KEEP)) return invalid();
 			setSettings({ backupKeep: String(keep) });
 		}
-		updateTask(key, { enabled: data.get('enabled') === 'on', frequency, time, weekday });
+		// (On or off has a switch of its own, see toggle.)
+		const current = listTasks().find((row) => row.key === key);
+		updateTask(key, { enabled: current?.enabled ?? true, frequency, time, weekday });
 		return { key, message: t.settings.saved };
+	},
+
+	// The switch of a row: on or off, saved at once. Tasks that cannot be switched off stay on
+	// (updateTask sees to that).
+	toggle: async ({ request, locals }) => {
+		requireAdmin(locals.user);
+		const data = await request.formData();
+		const key = readKey(data);
+		const current = listTasks().find((row) => row.key === key);
+		if (!key || !current) return fail(400, { key, error: serverMessages().common.invalidData });
+		const { frequency, time, weekday } = current;
+		updateTask(key, { enabled: data.get('enabled') === 'on', frequency, time, weekday });
+		return { key };
 	},
 
 	// Back to the schedule of a new installation; whether the task is switched on stays as it is.

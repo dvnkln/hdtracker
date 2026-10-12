@@ -41,7 +41,7 @@ test('notifications: choose form and hour, mute a single title', async ({ page }
 
 	// The task that sends the messages is listed with the others
 	await page.goto('/settings/maintenance');
-	await expect(page.getByText('Send notifications')).toBeVisible();
+	await expect(page.getByRole('button', { name: /Announce new releases/ }).first()).toBeVisible();
 });
 
 test('notifications: targets are one list – add Pushover, a webhook and ntfy, switch off and on, test, remove', async ({

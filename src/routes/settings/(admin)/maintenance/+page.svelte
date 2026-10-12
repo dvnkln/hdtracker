@@ -5,12 +5,21 @@
 	import { ui } from '$lib/ui';
 	import { Download, Trash2 } from '@lucide/svelte';
 	import Notice from '$lib/components/Notice.svelte';
-	import TaskCard from './TaskCard.svelte';
+	import TaskRow from './TaskRow.svelte';
 
 	let { data } = $props();
 
 	const forms = new FormFeedback();
-	const { label, labelText, hint, pageTitle } = ui;
+	const { card, label, labelText, hint, pageTitle } = ui;
+
+	// The task whose row is unfolded (one at a time)
+	let open = $state<string | null>(null);
+	const toggle = (key: string) => (open = open === key ? null : key);
+	// The order of the rows as the page was opened: a task that is switched off would jump to
+	// the end of the list under the finger otherwise
+	// svelte-ignore state_referenced_locally
+	const order = data.tasks.map((task) => task.key);
+	let tasks = $derived([...data.tasks].sort((a, b) => order.indexOf(a.key) - order.indexOf(b.key)));
 
 	// "Alle löschen" needs a second tap to confirm.
 	let confirmDeleteAll = $state(false);
@@ -25,113 +34,129 @@
 
 <p class="mt-2 {hint}">{m.maintenance.intro(data.timeZone)}</p>
 
-{#each data.tasks as task (task.key)}
-	{#if task.key === 'backup'}
-		<TaskCard {task} frequencies={data.frequencies} {forms}>
-			{#snippet fields()}
-				<label class={label}>
-					<span class={labelText}>{m.maintenance.keep}</span>
-					<input
-						type="number"
-						name="keep"
-						min="1"
-						max={data.maxKeep}
-						value={data.backupKeep}
-						required
-						class="w-28"
-					/>
-				</label>
-				<Notice>{m.maintenance.volumeHint}</Notice>
-			{/snippet}
+<section class={card}>
+	<ul class="flex flex-col divide-y divide-zinc-800">
+		{#each tasks as task (task.key)}
+			{#if task.key === 'backup'}
+				<TaskRow
+					{task}
+					frequencies={data.frequencies}
+					{forms}
+					open={open === task.key}
+					ontoggle={() => toggle(task.key)}
+				>
+					{#snippet fields()}
+						<label class={label}>
+							<span class={labelText}>{m.maintenance.keep}</span>
+							<input
+								type="number"
+								name="keep"
+								min="1"
+								max={data.maxKeep}
+								value={data.backupKeep}
+								required
+								class="w-28"
+							/>
+						</label>
+						<Notice>{m.maintenance.volumeHint}</Notice>
+					{/snippet}
 
-			<!-- Existing backup files -->
-			<div class="mt-6 border-t border-zinc-800 pt-4">
-				<div class="flex items-center justify-between gap-3">
-					<h3 class="font-medium text-zinc-300">{m.maintenance.backups}</h3>
-					{#if data.backups.length}
-						<form
-							method="POST"
-							action="?/deleteAllBackups"
-							use:enhance={() => {
-								return async ({ update }) => {
-									await update();
-									confirmDeleteAll = false;
-								};
-							}}
-						>
-							{#if confirmDeleteAll}
-								<span class="flex items-center gap-2 text-sm">
-									<button
-										class="rounded-lg bg-red-600 px-3 py-1.5 font-medium text-white transition-colors hover:bg-red-500"
-									>
-										{m.maintenance.deleteAllConfirm}
-									</button>
-									<button
-										type="button"
-										class="rounded-lg px-2 py-1.5 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-100"
-										onclick={() => (confirmDeleteAll = false)}
-									>
-										{m.common.close}
-									</button>
-								</span>
-							{:else}
-								<button
-									type="button"
-									class="rounded-lg px-3 py-1.5 text-sm text-red-400 transition-colors hover:bg-red-950"
-									onclick={() => (confirmDeleteAll = true)}
+					<!-- Existing backup files -->
+					<div class="mt-6 border-t border-zinc-800 pt-4">
+						<div class="flex items-center justify-between gap-3">
+							<h3 class="font-medium text-zinc-300">{m.maintenance.backups}</h3>
+							{#if data.backups.length}
+								<form
+									method="POST"
+									action="?/deleteAllBackups"
+									use:enhance={() => {
+										return async ({ update }) => {
+											await update();
+											confirmDeleteAll = false;
+										};
+									}}
 								>
-									{m.maintenance.deleteAll}
-								</button>
-							{/if}
-						</form>
-					{/if}
-				</div>
-
-				{#if data.backups.length}
-					<ul class="mt-2 divide-y divide-zinc-800">
-						{#each data.backups as file (file.name)}
-							<li class="flex items-center gap-2 py-1.5">
-								<span class="flex-1 text-sm">
-									{formatDateTime(file.createdAt)}
-									<span class="text-zinc-500">· {formatFileSize(file.size)}</span>
-								</span>
-								<a
-									href="/settings/maintenance/backups/{file.name}"
-									download
-									class={iconButton}
-									aria-label={m.maintenance.download}
-									title={m.maintenance.download}
-								>
-									<Download size={18} />
-								</a>
-								<form method="POST" action="?/deleteBackup" use:enhance>
-									<input type="hidden" name="name" value={file.name} />
-									<button
-										class="rounded-lg p-2 text-zinc-400 transition-colors hover:bg-red-950 hover:text-red-400"
-										aria-label={m.maintenance.delete}
-										title={m.maintenance.delete}
-									>
-										<Trash2 size={18} />
-									</button>
+									{#if confirmDeleteAll}
+										<span class="flex items-center gap-2 text-sm">
+											<button
+												class="rounded-lg bg-red-600 px-3 py-1.5 font-medium text-white transition-colors hover:bg-red-500"
+											>
+												{m.maintenance.deleteAllConfirm}
+											</button>
+											<button
+												type="button"
+												class="rounded-lg px-2 py-1.5 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-100"
+												onclick={() => (confirmDeleteAll = false)}
+											>
+												{m.common.close}
+											</button>
+										</span>
+									{:else}
+										<button
+											type="button"
+											class="rounded-lg px-3 py-1.5 text-sm text-red-400 transition-colors hover:bg-red-950"
+											onclick={() => (confirmDeleteAll = true)}
+										>
+											{m.maintenance.deleteAll}
+										</button>
+									{/if}
 								</form>
-							</li>
-						{/each}
-					</ul>
-				{:else}
-					<p class="mt-2 text-sm text-zinc-500">{m.maintenance.noBackups}</p>
-				{/if}
-				<p class="mt-3 {hint}">
-					{m.maintenance.restoreHint}
-					<a
-						href="https://github.com/dvnkln/hdtracker/wiki/Backups-and-restore"
-						target="_blank"
-						rel="noreferrer"
-						class="underline hover:text-zinc-300">{m.maintenance.restoreLink}</a
-					>
-				</p>
-			</div>
-		</TaskCard>
-	{:else}
-		<TaskCard {task} frequencies={data.frequencies} {forms} />
-	{/if}
-{/each}
+							{/if}
+						</div>
+
+						{#if data.backups.length}
+							<ul class="mt-2 divide-y divide-zinc-800">
+								{#each data.backups as file (file.name)}
+									<li class="flex items-center gap-2 py-1.5">
+										<span class="flex-1 text-sm">
+											{formatDateTime(file.createdAt)}
+											<span class="text-zinc-500">· {formatFileSize(file.size)}</span>
+										</span>
+										<a
+											href="/settings/maintenance/backups/{file.name}"
+											download
+											class={iconButton}
+											aria-label={m.maintenance.download}
+											title={m.maintenance.download}
+										>
+											<Download size={18} />
+										</a>
+										<form method="POST" action="?/deleteBackup" use:enhance>
+											<input type="hidden" name="name" value={file.name} />
+											<button
+												class="rounded-lg p-2 text-zinc-400 transition-colors hover:bg-red-950 hover:text-red-400"
+												aria-label={m.maintenance.delete}
+												title={m.maintenance.delete}
+											>
+												<Trash2 size={18} />
+											</button>
+										</form>
+									</li>
+								{/each}
+							</ul>
+						{:else}
+							<p class="mt-2 text-sm text-zinc-500">{m.maintenance.noBackups}</p>
+						{/if}
+						<p class="mt-3 {hint}">
+							{m.maintenance.restoreHint}
+							<a
+								href="https://github.com/dvnkln/hdtracker/wiki/Backups-and-restore"
+								target="_blank"
+								rel="noreferrer"
+								class="underline hover:text-zinc-300">{m.maintenance.restoreLink}</a
+							>
+						</p>
+					</div>
+				</TaskRow>
+			{:else}
+				<TaskRow
+					{task}
+					frequencies={data.frequencies}
+					{forms}
+					open={open === task.key}
+					ontoggle={() => toggle(task.key)}
+				/>
+			{/if}
+		{/each}
+	</ul>
+</section>

@@ -17,6 +17,7 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 
 ### 🔧 Improved
 
+- Settings → Maintenance is tidier: the tasks are one list – each row says when the task runs and how its last run went, a tap unfolds its description, schedule and “Run now”. The switch of a task now saves at once
 - The window that changes the status of a title now also holds its bell and the invitations – no detour to the page of the title
 - The bell on the page of a title is always there for titles of your library: switched off, you hear nothing about this title – neither in the inbox nor as a push message
 - After an update of the server, an app that was left open (a tab, the installed app) notices the new version and loads itself afresh on the next change of page – before, it kept showing the old interface until it was reloaded by hand
