@@ -17,6 +17,7 @@ import {
 } from './db/schema';
 import { removeOrphans, type Title } from './library';
 import { addNotice } from './noticeLog';
+import { announceSoon, type ShareEvent } from './shareNotify';
 import { toPerson } from './users';
 
 export type SharingError =
@@ -62,10 +63,20 @@ const dropSent = (userId: number, trackingId: number, db: Db) =>
 export function invite(
 	by: number,
 	itemId: number,
-	to: number
+	to: number,
+	// Do not send a message about it (the caller sends one for several invitations)
+	quiet = false
 ): { ok: true; id: number; created: boolean } | Failed {
 	if (to === by) return { ok: false, error: 'self' };
-	return getDb().transaction((tx) => {
+	const result = inviteStored(by, itemId, to);
+	if (result.ok && result.created && !quiet) {
+		announceSoon([{ kind: 'invited', actorId: by, to, itemId }]);
+	}
+	return result;
+}
+
+function inviteStored(by: number, itemId: number, to: number) {
+	return getDb().transaction((tx): { ok: true; id: number; created: boolean } | Failed => {
 		const mine = membership(by, itemId, tx);
 		if (!mine) return { ok: false, error: 'notYours' } as const;
 		const target = tx
@@ -99,7 +110,8 @@ type Answered = { ok: true; itemId: number; from: number };
 // this title is replaced by it (and gone, unless they shared it with others, who keep it); the
 // day they added the title and their bell stay.
 export function accept(userId: number, invitationId: number): Answered | Failed {
-	return getDb().transaction((tx) => {
+	const events: ShareEvent[] = [];
+	const result = getDb().transaction((tx): Answered | Failed => {
 		const open = tx
 			.select({
 				id: invitations.id,
@@ -116,7 +128,10 @@ export function accept(userId: number, invitationId: number): Answered | Failed 
 		const mine = membership(userId, open.itemId, tx);
 		if (mine && mine.trackingId !== open.trackingId) {
 			// Coming from another group: those who stay there learn that the user left
-			addNotice(tx, 'left', open.itemId, userId, othersIn(mine.trackingId, userId, tx));
+			const stay = othersIn(mine.trackingId, userId, tx);
+			addNotice(tx, 'left', open.itemId, userId, stay);
+			for (const to of stay)
+				events.push({ kind: 'left', actorId: userId, to, itemId: open.itemId });
 			dropSent(userId, mine.trackingId, tx);
 			tx.delete(trackingMembers).where(eq(trackingMembers.id, mine.id)).run();
 		}
@@ -134,13 +149,16 @@ export function accept(userId: number, invitationId: number): Answered | Failed 
 		tx.delete(invitations).where(eq(invitations.id, open.id)).run();
 		removeOrphans(tx);
 		addNotice(tx, 'accepted', open.itemId, userId, [open.from]);
+		events.push({ kind: 'accepted', actorId: userId, to: open.from, itemId: open.itemId });
 		return { ok: true, itemId: open.itemId, from: open.from } as const;
 	});
+	announceSoon(events);
+	return result;
 }
 
 // Declines an invitation. Nothing else changes.
 export function decline(userId: number, invitationId: number): Answered | Failed {
-	return getDb().transaction((tx) => {
+	const result = getDb().transaction((tx): Answered | Failed => {
 		const open = tx
 			.select({ id: invitations.id, from: invitations.fromUserId, itemId: trackings.itemId })
 			.from(invitations)
@@ -152,6 +170,10 @@ export function decline(userId: number, invitationId: number): Answered | Failed
 		addNotice(tx, 'declined', open.itemId, userId, [open.from]);
 		return { ok: true, itemId: open.itemId, from: open.from } as const;
 	});
+	if (result.ok) {
+		announceSoon([{ kind: 'declined', actorId: userId, to: result.from, itemId: result.itemId }]);
+	}
+	return result;
 }
 
 // Takes back an invitation the user sent.
@@ -170,7 +192,7 @@ export function leaveShared(
 	userId: number,
 	itemId: number
 ): { ok: true; others: number[] } | Failed {
-	return getDb().transaction((tx) => {
+	const result = getDb().transaction((tx): { ok: true; others: number[] } | Failed => {
 		const mine = membership(userId, itemId, tx);
 		if (!mine) return { ok: false, error: 'notYours' } as const;
 		const others = othersIn(mine.trackingId, userId, tx);
@@ -207,6 +229,10 @@ export function leaveShared(
 		addNotice(tx, 'left', itemId, userId, others);
 		return { ok: true, others } as const;
 	});
+	if (result.ok) {
+		announceSoon(result.others.map((to) => ({ kind: 'left', actorId: userId, to, itemId })));
+	}
+	return result;
 }
 
 // ---- What the pages show ----
@@ -360,11 +386,19 @@ export const canShare = (userId: number) => shareablePeople(userId).length > 0;
 export function inviteMany(by: number, itemIds: number[], to: number) {
 	let invited = 0;
 	let already = 0;
+	const events: ShareEvent[] = [];
 	for (const itemId of new Set(itemIds)) {
-		const result = invite(by, itemId, to);
-		if (result.ok && result.created) invited++;
-		else if (result.ok || result.error === 'member') already++;
-		else return { ok: false, error: result.error } as const;
+		const result = invite(by, itemId, to, true);
+		if (result.ok && result.created) {
+			invited++;
+			events.push({ kind: 'invited', actorId: by, to, itemId });
+		} else if (result.ok || result.error === 'member') already++;
+		else {
+			announceSoon(events);
+			return { ok: false, error: result.error } as const;
+		}
 	}
+	// One message for all of them
+	announceSoon(events);
 	return { ok: true, invited, already } as const;
 }

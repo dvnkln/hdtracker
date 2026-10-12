@@ -45,7 +45,11 @@ const USER_DEFAULTS = {
 	// 'off' | 'single' (one message per title) | 'digest' (one message a day)
 	notifyMode: 'off',
 	notifyHour: '9', // from this hour of the day on (0–23) the day's messages are sent
-	notifyFrom: '' // day the messages were switched on: nothing older is announced
+	notifyFrom: '', // day the messages were switched on: nothing older is announced
+	// Push messages about tracking together, sent at once (shareNotify.ts): 'on' | 'off'
+	notifyInvited: 'on', // somebody invites me
+	notifyAnswered: 'on', // somebody accepted or declined my invitation
+	notifyLeft: 'on' // somebody no longer tracks a title with me
 } as const;
 
 export type SettingKey = keyof typeof DEFAULTS;

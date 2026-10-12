@@ -42,6 +42,18 @@ test('tracking together: invite, accept, one state for both, leave with a copy',
 	await mate.getByRole('button', { name: 'Save password' }).click();
 	await expect(mate).toHaveURL('/');
 
+	// With somebody to share with, the notification settings offer a switch per kind of
+	// message about tracking together; it is saved the moment it is switched
+	await mate.goto('/settings/notifications');
+	const share = mate.locator('form[action="?/share"]');
+	await expect(share.locator('input[name=invited]')).toBeChecked();
+	const stored = mate.waitForResponse((res) => res.url().includes('?/share'));
+	await share.locator('label[for=share-left]').click();
+	expect((await stored).ok()).toBe(true);
+	await mate.reload();
+	await expect(share.locator('input[name=left]')).not.toBeChecked();
+	await expect(share.locator('input[name=answered]')).toBeChecked();
+
 	// The symbol next to the status invites; the window lists who can be asked
 	await page.goto(SERIES);
 	await page.getByRole('button', { name: 'Track together – invite somebody' }).click();

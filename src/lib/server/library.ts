@@ -3,6 +3,7 @@ import type { Category, Status } from '$lib/status';
 import { getDb } from './db';
 import { invitations, libraryItems, trackingMembers, trackings } from './db/schema';
 import { addNotice } from './noticeLog';
+import { announceSoon, type ShareEvent } from './shareNotify';
 import { getUserSetting } from './settings';
 import type { SearchResult } from './providers/types';
 
@@ -164,7 +165,8 @@ export function removeOrphans(db: Db = getDb()) {
 // lapse. Returns how many titles were taken out.
 function leave(userId: number, itemIds: number[]) {
 	if (itemIds.length === 0) return 0;
-	return getDb().transaction((tx) => {
+	const events: ShareEvent[] = [];
+	const count = getDb().transaction((tx) => {
 		const left = tx
 			.select({ trackingId: trackingMembers.trackingId })
 			.from(trackingMembers)
@@ -178,7 +180,10 @@ function leave(userId: number, itemIds: number[]) {
 				.from(trackingMembers)
 				.where(and(inArray(trackingMembers.trackingId, left), ne(trackingMembers.userId, userId)))
 				.all();
-			for (const other of others) addNotice(tx, 'left', other.itemId, userId, [other.userId]);
+			for (const other of others) {
+				addNotice(tx, 'left', other.itemId, userId, [other.userId]);
+				events.push({ kind: 'left', actorId: userId, to: other.userId, itemId: other.itemId });
+			}
 			tx.delete(invitations)
 				.where(and(eq(invitations.fromUserId, userId), inArray(invitations.trackingId, left)))
 				.run();
@@ -190,6 +195,8 @@ function leave(userId: number, itemIds: number[]) {
 		removeOrphans(tx);
 		return removed;
 	});
+	announceSoon(events);
+	return count;
 }
 
 export function removeItem(userId: number, category: Category, externalId: string) {

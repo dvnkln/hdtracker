@@ -21,6 +21,8 @@ import {
 	renameDevice,
 	setDeviceEnabled
 } from '$lib/server/push';
+import { getUserSetting, setUserSettings } from '$lib/server/settings';
+import { canShare } from '$lib/server/sharing';
 import { deliver, listTargets, parseTargetKey } from '$lib/server/targets';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -28,12 +30,33 @@ import type { Actions, PageServerLoad } from './$types';
 export const load: PageServerLoad = ({ locals }) => ({
 	publicKey: pushPublicKey(),
 	prefs: prefsFor(locals.user!.id),
+	// Messages about tracking together, one switch per kind – only while there is somebody
+	// to share with
+	share: canShare(locals.user!.id)
+		? {
+				invited: getUserSetting(locals.user!.id, 'notifyInvited') === 'on',
+				answered: getUserSetting(locals.user!.id, 'notifyAnswered') === 'on',
+				left: getUserSetting(locals.user!.id, 'notifyLeft') === 'on'
+			}
+		: null,
 	targets: listTargets(locals.user!.id),
 	// Whether this user may add webhook and ntfy targets (admins always, see channels.ts)
 	customTargets: mayUseCustomTargets(locals.user!.id)
 });
 
 export const actions: Actions = {
+	// Which messages about tracking together to get.
+	share: async ({ request, locals }) => {
+		const data = await request.formData();
+		const on = (name: string) => (data.get(name) === 'on' ? 'on' : 'off');
+		setUserSettings(locals.user!.id, {
+			notifyInvited: on('invited'),
+			notifyAnswered: on('answered'),
+			notifyLeft: on('left')
+		});
+		return { section: 'share' };
+	},
+
 	// What to be told about new releases, and from which hour of the day.
 	prefs: async ({ request, locals }) => {
 		const t = serverMessages();

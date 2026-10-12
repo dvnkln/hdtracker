@@ -632,6 +632,25 @@ export const de = {
 			ntfyToken: 'Der Zugangsschlüssel enthält unerlaubte Zeichen.',
 			icon: 'Die Icon-Adresse muss mit http:// oder https:// beginnen.'
 		} as Record<string, string>,
+		// Tracking together (shareNotify.ts)
+		share: {
+			invited: (name: string) => `${name} lädt dich ein, das gemeinsam zu tracken`,
+			accepted: (name: string) => `${name} hat deine Einladung angenommen`,
+			declined: (name: string) => `${name} hat deine Einladung abgelehnt`,
+			left: (name: string) => `${name} trackt das nicht mehr mit dir`,
+			several: {
+				invited: (name: string, n: number) => `${name} lädt dich zu ${n} Titeln ein`,
+				accepted: (name: string, n: number) => `${name} hat ${n} Einladungen angenommen`,
+				declined: (name: string, n: number) => `${name} hat ${n} Einladungen abgelehnt`,
+				left: (name: string, n: number) => `${name} trackt ${n} Titel nicht mehr mit dir`
+			}
+		},
+		// The switches for them
+		shareTitle: 'Gemeinsam tracken',
+		shareHint: 'Kommen sofort – unabhängig davon, was bei Neuerscheinungen gewählt ist.',
+		shareInvited: 'Jemand lädt mich ein',
+		shareAnswered: 'Meine Einladung wurde beantwortet',
+		shareLeft: 'Jemand trackt nicht mehr mit',
 		// The bell on the page of a title
 		bell: 'Benachrichtigungen zu diesem Titel',
 		mute: 'Benachrichtigungen zu diesem Titel ausschalten',

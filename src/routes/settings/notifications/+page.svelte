@@ -5,8 +5,9 @@
 	import { FormFeedback } from '$lib/forms.svelte';
 	import { ui } from '$lib/ui';
 	import FeedbackText from '$lib/components/FeedbackText.svelte';
+	import Switch from '$lib/components/Switch.svelte';
 	import TargetList from '$lib/components/TargetList.svelte';
-	import { CalendarClock, Send } from '@lucide/svelte';
+	import { CalendarClock, Send, Users } from '@lucide/svelte';
 
 	let { data } = $props();
 
@@ -18,6 +19,18 @@
 	// What is chosen right now (decides whether the hour is shown)
 	// svelte-ignore state_referenced_locally
 	let mode = $state(data.prefs.mode);
+
+	// Messages about tracking together, as they are switched right now
+	const SHARE = ['invited', 'answered', 'left'] as const;
+	let SHARE_LABELS = $derived({
+		invited: m.notifications.shareInvited,
+		answered: m.notifications.shareAnswered,
+		left: m.notifications.shareLeft
+	});
+	// svelte-ignore state_referenced_locally
+	let share = $state({ ...(data.share ?? { invited: false, answered: false, left: false }) });
+	// Nothing at all is sent: neither about releases nor about tracking together
+	let silent = $derived(mode === 'off' && !Object.values(share).some(Boolean));
 </script>
 
 <svelte:head><title>{m.notifications.title} · hdtracker</title></svelte:head>
@@ -68,13 +81,38 @@
 	</form>
 </section>
 
+{#if data.share}
+	<!-- Tracking together: one switch per kind of message, saved the moment it is switched -->
+	<section class={card}>
+		<div class="flex min-h-7 items-center justify-between gap-3">
+			<h3 class={heading}><Users size={20} class="text-zinc-400" />{m.notifications.shareTitle}</h3>
+			<FeedbackText feedback={forms.error('share')} />
+		</div>
+		<form
+			method="POST"
+			action="?/share"
+			use:enhance={forms.submit('share')}
+			use:autosave
+			class="mt-4 flex flex-col gap-4"
+		>
+			{#each SHARE as kind (kind)}
+				<div class="flex items-center justify-between gap-4">
+					<label for="share-{kind}" class="{labelText} cursor-pointer">{SHARE_LABELS[kind]}</label>
+					<Switch id="share-{kind}" name={kind} bind:checked={share[kind]} />
+				</div>
+			{/each}
+			<span class={hint}>{m.notifications.shareHint}</span>
+		</form>
+	</section>
+{/if}
+
 <!-- Where to: devices, Pushover, ... as one list -->
 <section class={card}>
 	<h3 class={heading}><Send size={20} class="text-zinc-400" />{m.notifications.targets}</h3>
 	<TargetList
 		targets={data.targets}
 		publicKey={data.publicKey}
-		paused={mode === 'off'}
+		paused={silent}
 		custom={data.customTargets}
 	/>
 	<p class="mt-4 {hint}">

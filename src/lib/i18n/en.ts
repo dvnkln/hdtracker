@@ -609,6 +609,25 @@ export const en: Messages = {
 			ntfyToken: 'The access token contains characters that are not allowed.',
 			icon: 'The icon address must start with http:// or https://.'
 		},
+		// Tracking together (shareNotify.ts)
+		share: {
+			invited: (name: string) => `${name} invites you to track this together`,
+			accepted: (name: string) => `${name} accepted your invitation`,
+			declined: (name: string) => `${name} declined your invitation`,
+			left: (name: string) => `${name} no longer tracks this with you`,
+			several: {
+				invited: (name: string, n: number) => `${name} invites you to ${n} titles`,
+				accepted: (name: string, n: number) => `${name} accepted ${n} invitations`,
+				declined: (name: string, n: number) => `${name} declined ${n} invitations`,
+				left: (name: string, n: number) => `${name} no longer tracks ${n} titles with you`
+			}
+		},
+		// The switches for them
+		shareTitle: 'Tracking together',
+		shareHint: 'Sent right away, whatever is chosen for new releases.',
+		shareInvited: 'Somebody invites me',
+		shareAnswered: 'My invitation was answered',
+		shareLeft: 'Somebody no longer tracks along',
 		// The bell on the page of a title
 		bell: 'Notifications about this title',
 		mute: 'Switch off notifications about this title',
