@@ -122,6 +122,24 @@ export const en: Messages = {
 		replaces: 'Your own status and watched episodes are replaced by theirs.',
 		accept: 'Accept',
 		decline: 'Decline',
+		short: 'Together',
+		pendingShort: 'Invited',
+		endSelection: 'End selection',
+		// Selecting several titles in the library
+		select: 'Select',
+		selected: (n: number) => (n === 1 ? '1 title selected' : `${n} titles selected`),
+		inviteSelected: 'Invite …',
+		chooseWho: 'Invite whom?',
+		sent: (n: number, name: string) =>
+			n === 0
+				? `No new invitation for ${name}.`
+				: n === 1
+					? `1 invitation sent to ${name}.`
+					: `${n} invitations sent to ${name}.`,
+		sentAlready: (n: number) =>
+			n === 1
+				? '1 title was shared or asked for already.'
+				: `${n} titles were shared or asked for already.`,
 		errors: {
 			notYours: 'This title is not in your library.',
 			unknown: 'This is no longer possible – please reload the page.',
@@ -232,6 +250,8 @@ export const en: Messages = {
 	},
 
 	sheet: {
+		notifyOn: 'Notify me',
+		notifyOff: 'Muted',
 		details: 'Details',
 		detailsAndEpisodes: 'Details & episodes',
 		remove: 'Remove from library',

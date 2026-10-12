@@ -422,6 +422,8 @@
 			onclose={() => (sheetOpen = false)}
 			actionPath="/{data.category}"
 			showDetailsLink={false}
+			notify={data.notify}
+			sharing={data.sharing}
 		/>
 		{#if sharing}
 			<ShareSheet

@@ -104,6 +104,14 @@ test('tracking together: invite, accept, one state for both, leave with a copy',
 	await page.getByRole('button', { name: 'Tracking together with mate' }).click();
 	await expect(sheet(page).getByText('mate')).toBeVisible();
 
+	await sheet(page).getByRole('button', { name: 'Close' }).click();
+	// In the library and on the dashboard the poster carries the picture of who tracks along
+	await page.goto('/series');
+	const poster = page.getByRole('button', { name: /Test Series Gamma/ });
+	await expect(poster.getByTitle('mate')).toBeVisible();
+	await page.goto(SERIES);
+	await page.getByRole('button', { name: 'Tracking together with mate' }).click();
+
 	// Leaving keeps a copy; from then on each has their own
 	await sheet(page).getByRole('button', { name: 'Stop tracking together' }).click();
 	await sheet(page).getByRole('button', { name: 'Track on my own' }).click();
@@ -116,7 +124,49 @@ test('tracking together: invite, accept, one state for both, leave with a copy',
 	await page.reload();
 	await expect(page.getByRole('button', { name: 'Paused', exact: true })).toBeVisible();
 
+	// The window that changes the status also holds the bell and tracking together
+	await page.goto('/series');
+	await page.getByRole('button', { name: /Test Series Gamma/ }).click();
+	const bell = sheet(page).getByRole('button', { name: 'Notifications about this title' });
+	await expect(bell).toHaveAttribute('aria-pressed', 'true');
+	await bell.click();
+	await expect(bell).toHaveAttribute('aria-pressed', 'false');
+	await bell.click();
+	await expect(bell).toHaveAttribute('aria-pressed', 'true');
+	await sheet(page).getByRole('button', { name: 'Track together – invite somebody' }).click();
+	const who = page.locator('dialog[open]').last();
+	await who.getByRole('button', { name: 'Invite mate' }).click();
+	await expect(who.getByText('Invited – no answer yet')).toBeVisible();
+	await who.getByRole('button', { name: 'Withdraw the invitation for mate' }).click();
+	await expect(who.getByRole('button', { name: 'Invite mate' })).toBeVisible();
+	await who.getByRole('button', { name: 'Close' }).click();
+	await sheet(page).getByRole('button', { name: 'Close' }).click();
+
+	// Several titles at once: a right click (holding, on a phone) starts selecting, Ctrl+click
+	// too; taps add and take away, and with nothing left selected it is over
+	await page.goto('/movies');
+	const posters = page.locator('main [class*="group/poster"]');
+	const invite = page.getByRole('button', { name: 'Invite …' });
+	await posters.first().click({ button: 'right' });
+	await expect(page.getByText('1 title selected').first()).toBeVisible();
+	await expect(sheet(page)).toHaveCount(0); // no status window while selecting
+	await posters.first().click();
+	await expect(invite).toHaveCount(0);
+	await posters.first().click({ modifiers: ['Control'] });
+	await expect(page.getByText('1 title selected').first()).toBeVisible();
+	await page.keyboard.press('Escape');
+	await expect(invite).toHaveCount(0);
+	// ... then choose whom to invite
+	await posters.first().click({ button: 'right' });
+	await invite.click();
+	await sheet(page).getByRole('button', { name: 'Invite mate' }).click();
+	await expect(page.getByText('1 invitation sent to mate.')).toBeVisible();
+	await expect(invite).toHaveCount(0); // selecting is over
+	await mate.goto('/inbox');
+	await expect(mate.getByRole('heading', { name: 'Invitations for you' })).toBeVisible();
+
 	// Back to how it was: the status, and one account
+	await page.goto(SERIES);
 	await setStatus(page, 'Paused', 'Watched');
 	await page.goto('/settings/users');
 	await accounts.getByRole('button', { name: /mate/ }).click();

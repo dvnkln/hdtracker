@@ -15,8 +15,10 @@ import {
 	incoming,
 	invitable,
 	invite,
+	inviteMany,
 	leaveShared,
 	outgoing,
+	shareablePeople,
 	withdraw
 } from './sharing';
 import { deleteUser, setDisabled } from './users';
@@ -232,6 +234,29 @@ describe('leaving', () => {
 });
 
 describe('who tracks along', () => {
+	it('several titles at once: invites where it is new, leaves the rest alone', () => {
+		const film = addItem({ category: 'movies', externalId: '3', title: 'Film', userId: ann });
+		const other = addItem({ category: 'movies', externalId: '4', title: 'Other', userId: ann });
+		const show1 = addItem({ ...show, userId: ann });
+		accept(ben, invited(ann, show1.id, ben)); // together already
+		invited(ann, film.id, ben); // asked already
+
+		expect(inviteMany(ann, [show1.id, film.id, other.id, other.id], ben)).toEqual({
+			ok: true,
+			invited: 1,
+			already: 2
+		});
+		expect(
+			outgoing(ann)
+				.map((i) => i.item.title)
+				.sort()
+		).toEqual(['Film', 'Other']);
+		// Nothing of somebody else's library, nobody who cannot log in
+		const bens = addItem({ category: 'movies', externalId: '9', title: 'His', userId: ben });
+		expect(inviteMany(ann, [bens.id], cleo)).toEqual({ ok: false, error: 'notYours' });
+		expect(shareablePeople(ann).map((p) => p.name)).toEqual(['ben', 'cleo']);
+	});
+
 	it('needs a second account that can log in', () => {
 		expect(canShare(ann)).toBe(true);
 		setDisabled(ben, true, ann);

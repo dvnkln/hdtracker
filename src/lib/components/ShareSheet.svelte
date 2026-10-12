@@ -15,8 +15,10 @@
 		// Everybody who could be invited; `invitation` is set while one is open
 		candidates: { person: Person; invitation: number | null }[];
 		onclose: () => void;
+		// Page the actions live on (the page of the title); empty = the current page
+		actionPath?: string;
 	};
-	let { open, title, companions, candidates, onclose }: Props = $props();
+	let { open, title, companions, candidates, onclose, actionPath = '' }: Props = $props();
 
 	let dialog: HTMLDialogElement;
 	let busy = $state(false);
@@ -98,14 +100,14 @@
 							{/if}
 						</span>
 						{#if invitation === null}
-							<form method="POST" action="?/invite" use:enhance={submit}>
+							<form method="POST" action="{actionPath}?/invite" use:enhance={submit}>
 								<input type="hidden" name="to" value={person.id} />
 								<button class={small} disabled={busy} aria-label={m.share.inviteName(person.name)}>
 									<UserPlus size={16} />{m.share.inviteAction}
 								</button>
 							</form>
 						{:else}
-							<form method="POST" action="?/withdraw" use:enhance={submit}>
+							<form method="POST" action="{actionPath}?/withdraw" use:enhance={submit}>
 								<input type="hidden" name="id" value={invitation} />
 								<button
 									class={small}
@@ -126,7 +128,12 @@
 			<div class="mt-5 border-t border-zinc-800 pt-4">
 				{#if confirmLeave}
 					<p class="text-sm text-zinc-300">{m.share.leaveHint}</p>
-					<form method="POST" action="?/leave" use:enhance={submit} class="mt-3 flex gap-2">
+					<form
+						method="POST"
+						action="{actionPath}?/leave"
+						use:enhance={submit}
+						class="mt-3 flex gap-2"
+					>
 						<button class="{small} border-red-900 text-red-400" disabled={busy}>
 							<LogOut size={16} />{m.share.leaveNow}
 						</button>

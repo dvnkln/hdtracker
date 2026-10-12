@@ -12,6 +12,7 @@ const RECENT_DAYS = 28;
 
 // One line on the dashboard. Episodes of a show are grouped into one entry.
 export type DashboardEntry = {
+	itemId: number;
 	category: Category;
 	externalId: string;
 	title: string;
@@ -103,6 +104,7 @@ export const byEpisode = (a: Row, b: Row) =>
 // One line for a date of a title; for several episodes, the first and the last one.
 export function toEntry(item: Item, r: Row, last: Row = r): DashboardEntry {
 	return {
+		itemId: item.id,
 		category: item.category,
 		externalId: item.externalId,
 		title: item.title,

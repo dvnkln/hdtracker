@@ -339,13 +339,32 @@ export function invitable(
 		.sort((a, b) => a.person.name.localeCompare(b.person.name, 'de', { sensitivity: 'base' }));
 }
 
-// Whether there is anybody to track together with: another account that can log in. While
-// there is none, nothing about sharing is shown anywhere.
-export function canShare(userId: number) {
-	return !!getDb()
-		.select({ id: users.id })
+// Everybody the user could track something together with: the other accounts that can log
+// in, A–Z.
+export function shareablePeople(userId: number): Person[] {
+	return getDb()
+		.select(personFields)
 		.from(users)
 		.where(and(ne(users.id, userId), eq(users.disabled, false)))
-		.limit(1)
-		.get();
+		.all()
+		.map(toPerson)
+		.sort((a, b) => a.name.localeCompare(b.name, 'de', { sensitivity: 'base' }));
+}
+
+// Whether there is anybody to track together with. While there is nobody, nothing about
+// sharing is shown anywhere.
+export const canShare = (userId: number) => shareablePeople(userId).length > 0;
+
+// Invites one person to several titles at once (the selection in the library). Titles they
+// already track together with the user, or are invited to, are left as they are.
+export function inviteMany(by: number, itemIds: number[], to: number) {
+	let invited = 0;
+	let already = 0;
+	for (const itemId of new Set(itemIds)) {
+		const result = invite(by, itemId, to);
+		if (result.ok && result.created) invited++;
+		else if (result.ok || result.error === 'member') already++;
+		else return { ok: false, error: result.error } as const;
+	}
+	return { ok: true, invited, already } as const;
 }

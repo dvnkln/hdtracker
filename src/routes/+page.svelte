@@ -9,6 +9,7 @@
 	import { img } from '$lib/images';
 	import { reportSeen } from '$lib/seen';
 	import { titles } from '$lib/titles.svelte';
+	import Avatar from '$lib/components/Avatar.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import type { DashboardEntry } from '$lib/server/dashboard';
 	import {
@@ -133,6 +134,16 @@
 							<span class="truncate">{eventLabel(entry, m)}</span>
 						</p>
 					</div>
+					{#if data.together[entry.itemId]}
+						<span
+							class="flex shrink-0 -space-x-1.5"
+							title={m.share.together(data.together[entry.itemId].map((p) => p.name).join(', '))}
+						>
+							{#each data.together[entry.itemId].slice(0, 3) as person (person.id)}
+								<Avatar {person} class="size-6 text-[10px] ring-2 ring-zinc-950" />
+							{/each}
+						</span>
+					{/if}
 				</a>
 			</li>
 		{/each}

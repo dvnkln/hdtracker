@@ -1,4 +1,5 @@
 import { fail } from '@sveltejs/kit';
+import type { Person } from '$lib/avatar';
 import type { Category } from '$lib/categories';
 import { allowedStatuses, isReleased, isStatusFor, type Status } from '$lib/status';
 import {
@@ -15,7 +16,16 @@ import { ProviderError, today, type SearchResult } from '$lib/server/providers/t
 import { searchCategory } from '$lib/server/search';
 import { refreshPending } from '$lib/server/releases';
 import { serverMessages } from '$lib/server/i18n';
+import { companionsByItem, inviteMany, outgoing, shareablePeople } from '$lib/server/sharing';
 import type { Actions, PageServerLoad } from './$types';
+
+function pendingByItem(userId: number) {
+	const pending: Record<number, Record<number, number>> = {};
+	for (const invitation of outgoing(userId)) {
+		(pending[invitation.item.id] ??= {})[invitation.to.id] = invitation.id;
+	}
+	return pending;
+}
 
 export const load: PageServerLoad = async ({ params, url, locals }) => {
 	const me = locals.user!.id;
@@ -24,7 +34,25 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 
 	// No search term: show the library.
 	if (!q) {
-		return { category, q, library: listLibrary(me, category), results: [], error: null };
+		const library = listLibrary(me, category);
+		// Who tracks along (profile pictures on the posters), and whom one could invite
+		const companions = companionsByItem(me);
+		const together = Object.fromEntries(
+			library.flatMap((item) =>
+				companions.has(item.id) ? [[item.id, companions.get(item.id)!]] : []
+			)
+		) as Record<number, Person[]>;
+		return {
+			category,
+			q,
+			library,
+			together,
+			people: shareablePeople(me),
+			// The user's open invitations: title -> (invited user -> invitation)
+			pending: pendingByItem(me),
+			results: [],
+			error: null
+		};
 	}
 
 	let results: (SearchResult & { status: Status | null })[] = [];
@@ -41,10 +69,33 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 		console.error(`Search in ${category} failed`, err);
 		error = err instanceof ProviderError ? err.message : serverMessages().library.searchFailed;
 	}
-	return { category, q, library: [] as LibraryItem[], results, error };
+	return {
+		category,
+		q,
+		library: [] as LibraryItem[],
+		together: {} as Record<number, Person[]>,
+		people: [] as Person[],
+		pending: {} as Record<number, Record<number, number>>,
+		results,
+		error
+	};
 };
 
 export const actions: Actions = {
+	// Tracking together: invite one person to the titles selected in the library.
+	invite: async ({ request, locals }) => {
+		const data = await request.formData();
+		const ids = data.getAll('id').map(Number);
+		const to = Number(data.get('to'));
+		const whole = (n: number) => Number.isInteger(n) && n > 0;
+		if (ids.length === 0 || ids.length > 500 || !ids.every(whole) || !whole(to)) {
+			return fail(400, { error: serverMessages().common.invalidData });
+		}
+		const result = inviteMany(locals.user!.id, ids, to);
+		if (!result.ok) return fail(400, { error: serverMessages().share.errors[result.error] });
+		return { invited: result.invited, already: result.already, to };
+	},
+
 	// Add to library or change status.
 	save: async ({ params, request, locals }) => {
 		const me = locals.user!.id;

@@ -20,7 +20,10 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
-	import { Info, Trash2, X } from '@lucide/svelte';
+	import { Bell, BellOff, Info, Trash2, UserPlus, X } from '@lucide/svelte';
+	import type { Sharing } from '$lib/sharing';
+	import Avatar from '$lib/components/Avatar.svelte';
+	import ShareSheet from '$lib/components/ShareSheet.svelte';
 	import { STATUS_ICONS } from '$lib/statusIcons';
 	import {
 		allowedStatuses,
@@ -40,8 +43,40 @@
 		// Page whose form actions save/remove live on (the category page by default)
 		actionPath?: string;
 		showDetailsLink?: boolean;
+		// For titles of the library: the bell (false = muted) and tracking together. Their
+		// actions live on the page of the title.
+		notify?: boolean | null;
+		sharing?: Sharing;
 	};
-	let { category, item, onclose, actionPath = '', showDetailsLink = true }: Props = $props();
+	let {
+		category,
+		item,
+		onclose,
+		actionPath = '',
+		showDetailsLink = true,
+		notify = null,
+		sharing = null
+	}: Props = $props();
+
+	// The page of the title: where the bell and the invitations are saved
+	let titlePath = $derived(item ? `/${category}/${item.externalId}` : '');
+	let shareOpen = $state(false);
+	let waiting = $derived(!!sharing?.candidates.some((c) => c.invitation !== null));
+	let shareLabel = $derived(
+		!sharing
+			? ''
+			: sharing.companions.length > 0
+				? m.share.together(sharing.companions.map((p) => p.name).join(', '))
+				: waiting
+					? m.share.invited
+					: m.share.alone
+	);
+	// Saved in the background; the window stays open
+	const stay: SubmitFunction =
+		() =>
+		async ({ update }) => {
+			await update({ reset: false });
+		};
 
 	let dialog: HTMLDialogElement;
 	let confirmRemove = $state(false);
@@ -51,6 +86,7 @@
 	$effect(() => {
 		if (item) {
 			confirmRemove = false;
+			shareOpen = false;
 			lastTap = null;
 			flash = 0;
 			dialog.showModal();
@@ -204,6 +240,59 @@
 				{/each}
 			</form>
 
+			{#if item.status && (notify !== null || sharing)}
+				<!-- Notifications about this title, and tracking it together -->
+				<div class="mt-4 flex items-center gap-2">
+					{#if notify !== null}
+						<form method="POST" action="{titlePath}?/notify" use:enhance={stay} class="flex-1">
+							<input type="hidden" name="notify" value={notify ? '0' : '1'} />
+							<button
+								class="ui-btn flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-700 p-3 text-sm font-medium transition-colors hover:bg-zinc-800 {notify
+									? ''
+									: 'text-zinc-500'}"
+								aria-pressed={notify}
+								aria-label={m.notifications.bell}
+								title={notify ? m.notifications.mute : m.notifications.unmute}
+							>
+								{#if notify}<Bell size={18} />{m.sheet.notifyOn}{:else}<BellOff size={18} />{m.sheet
+										.notifyOff}{/if}
+							</button>
+						</form>
+					{/if}
+					{#if sharing}
+						<button
+							type="button"
+							onclick={() => (shareOpen = true)}
+							aria-label={shareLabel}
+							title={shareLabel}
+							class="ui-btn relative flex flex-1 items-center justify-center gap-2 rounded-xl border p-3 text-sm font-medium transition-colors hover:bg-zinc-800 {sharing
+								.companions.length > 0
+								? 'ui-keep border-(--accent)'
+								: 'border-zinc-700'}"
+						>
+							{#if sharing.companions.length > 0}
+								<span class="flex -space-x-1.5">
+									{#each sharing.companions.slice(0, 3) as person (person.id)}
+										<Avatar {person} class="size-5 text-[10px] ring-2 ring-zinc-900" />
+									{/each}
+								</span>
+								{m.share.short}
+							{:else}
+								<span class="relative">
+									<UserPlus size={18} />
+									{#if waiting}
+										<span
+											class="absolute -top-1 -right-1 size-2.5 rounded-full bg-amber-400 ring-2 ring-zinc-900"
+										></span>
+									{/if}
+								</span>
+								{waiting ? m.share.pendingShort : m.share.inviteAction}
+							{/if}
+						</button>
+					{/if}
+				</div>
+			{/if}
+
 			{#if item.status}
 				<form method="POST" action="{actionPath}?/remove" use:enhance={submit} class="mt-4">
 					<input type="hidden" name="externalId" value={item.externalId} />
@@ -229,3 +318,14 @@
 		</div>
 	{/if}
 </dialog>
+
+{#if item && sharing}
+	<ShareSheet
+		open={shareOpen}
+		title={item.title}
+		companions={sharing.companions}
+		candidates={sharing.candidates}
+		actionPath={titlePath}
+		onclose={() => (shareOpen = false)}
+	/>
+{/if}

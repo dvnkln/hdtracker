@@ -12,10 +12,11 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 ### ✨ New
 
 - **Inbox:** the bell in the header collects what is new for you, with a number while something is unread – releases of titles you track (the same ones the dashboard lists as recently released, whether or not you use push messages), invitations, and what others did with titles you track together. Opening it marks everything as read, a look at the dashboard marks the releases; what you have read disappears after a week
-- **Track together:** on the page of a title in your library, the new symbol next to the bell invites another user. Who accepts takes over your status and watched episodes – from then on both of you keep them up to date, and the symbol shows who tracks along. Anybody can go on alone again and keeps the state as a copy of their own. Invitations wait in the inbox until they are answered
+- **Track together:** on the page of a title in your library, the new symbol next to the bell invites another user. Who accepts takes over your status and watched episodes – from then on both of you keep them up to date, and the symbol shows who tracks along. Anybody can go on alone again and keeps the state as a copy of their own. Invitations wait in the inbox until they are answered. In the library and on the dashboard, small profile pictures on a poster show who tracks along. To invite somebody to several titles at once, hold a poster in the library (right click or Ctrl+click on a computer) and tap the others
 
 ### 🔧 Improved
 
+- The window that changes the status of a title now also holds its bell and the invitations – no detour to the page of the title
 - The bell on the page of a title is always there for titles of your library: switched off, you hear nothing about this title – neither in the inbox nor as a push message
 - After an update of the server, an app that was left open (a tab, the installed app) notices the new version and loads itself afresh on the next change of page – before, it kept showing the old interface until it was reloaded by hand
 

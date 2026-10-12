@@ -126,6 +126,24 @@ export const de = {
 		replaces: 'Dein eigener Status und deine gesehenen Folgen werden dadurch ersetzt.',
 		accept: 'Annehmen',
 		decline: 'Ablehnen',
+		short: 'Gemeinsam',
+		pendingShort: 'Eingeladen',
+		endSelection: 'Auswahl beenden',
+		// Selecting several titles in the library
+		select: 'Auswählen',
+		selected: (n: number) => (n === 1 ? '1 Titel ausgewählt' : `${n} Titel ausgewählt`),
+		inviteSelected: 'Einladen …',
+		chooseWho: 'Wen einladen?',
+		sent: (n: number, name: string) =>
+			n === 0
+				? `Keine neue Einladung für ${name}.`
+				: n === 1
+					? `1 Einladung an ${name} verschickt.`
+					: `${n} Einladungen an ${name} verschickt.`,
+		sentAlready: (n: number) =>
+			n === 1
+				? '1 Titel war schon geteilt oder angefragt.'
+				: `${n} Titel waren schon geteilt oder angefragt.`,
 		errors: {
 			notYours: 'Dieser Titel ist nicht in deiner Bibliothek.',
 			unknown: 'Das geht nicht mehr – bitte die Seite neu laden.',
@@ -237,6 +255,8 @@ export const de = {
 	},
 
 	sheet: {
+		notifyOn: 'Benachrichtigen',
+		notifyOff: 'Stumm',
 		details: 'Details',
 		detailsAndEpisodes: 'Details & Folgen',
 		remove: 'Aus Bibliothek entfernen',
