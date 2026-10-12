@@ -13,6 +13,7 @@ export const de = {
 		search: 'Suchen',
 		logout: 'Abmelden',
 		settings: 'Einstellungen',
+		accountMenu: 'Konto-Menü',
 		showPassword: 'Passwort anzeigen',
 		hidePassword: 'Passwort verbergen',
 		tba: 'TBA',
@@ -82,6 +83,15 @@ export const de = {
 			'Du hast dich mit einem Übergangspasswort angemeldet. Wähle jetzt ein Passwort, das nur du kennst.',
 		saveNewPassword: 'Passwort speichern'
 	},
+	profile: {
+		title: 'Profil',
+		upload: 'Bild hochladen',
+		remove: 'Bild entfernen',
+		newColor: 'Neue Farbe',
+		uploadFailed: 'Hochladen fehlgeschlagen. Versuche es erneut.',
+		displayName: 'Anzeigename',
+		displayNameHint: 'So sehen dich die anderen. Leer: dein Benutzername.'
+	},
 	users: {
 		title: 'Benutzer',
 		navHint: 'Konten, Rollen',
@@ -122,7 +132,10 @@ export const de = {
 			taken: 'Diesen Benutzernamen gibt es schon.',
 			unknown: 'Dieses Konto gibt es nicht (mehr).',
 			lastAdmin: 'Es muss mindestens ein Admin bleiben, der sich anmelden kann.',
-			self: 'Das eigene Konto lässt sich hier nicht sperren oder löschen.'
+			self: 'Das eigene Konto lässt sich hier nicht sperren oder löschen.',
+			displayName: 'Der Anzeigename darf höchstens 30 Zeichen haben.',
+			nameTaken: 'Unter diesem Namen ist schon jemand zu sehen.',
+			picture: 'Das ließ sich nicht als Bild lesen (oder es ist zu groß).'
 		} as Record<string, string>
 	},
 

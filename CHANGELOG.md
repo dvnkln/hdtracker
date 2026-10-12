@@ -12,9 +12,11 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 ### ✨ New
 
 - **Several users:** an admin creates accounts under Settings → Users – nobody can register themselves. A new account gets a temporary password that is shown once; on the first login its owner chooses their own. Everybody has a library, a dashboard and settings of their own (language, theme, shown areas, notifications, …); what is set for the whole installation (content language, region, connection, maintenance) stays with the admins. Accounts can be made admin, locked (keeps everything, login refused) or deleted. The admin sees how many titles somebody tracks, never which
+- **Profile:** under Settings → Account everybody can choose a display name – what others see instead of the name used to log in – and a profile picture. Without a picture of your own, the first letter of your name stands on a colour (roll another one if you do not like it). An uploaded photo is cut to a small square and stored without the data the camera wrote into the file
 
 ### 🔧 Improved
 
+- Your profile picture now sits at the top right instead of the gear and the log-out icon: a tap opens a small menu that shows who is logged in and leads to the settings and to logging out
 - An empty library, an empty dashboard and a search without results show a small pictogram and a few words instead of a paragraph of text
 - Choosing a password tells you while typing whether it is long enough and whether both entries match
 - The login page of a device now also remembers the language last used there (as it already did the theme)

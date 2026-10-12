@@ -18,7 +18,14 @@ test('first start: set-up wizard, log out, wrong password, log in', async ({ pag
 	await page.goto('/setup');
 	await expect(page).toHaveURL('/');
 
-	await page.getByRole('button', { name: 'Log out' }).click();
+	// The own picture at the top right opens the menu with the settings and logging out
+	const menu = page.getByRole('button', { name: 'Account menu' });
+	await menu.click();
+	await expect(page.getByRole('menuitem', { name: 'Settings' })).toBeVisible();
+	await page.keyboard.press('Escape');
+	await expect(page.getByRole('menu')).toBeHidden();
+	await menu.click();
+	await page.getByRole('menuitem', { name: 'Log out' }).click();
 	await expect(page).toHaveURL('/login');
 
 	await login(page, 'not-the-password');

@@ -4,6 +4,12 @@ import { addTitle, loginOk, saved } from './helpers';
 // A second account, created by the admin in this test and removed again at its end.
 const GUEST = { name: 'guest', password: 'guest-password-6789' };
 
+// A tiny picture to upload (2×2 pixels, red)
+const PICTURE = Buffer.from(
+	'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAE0lEQVQImWP4z8DwnwGM/zMwAAAf7gP9qS/A4gAAAABJRU5ErkJggg==',
+	'base64'
+);
+
 // The posters of a library page
 const posters = (page: Page) => page.locator('main [class*="group/poster"]');
 
@@ -42,7 +48,7 @@ test('users: the admin creates an account; it starts with a temporary password, 
 	await expect(shown).toHaveText(/^[A-Za-z0-9]{16}$/);
 	const temporary = (await shown.textContent())!;
 	await expect(accounts.getByRole('listitem')).toHaveCount(2);
-	await expect(accounts.getByText('User · 0 titles · Temporary password')).toBeVisible();
+	await expect(accounts.getByText('0 titles · Temporary password')).toBeVisible();
 
 	// The new user, in a browser of their own
 	const theirs = await browser.newContext();
@@ -95,9 +101,53 @@ test('users: the admin creates an account; it starts with a temporary password, 
 
 	// The admin sees how many titles, not which; their own library is untouched
 	await page.goto('/settings/users');
-	await expect(accounts.getByText(/User · 1 title · last login/)).toBeVisible();
+	await expect(accounts.getByText(/1 title · last login/)).toBeVisible();
 	await page.goto('/movies');
 	await expect(posters(page)).toHaveCount(adminsMovies);
+
+	// The guest chooses how the others see them: a name and a picture
+	await guest.goto('/settings/account');
+	const profile = guest
+		.locator('section')
+		.filter({ has: guest.getByRole('heading', { name: 'Profile' }) });
+	await expect(profile.locator('img')).toHaveCount(0); // the letter on a colour
+	await profile.getByLabel('Display name').fill('tester'); // the admin's name
+	await profile.getByRole('button', { name: 'Save' }).click();
+	await expect(profile.getByText('Somebody is already shown under this name.')).toBeVisible();
+	await profile.getByLabel('Display name').fill('Guest of Honour');
+	await saved(guest, 'profile', () => profile.getByRole('button', { name: 'Save' }).click());
+	const uploaded = guest.waitForResponse((res) => res.url().includes('?/avatar'));
+	await profile.locator('input[type=file]').setInputFiles({
+		name: 'me.png',
+		mimeType: 'image/png',
+		buffer: PICTURE
+	});
+	expect((await uploaded).ok()).toBe(true);
+	await expect(profile.locator('img')).toHaveAttribute('src', /^\/avatar\/\d+\?v=\d+$/);
+	// The menu at the top right shows both at once: the name others see, and the login name
+	await guest.getByRole('button', { name: 'Account menu' }).click();
+	const me = guest.getByRole('menuitem', { name: /Guest of Honour/ });
+	await expect(me).toContainText('@guest');
+	await expect(me.locator('img')).toBeVisible();
+	await guest.keyboard.press('Escape');
+	expect(
+		(await guest.request.get((await profile.locator('img').getAttribute('src')) ?? '')).headers()[
+			'content-type'
+		]
+	).toBe('image/jpeg');
+	// Something that is no picture is refused
+	await profile.locator('input[type=file]').setInputFiles({
+		name: 'notes.txt',
+		mimeType: 'text/plain',
+		buffer: Buffer.from('not a picture')
+	});
+	await expect(profile.getByText(/could not be read as a picture/)).toBeVisible();
+
+	// The admin sees the new name and picture – and still the name they log in with
+	await page.goto('/settings/users');
+	await expect(accounts.getByText('Guest of Honour')).toBeVisible();
+	await expect(accounts.getByText(/@guest · 1 title/)).toBeVisible();
+	await expect(accounts.locator('img')).toHaveCount(1);
 
 	// Locking throws the user out and keeps them out
 	await page.goto('/settings/users');

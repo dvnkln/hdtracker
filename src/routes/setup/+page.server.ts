@@ -6,6 +6,7 @@ import { createSession, hasAnyUser, hashPassword, setSessionCookie } from '$lib/
 import { localeOf, rememberLocale, serverMessages } from '$lib/server/i18n';
 import { MIN_PASSWORD_LENGTH as MIN_PASSWORD, USERNAME_PATTERN } from '$lib/limits';
 import { rememberTheme, savedTheme } from '$lib/server/theme';
+import { randomHue } from '$lib/server/users';
 import type { Actions } from './$types';
 
 export const actions: Actions = {
@@ -34,7 +35,13 @@ export const actions: Actions = {
 		if (hasAnyUser()) redirect(303, '/login');
 		const user = getDb()
 			.insert(users)
-			.values({ username, passwordHash, role: 'admin', lastLoginAt: new Date() })
+			.values({
+				username,
+				passwordHash,
+				role: 'admin',
+				lastLoginAt: new Date(),
+				avatarColor: randomHue()
+			})
 			.returning({ id: users.id })
 			.get();
 

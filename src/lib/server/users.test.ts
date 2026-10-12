@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
+import sharp from 'sharp';
 import { addItem } from '../../tests/helpers';
 import { createSession, isAdmin, validateSession, verifyPassword } from './auth';
 import {
@@ -15,10 +16,17 @@ import { localeOf } from './i18n';
 import { allItems } from './library';
 import { setSettings, setUserSettings } from './settings';
 import {
+	MAX_AVATAR_BYTES,
+	avatarOf,
 	createUser,
 	deleteUser,
 	listUsers,
+	nameInUse,
+	removeAvatar,
+	rerollColor,
 	resetPassword,
+	setAvatar,
+	setDisplayName,
 	setDisabled,
 	setOwnPassword,
 	setRole,
@@ -190,6 +198,100 @@ describe('what an admin sees of the others', () => {
 		]);
 		expect(JSON.stringify(list)).not.toContain('Private');
 		expect(JSON.stringify(list)).not.toContain('passwordHash');
+	});
+});
+
+describe('what others see of a user', () => {
+	it('the display name, or the username while there is none', async () => {
+		const { id } = await add('anna');
+		const person = () => listUsers().find((user) => user.id === id)!.person;
+		expect(person().name).toBe('anna');
+		expect(setDisplayName(id, '  Anna   Banana ')).toEqual({ ok: true });
+		expect(person().name).toBe('Anna Banana');
+		expect(row(id).username).toBe('anna'); // logging in is untouched
+		// Empty: back to the username
+		expect(setDisplayName(id, '   ')).toEqual({ ok: true });
+		expect(person().name).toBe('anna');
+		expect(row(id).displayName).toBeNull();
+	});
+
+	it('nobody is shown under a name somebody else uses – to be seen or to log in', async () => {
+		const anna = await add('anna');
+		const ben = await add('ben');
+		setDisplayName(anna.id, 'Captain');
+		expect(setDisplayName(ben.id, 'captain')).toEqual({ ok: false, error: 'nameTaken' });
+		expect(setDisplayName(ben.id, 'ANNA')).toEqual({ ok: false, error: 'nameTaken' });
+		expect(setDisplayName(ben.id, 'Boss')).toEqual({ ok: false, error: 'nameTaken' });
+		// One's own names are fine, in any case
+		expect(setDisplayName(anna.id, 'Anna')).toEqual({ ok: true });
+		expect(setDisplayName(anna.id, 'CAPTAIN')).toEqual({ ok: true });
+		// ... and a new account cannot take a name somebody is shown under
+		expect(await createUser('captain', 'user', admin)).toEqual({ ok: false, error: 'taken' });
+		expect(nameInUse('Captain', anna.id)).toBe(false);
+		expect(nameInUse('Captain', ben.id)).toBe(true);
+	});
+
+	it('a display name is short and has nothing invisible in it', async () => {
+		const { id } = await add('anna');
+		expect(setDisplayName(id, 'x'.repeat(31))).toEqual({ ok: false, error: 'displayName' });
+		expect(setDisplayName(id, 'An\u200bna')).toEqual({ ok: false, error: 'displayName' });
+		expect(setDisplayName(id, 'Zoë 🎬')).toEqual({ ok: true });
+		expect(setDisplayName(9999, 'x')).toEqual({ ok: false, error: 'unknown' });
+	});
+
+	it('every account gets a colour; another one can be rolled', async () => {
+		const { id } = await add('anna');
+		const before = row(id).avatarColor;
+		expect(before).toBeGreaterThanOrEqual(0);
+		expect(before).toBeLessThan(360);
+		const after = rerollColor(id);
+		expect(after).not.toBe(before);
+		expect(row(id).avatarColor).toBe(after);
+		expect(row(admin).avatarColor).toBe(210); // nobody else's changes
+	});
+});
+
+describe('profile pictures', () => {
+	const photo = (width: number, height: number) =>
+		sharp({ create: { width, height, channels: 3, background: '#3366cc' } })
+			.withExif({ IFD0: { Copyright: 'secret place' } })
+			.jpeg()
+			.toBuffer();
+
+	it('are stored anew as a small square JPEG, without what the camera wrote into the file', async () => {
+		const { id } = await add('anna');
+		expect(listUsers().find((user) => user.id === id)!.person.picture).toBeNull();
+		expect(await setAvatar(id, await photo(1200, 800))).toEqual({ ok: true });
+
+		const stored = avatarOf(id)!;
+		const meta = await sharp(stored).metadata();
+		expect([meta.format, meta.width, meta.height]).toEqual(['jpeg', 256, 256]);
+		expect(meta.exif).toBeUndefined();
+		expect(stored.includes('secret place')).toBe(false);
+		// The picture's version changes with it, so browsers load the new one
+		expect(listUsers().find((user) => user.id === id)!.person.picture).toBeTypeOf('number');
+		expect(avatarOf(admin)).toBeNull();
+	});
+
+	it('refuse what is not a picture, what is empty and what is too large', async () => {
+		const { id } = await add('anna');
+		const text = new TextEncoder().encode('<script>alert(1)</script>');
+		expect(await setAvatar(id, text)).toEqual({ ok: false, error: 'picture' });
+		expect(await setAvatar(id, new Uint8Array())).toEqual({ ok: false, error: 'picture' });
+		expect(await setAvatar(id, new Uint8Array(MAX_AVATAR_BYTES + 1))).toEqual({
+			ok: false,
+			error: 'picture'
+		});
+		expect(await setAvatar(9999, await photo(10, 10))).toEqual({ ok: false, error: 'unknown' });
+		expect(avatarOf(id)).toBeNull();
+	});
+
+	it('can be removed again: back to the letter on the colour', async () => {
+		const { id } = await add('anna');
+		await setAvatar(id, await photo(300, 300));
+		removeAvatar(id);
+		expect(avatarOf(id)).toBeNull();
+		expect(listUsers().find((user) => user.id === id)!.person.picture).toBeNull();
 	});
 });
 

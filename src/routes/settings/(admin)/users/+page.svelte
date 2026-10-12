@@ -5,6 +5,7 @@
 	import { formatDateTime, m } from '$lib/i18n/index.svelte';
 	import { USERNAME_PATTERN } from '$lib/limits';
 	import { ui } from '$lib/ui';
+	import Avatar from '$lib/components/Avatar.svelte';
 	import FeedbackText from '$lib/components/FeedbackText.svelte';
 	import Switch from '$lib/components/Switch.svelte';
 	import SubmitButton, {
@@ -20,7 +21,6 @@
 		Plus,
 		ShieldCheck,
 		Trash2,
-		UserRound,
 		Users,
 		Webhook
 	} from '@lucide/svelte';
@@ -49,6 +49,14 @@
 		}
 	}
 
+	// The small line under a name. The name somebody logs in with is only shown where it
+	// differs from the name they are seen under – and only here, to the admin.
+	const detailOf = (user: (typeof data.users)[number]) =>
+		[
+			...(user.person.name !== user.username ? [`@${user.username}`] : []),
+			m.users.titles(user.titles),
+			stateOf(user)
+		].join(' · ');
 	const stateOf = (user: (typeof data.users)[number]) =>
 		user.disabled
 			? m.users.locked
@@ -104,19 +112,18 @@
 						deleting = null;
 					}}
 				>
-					{#if user.role === 'admin'}
-						<ShieldCheck size={20} class="shrink-0 text-zinc-400" />
-					{:else}
-						<UserRound size={20} class="shrink-0 text-zinc-400" />
-					{/if}
+					<Avatar person={user.person} class="size-9 text-sm" />
 					<span class="min-w-0 flex-1">
 						<span class="flex items-center gap-1.5 text-sm font-medium">
-							<span class="truncate">{user.username}</span>
+							<span class="truncate">{user.person.name}</span>
+							{#if user.role === 'admin'}
+								<ShieldCheck size={15} class="shrink-0 text-zinc-400" aria-label={m.users.admin} />
+							{/if}
 							{#if mine}<span class="shrink-0 font-normal text-emerald-400">· {m.users.you}</span
 								>{/if}
 						</span>
 						<span class="block truncate text-xs text-zinc-500">
-							{m.users.roles[user.role]} · {m.users.titles(user.titles)} · {stateOf(user)}
+							{detailOf(user)}
 						</span>
 					</span>
 					{#if user.disabled}<Lock size={16} class="shrink-0 text-zinc-500" />{/if}

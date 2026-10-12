@@ -417,7 +417,8 @@ html[data-theme='cyberpunk'] {
 	border: 2px solid;
 	border-color: #808080 #ffffff #ffffff #808080;
 }
-/* The header is the window's title bar: white on navy; the search field stays a white field. */
+/* The header is the window's title bar: white on navy; the search field stays a white field,
+   the account menu a grey window. */
 [data-theme='retro95'] [data-chrome='header'] {
 	background: #000080;
 	color: #ffffff;
@@ -425,7 +426,7 @@ html[data-theme='cyberpunk'] {
 	--color-zinc-400: #dcdcff;
 	--color-zinc-800: #2a2aa8;
 }
-[data-theme='retro95'] [data-chrome='header'] form[role='search'] {
+[data-theme='retro95'] [data-chrome='header'] :is(form[role='search'], [role='menu']) {
 	--color-zinc-100: #000000;
 	--color-zinc-400: #333333;
 	--color-zinc-800: #a6a6a6;

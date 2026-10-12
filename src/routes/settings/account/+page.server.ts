@@ -1,12 +1,11 @@
 import { fail, type RequestEvent } from '@sveltejs/kit';
-import { and, eq, ne } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { MIN_PASSWORD_LENGTH as MIN_PASSWORD, USERNAME_PATTERN } from '$lib/limits';
 import {
 	SESSION_COOKIE,
 	clearLoginFailures,
 	clientAddress,
 	deleteOtherSessions,
-	hashPassword,
 	loginLockedFor,
 	recordLoginFailure,
 	verifyPassword
@@ -14,8 +13,34 @@ import {
 import { getDb } from '$lib/server/db';
 import { users } from '$lib/server/db/schema';
 import { serverMessages } from '$lib/server/i18n';
-import { setOwnPassword } from '$lib/server/users';
-import type { Actions } from './$types';
+import {
+	MAX_AVATAR_BYTES,
+	MAX_DISPLAY_NAME,
+	nameInUse,
+	removeAvatar,
+	rerollColor,
+	setAvatar,
+	setDisplayName,
+	setOwnPassword,
+	toPerson
+} from '$lib/server/users';
+import type { Actions, PageServerLoad } from './$types';
+
+// Personal: who you are for the others (name, picture) and how you log in.
+export const load: PageServerLoad = ({ locals }) => {
+	const user = locals.user!;
+	return {
+		me: toPerson({
+			id: user.id,
+			username: user.username,
+			displayName: user.displayName,
+			avatarColor: user.avatarColor,
+			avatarUpdatedAt: user.avatarVersion === null ? null : new Date(user.avatarVersion)
+		}),
+		displayName: user.displayName ?? '',
+		maxDisplayName: MAX_DISPLAY_NAME
+	};
+};
 
 // Checks the current password (with the same brute-force protection as the login form).
 // Returns an error text, or null if the password is right.
@@ -34,6 +59,38 @@ async function checkCurrentPassword(event: RequestEvent, password: string) {
 }
 
 export const actions: Actions = {
+	// The name others see. Empty: the username is shown.
+	profile: async ({ request, locals }) => {
+		const t = serverMessages();
+		const name = String((await request.formData()).get('displayName') ?? '');
+		const result = setDisplayName(locals.user!.id, name);
+		if (!result.ok) return fail(400, { section: 'profile', error: t.users.errors[result.error] });
+		return { section: 'profile', message: t.settings.saved };
+	},
+
+	// A profile picture, sent by the page after it shrank the chosen photo.
+	avatar: async ({ request, locals }) => {
+		const t = serverMessages();
+		const file = (await request.formData()).get('picture');
+		if (!(file instanceof File) || file.size === 0 || file.size > MAX_AVATAR_BYTES) {
+			return fail(400, { section: 'avatar', error: t.users.errors.picture });
+		}
+		const result = await setAvatar(locals.user!.id, new Uint8Array(await file.arrayBuffer()));
+		if (!result.ok) return fail(400, { section: 'avatar', error: t.users.errors[result.error] });
+		return { section: 'avatar' };
+	},
+
+	avatarRemove: ({ locals }) => {
+		removeAvatar(locals.user!.id);
+		return { section: 'avatar' };
+	},
+
+	// Another colour for the placeholder picture.
+	color: ({ locals }) => {
+		rerollColor(locals.user!.id);
+		return { section: 'avatar' };
+	},
+
 	username: async (event) => {
 		const t = serverMessages();
 		const data = await event.request.formData();
@@ -45,12 +102,7 @@ export const actions: Actions = {
 		if (wrong) return failWith(wrong);
 
 		const me = event.locals.user!.id;
-		const taken = getDb()
-			.select({ id: users.id })
-			.from(users)
-			.where(and(eq(users.username, username), ne(users.id, me)))
-			.get();
-		if (taken) return failWith(t.settings.usernameTaken);
+		if (nameInUse(username, me)) return failWith(t.settings.usernameTaken);
 
 		getDb().update(users).set({ username }).where(eq(users.id, me)).run();
 		return { section: 'username', message: t.settings.usernameChanged };

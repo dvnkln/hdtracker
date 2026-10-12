@@ -30,6 +30,11 @@ export type SessionUser = {
 	role: Role;
 	// Has a temporary password: has to choose one of their own before anything else
 	mustChangePassword: boolean;
+	// The name others see (the username while none is set) and the profile picture
+	displayName: string | null;
+	avatarColor: number;
+	// Version of the profile picture (null: none of their own)
+	avatarVersion: number | null;
 };
 
 // ---- Secret ----
@@ -107,6 +112,9 @@ export function validateSession(token: string) {
 			role: users.role,
 			disabled: users.disabled,
 			mustChangePassword: users.mustChangePassword,
+			displayName: users.displayName,
+			avatarColor: users.avatarColor,
+			avatarUpdatedAt: users.avatarUpdatedAt,
 			expiresAt: sessions.expiresAt
 		})
 		.from(sessions)
@@ -130,7 +138,10 @@ export function validateSession(token: string) {
 		id: row.id,
 		username: row.username,
 		role: row.role,
-		mustChangePassword: row.mustChangePassword
+		mustChangePassword: row.mustChangePassword,
+		displayName: row.displayName,
+		avatarColor: row.avatarColor,
+		avatarVersion: row.avatarUpdatedAt?.getTime() ?? null
 	};
 	return { user, renewedUntil };
 }

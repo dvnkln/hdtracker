@@ -1,5 +1,6 @@
-import { randomBytes } from 'node:crypto';
+import { randomBytes, randomInt } from 'node:crypto';
 import { and, count, eq, ne } from 'drizzle-orm';
+import type { Person } from '$lib/avatar';
 import { USERNAME_PATTERN } from '$lib/limits';
 import { hashPassword, type Role } from './auth';
 import { getDb } from './db';
@@ -14,7 +15,8 @@ import { setUserSettings } from './settings';
 // can log in.
 
 // What went wrong – a key of `users.errors` in the texts.
-export type UserError = 'username' | 'taken' | 'unknown' | 'lastAdmin' | 'self';
+export type UserError =
+	'username' | 'taken' | 'unknown' | 'lastAdmin' | 'self' | 'displayName' | 'nameTaken' | 'picture';
 type Failed = { ok: false; error: UserError };
 
 // Readable and free of characters that look alike (no 0/O, 1/l/I).
@@ -49,12 +51,25 @@ export function listUsers() {
 			disabled: users.disabled,
 			mustChangePassword: users.mustChangePassword,
 			lastLoginAt: users.lastLoginAt,
-			createdAt: users.createdAt
+			createdAt: users.createdAt,
+			displayName: users.displayName,
+			avatarColor: users.avatarColor,
+			avatarUpdatedAt: users.avatarUpdatedAt
 		})
 		.from(users)
 		.orderBy(users.id)
 		.all()
-		.map((user) => ({ ...user, titles: titles.get(user.id) ?? 0 }));
+		.map(({ displayName, avatarColor, avatarUpdatedAt, ...user }) => ({
+			...user,
+			person: toPerson({
+				id: user.id,
+				username: user.username,
+				displayName,
+				avatarColor,
+				avatarUpdatedAt
+			}),
+			titles: titles.get(user.id) ?? 0
+		}));
 }
 
 const find = (id: number) => getDb().select().from(users).where(eq(users.id, id)).get();
@@ -82,16 +97,16 @@ export async function createUser(
 	const password = temporaryPassword();
 	const passwordHash = await hashPassword(password);
 	const db = getDb();
-	// "Anna" and "anna" would be told apart at login, but not by people
-	const taken = db
-		.select({ username: users.username })
-		.from(users)
-		.all()
-		.some((user) => user.username.toLowerCase() === name.toLowerCase());
-	if (taken) return { ok: false, error: 'taken' };
+	if (nameInUse(name)) return { ok: false, error: 'taken' };
 	const created = db
 		.insert(users)
-		.values({ username: name, passwordHash, role, mustChangePassword: true })
+		.values({
+			username: name,
+			passwordHash,
+			role,
+			mustChangePassword: true,
+			avatarColor: randomHue()
+		})
 		.returning({ id: users.id })
 		.get();
 	setUserSettings(created.id, { uiLanguage: localeOf(by) });
@@ -162,4 +177,115 @@ export function deleteUser(id: number, by: number): { ok: true } | Failed {
 
 export function recordLogin(id: number) {
 	getDb().update(users).set({ lastLoginAt: new Date() }).where(eq(users.id, id)).run();
+}
+
+// ---- Profile: what others see of a user ----
+
+type Shown = {
+	id: number;
+	username: string;
+	displayName: string | null;
+	avatarColor: number;
+	avatarUpdatedAt: Date | null;
+};
+
+// The one place that decides which name others see: the display name, or the username while
+// none is set.
+export const shownName = (user: Pick<Shown, 'username' | 'displayName'>) =>
+	user.displayName?.trim() || user.username;
+
+export function toPerson(user: Shown): Person {
+	return {
+		id: user.id,
+		name: shownName(user),
+		color: user.avatarColor,
+		picture: user.avatarUpdatedAt ? user.avatarUpdatedAt.getTime() : null
+	};
+}
+
+export const randomHue = () => randomInt(360);
+
+// Whether somebody else already goes by this name – as the name they log in with or as the
+// name they are shown under, whatever the case. ("Anna" and "anna" would be told apart at
+// login, but not by people; and nobody should be able to pose as somebody else.)
+export function nameInUse(name: string, exceptId?: number) {
+	const wanted = name.trim().toLowerCase();
+	return getDb()
+		.select({ id: users.id, username: users.username, displayName: users.displayName })
+		.from(users)
+		.all()
+		.some(
+			(other) =>
+				other.id !== exceptId &&
+				(other.username.toLowerCase() === wanted || shownName(other).toLowerCase() === wanted)
+		);
+}
+
+export const MAX_DISPLAY_NAME = 30;
+
+// Sets the name others see. Empty: back to the username. No two users may be shown under the
+// same name (whatever the case) – otherwise nobody could tell who invites them.
+export function setDisplayName(id: number, name: string): { ok: true } | Failed {
+	// Spaces are tidied up; anything invisible that could fake another name is refused
+	const wanted = name.trim().replace(/\s+/g, ' ');
+	if (wanted.length > MAX_DISPLAY_NAME || /[\p{C}]/u.test(wanted)) {
+		return { ok: false, error: 'displayName' };
+	}
+	const db = getDb();
+	const me = find(id);
+	if (!me) return { ok: false, error: 'unknown' };
+	if (nameInUse(wanted || me.username, id)) return { ok: false, error: 'nameTaken' };
+	db.update(users)
+		.set({ displayName: wanted || null })
+		.where(eq(users.id, id))
+		.run();
+	return { ok: true };
+}
+
+// A picture as it comes from the browser may be at most this large (the page shrinks photos
+// before sending them).
+export const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
+const AVATAR_SIZE = 256;
+
+// Stores a profile picture: whatever was uploaded is read as an image, turned upright, cut to
+// a square and saved anew as a small JPEG – nothing of the original file is kept (no location,
+// no camera data), and something that is not an image is refused.
+export async function setAvatar(id: number, file: Uint8Array): Promise<{ ok: true } | Failed> {
+	if (!find(id)) return { ok: false, error: 'unknown' };
+	if (file.length === 0 || file.length > MAX_AVATAR_BYTES) return { ok: false, error: 'picture' };
+	let avatar: Buffer;
+	try {
+		const { default: sharp } = await import('sharp');
+		avatar = await sharp(file, { limitInputPixels: 40_000_000 })
+			.rotate() // as the camera held it
+			.resize(AVATAR_SIZE, AVATAR_SIZE, { fit: 'cover' })
+			.flatten({ background: '#ffffff' })
+			.jpeg({ quality: 85 })
+			.toBuffer();
+	} catch {
+		return { ok: false, error: 'picture' };
+	}
+	getDb().update(users).set({ avatar, avatarUpdatedAt: new Date() }).where(eq(users.id, id)).run();
+	return { ok: true };
+}
+
+export function removeAvatar(id: number) {
+	getDb().update(users).set({ avatar: null, avatarUpdatedAt: null }).where(eq(users.id, id)).run();
+}
+
+// Another colour for the placeholder.
+export function rerollColor(id: number) {
+	const before = find(id)?.avatarColor ?? 0;
+	// Clearly different from the one before
+	const color = (before + 40 + randomInt(280)) % 360;
+	getDb().update(users).set({ avatarColor: color }).where(eq(users.id, id)).run();
+	return color;
+}
+
+// The picture itself, for the route that serves it.
+export function avatarOf(id: number) {
+	return (
+		getDb().select({ avatar: users.avatar }).from(users).where(eq(users.id, id)).get()?.avatar ??
+		null
+	);
 }

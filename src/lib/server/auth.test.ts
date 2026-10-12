@@ -42,11 +42,13 @@ describe('passwords', () => {
 describe('sessions', () => {
 	it('finds the user for a valid token only', () => {
 		const { token } = createSession(userId);
-		expect(validateSession(token)?.user).toEqual({
+		expect(validateSession(token)?.user).toMatchObject({
 			id: userId,
 			username: 'demo',
 			role: 'user',
-			mustChangePassword: false
+			mustChangePassword: false,
+			displayName: null,
+			avatarVersion: null
 		});
 		expect(validateSession('made-up-token')).toBeNull();
 	});

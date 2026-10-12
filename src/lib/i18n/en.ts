@@ -10,6 +10,7 @@ export const en: Messages = {
 		search: 'Search',
 		logout: 'Log out',
 		settings: 'Settings',
+		accountMenu: 'Account menu',
 		showPassword: 'Show password',
 		hidePassword: 'Hide password',
 		tba: 'TBA',
@@ -78,6 +79,15 @@ export const en: Messages = {
 			'You logged in with a temporary password. Now choose a password only you know.',
 		saveNewPassword: 'Save password'
 	},
+	profile: {
+		title: 'Profile',
+		upload: 'Upload a picture',
+		remove: 'Remove picture',
+		newColor: 'New colour',
+		uploadFailed: 'Upload failed. Please try again.',
+		displayName: 'Display name',
+		displayNameHint: 'How the others see you. Empty: your username.'
+	},
 	users: {
 		title: 'Users',
 		navHint: 'Accounts, roles',
@@ -118,7 +128,10 @@ export const en: Messages = {
 			taken: 'This username already exists.',
 			unknown: 'This account does not exist (any more).',
 			lastAdmin: 'At least one admin who can log in has to remain.',
-			self: 'Your own account cannot be locked or deleted here.'
+			self: 'Your own account cannot be locked or deleted here.',
+			displayName: 'The display name may have at most 30 characters.',
+			nameTaken: 'Somebody is already shown under this name.',
+			picture: 'This could not be read as a picture (or it is too large).'
 		} as Record<string, string>
 	},
 

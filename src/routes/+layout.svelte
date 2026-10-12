@@ -7,9 +7,9 @@
 	import { CATEGORIES } from '$lib/categories';
 	import Brand from '$lib/components/Brand.svelte';
 	import HeaderSearch from '$lib/components/HeaderSearch.svelte';
+	import UserMenu from '$lib/components/UserMenu.svelte';
 	import { m, setLocale } from '$lib/i18n/index.svelte';
 	import { setAnimeTitle } from '$lib/titles.svelte';
-	import { LogOut, Settings } from '@lucide/svelte';
 
 	let { data, children } = $props();
 
@@ -30,7 +30,7 @@
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
-{#if data.user && !data.user.mustChangePassword}
+{#if data.user && data.profile && !data.user.mustChangePassword}
 	<!-- Stays at the top while scrolling -->
 	<header
 		data-chrome="header"
@@ -47,32 +47,10 @@
 				class="shrink-0 transition-opacity hover:opacity-80 md:justify-self-start"><Brand /></a
 			>
 			<HeaderSearch categories={data.categories} />
-			<!-- -mr-2: the icon itself (not its hover area) lines up with the content edge -->
-			<form
-				method="POST"
-				action="/logout"
-				class="-mr-2 flex items-center gap-1 md:justify-self-end"
-			>
-				<a
-					href="/settings"
-					class="rounded-lg p-2 transition-colors hover:bg-zinc-800 hover:text-zinc-100 {section ===
-					'settings'
-						? 'text-zinc-100'
-						: 'text-zinc-400'}"
-					aria-label={m.common.settings}
-					title={m.common.settings}
-					aria-current={section === 'settings' ? 'page' : undefined}
-				>
-					<Settings size={18} />
-				</a>
-				<button
-					class="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
-					aria-label={m.common.logout}
-					title={m.common.logout}
-				>
-					<LogOut size={18} />
-				</button>
-			</form>
+			<!-- -mr-1: the picture itself (not its hover area) lines up with the content edge -->
+			<div class="-mr-1 flex items-center md:justify-self-end">
+				<UserMenu person={data.profile} username={data.user.username} />
+			</div>
 		</div>
 	</header>
 

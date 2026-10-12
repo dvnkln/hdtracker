@@ -1,4 +1,5 @@
 import {
+	blob,
 	index,
 	integer,
 	primaryKey,
@@ -28,6 +29,13 @@ export const users = sqliteTable('users', {
 	// page after logging in asks for a password of the user's own
 	mustChangePassword: integer('must_change_password', { mode: 'boolean' }).notNull().default(false),
 	lastLoginAt: integer('last_login_at', { mode: 'timestamp' }),
+	// The name others see instead of the username (empty: the username is shown)
+	displayName: text('display_name'),
+	// Profile picture: without one of their own, the first letter of the name on a colour
+	// (hue 0–359, given at random). `avatar` is a small JPEG, see setAvatar() in users.ts.
+	avatarColor: integer('avatar_color').notNull().default(210),
+	avatar: blob('avatar', { mode: 'buffer' }),
+	avatarUpdatedAt: integer('avatar_updated_at', { mode: 'timestamp' }),
 	createdAt: integer('created_at', { mode: 'timestamp' })
 		.notNull()
 		.$defaultFn(() => new Date())
