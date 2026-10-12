@@ -8,6 +8,7 @@
 	import { CATEGORIES } from '$lib/categories';
 	import Brand from '$lib/components/Brand.svelte';
 	import HeaderSearch from '$lib/components/HeaderSearch.svelte';
+	import ScrollThumb from '$lib/components/ScrollThumb.svelte';
 	import Toasts from '$lib/components/Toasts.svelte';
 	import UserMenu from '$lib/components/UserMenu.svelte';
 	import { m, setLocale } from '$lib/i18n/index.svelte';
@@ -45,6 +46,7 @@
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
+<ScrollThumb />
 <svelte:document
 	onvisibilitychange={() => document.visibilityState === 'visible' && checkVersion()}
 />
@@ -100,6 +102,7 @@
 	</div>
 
 	<nav
+		data-chrome="nav"
 		class="fixed inset-x-0 bottom-0 bg-zinc-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
 	>
 		<!-- One column per area that is switched on in the settings -->

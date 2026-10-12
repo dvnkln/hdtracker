@@ -521,12 +521,39 @@ html[data-theme='c64'] *:not(input, textarea) {
 	}
 }
 
+/* Scrollbars. On computers the page's own bar is hidden – it would take a strip at the right
+   edge that header and navigation cannot draw into – and ScrollThumb.svelte floats a handle
+   over the content instead. Nothing takes room, so the layout does not shift between short
+   and long pages either. Phones and tablets keep their own (floating) bar; so does a browser
+   without scripts. Scroll areas inside the page keep the browser's bar, slim and in the
+   colours of the theme. */
+* {
+	scrollbar-width: thin;
+	scrollbar-color: var(--color-zinc-600) transparent;
+}
+@media (hover: hover) and (pointer: fine) {
+	html {
+		scrollbar-width: none;
+	}
+	html::-webkit-scrollbar {
+		display: none;
+	}
+}
+@media (scripting: none) {
+	html {
+		scrollbar-width: thin;
+	}
+}
+/* inside the frame of the screen */
+@media (width >= 64rem) {
+	html[data-theme='c64'] .scroll-thumb {
+		right: 0.6rem;
+	}
+}
+
 /* The app is dark unless a theme says otherwise. */
 @layer base {
 	html {
-		/* Always reserve room for the scrollbar, so the layout does not shift between
-		   short and long pages. */
-		scrollbar-gutter: stable;
 		color-scheme: dark;
 		@apply bg-zinc-950 text-zinc-100 antialiased;
 	}

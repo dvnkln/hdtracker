@@ -17,6 +17,7 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 
 ### 🔧 Improved
 
+- On a computer the scrollbar now floats over the page as a slim handle in the style of the theme, instead of taking a strip at the right edge – header and navigation reach the edge of the window. It shows while you scroll and can be dragged
 - Settings → Maintenance is tidier: the tasks are one list – each row says when the task runs and how its last run went, a tap unfolds its description, schedule and “Run now”. The switch of a task now saves at once
 - The window that changes the status of a title now also holds its bell and the invitations – no detour to the page of the title
 - The bell on the page of a title is always there for titles of your library: switched off, you hear nothing about this title – neither in the inbox nor as a push message
