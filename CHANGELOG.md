@@ -7,22 +7,28 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
-## Upcoming release
+## 0.9.0 – 2026-10-12
+
+Track a title together with somebody: one state for both, an inbox for what is new, and a link to the trailer.
 
 ### ✨ New
 
+- **Track together:** on the page of a title in your library, the new symbol next to the bell invites another user. Who accepts takes over your status and watched episodes – from then on both of you keep them up to date, and the symbol shows who tracks along. Anybody can go on alone again and keeps the state as a copy of their own. Invitations wait in the inbox until they are answered, and you can get a push message when you are invited, when your invitation is answered or when somebody stops tracking along – each with a switch of its own under Settings → Notifications. In the library and on the dashboard, small profile pictures on a poster show who tracks along. To invite somebody to several titles at once, hold a poster in the library and tap the others; on a computer a right click or Ctrl+click starts it, Shift+click takes a whole range and Ctrl+A everything you see
 - **Inbox:** the bell in the header collects what is new for you, with a number while something is unread – releases of titles you track (the same ones the dashboard lists as recently released, whether or not you use push messages), invitations, and what others did with titles you track together. Opening it marks everything as read, a look at the dashboard marks the releases; what you have read disappears after a week
 - **Trailer:** the page of a title links to its trailer where the data source knows one – also right in an invitation, to have a look before answering. It is a link to the video site (YouTube); nothing is loaded from there before you tap it. Titles already in your library get their link shortly after the update
-- **Track together:** on the page of a title in your library, the new symbol next to the bell invites another user. Who accepts takes over your status and watched episodes – from then on both of you keep them up to date, and the symbol shows who tracks along. Anybody can go on alone again and keeps the state as a copy of their own. Invitations wait in the inbox until they are answered, and you can get a push message when you are invited, when your invitation is answered or when somebody stops tracking along – each with a switch of its own under Settings → Notifications. In the library and on the dashboard, small profile pictures on a poster show who tracks along. To invite somebody to several titles at once, hold a poster in the library and tap the others; on a computer a right click or Ctrl+click starts it, Shift+click takes a whole range and Ctrl+A everything you see
 
 ### 🔧 Improved
 
 - On a computer the dashboard shows what was released and what is coming up as posters, like the library, instead of one narrow list in the middle – each with what happens and when. Phones keep the list by day
-- On a computer the scrollbar now floats over the page as a slim handle in the style of the theme, instead of taking a strip at the right edge – header and navigation reach the edge of the window. It shows while you scroll and can be dragged
-- Settings → Maintenance is tidier: the tasks are one list – each row says when the task runs and how its last run went, a tap unfolds its description, schedule and “Run now”. The switch of a task now saves at once
 - The window that changes the status of a title now also holds its bell and the invitations – no detour to the page of the title
 - The bell on the page of a title is always there for titles of your library: switched off, you hear nothing about this title – neither in the inbox nor as a push message
+- Settings → Maintenance is tidier: the tasks are one list – each row says when the task runs and how its last run went, a tap unfolds its description, schedule and “Run now”. The switch of a task now saves at once
+- On a computer the scrollbar now floats over the page as a slim handle in the style of the theme, instead of taking a strip at the right edge – header and navigation reach the edge of the window. It shows while you scroll and can be dragged
 - After an update of the server, an app that was left open (a tab, the installed app) notices the new version and loads itself afresh on the next change of page – before, it kept showing the old interface until it was reloaded by hand
+
+### ⬆️ Updating
+
+Just pull the new image. Shortly after the first start, hdtracker loads the titles of your library once more in the background to get their trailer links. Tracking together needs a second account: [Users](https://github.com/dvnkln/hdtracker/wiki/Users#tracking-together).
 
 ## 0.8.0 – 2026-10-12
 
