@@ -7,7 +7,9 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
-## Upcoming release
+## 0.8.0 – 2026-10-12
+
+hdtracker is no longer for one person only: an admin can add accounts, and everybody gets a library of their own.
 
 ### ✨ New
 
@@ -21,6 +23,10 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 - Choosing a password tells you while typing whether it is long enough and whether both entries match
 - The login page of a device now also remembers the language last used there (as it already did the theme)
 - Webhook and ntfy targets for notifications are reserved for admins unless an admin allows them for everybody (Settings → Users) – they make the server call an address of the user's choice
+
+### ⬆️ Updating
+
+**Make a backup first** (Settings → Maintenance → Backups → Run now, then download it): this version restructures the database on the first start, and going back to 0.7.0 afterwards is only possible with that backup. Then just pull the new image. Your account becomes the admin and keeps its library and settings. How to add others: [Users](https://github.com/dvnkln/hdtracker/wiki/Users).
 
 ## 0.7.0 – 2026-10-06
 

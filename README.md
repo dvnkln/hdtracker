@@ -28,6 +28,7 @@ The guides live in the **[wiki](https://github.com/dvnkln/hdtracker/wiki)**:
 - 🐳 [Installation](https://github.com/dvnkln/hdtracker/wiki/Installation) – Docker Compose, the `.env` file, API keys
 - 🔐 [HTTPS and installing as an app](https://github.com/dvnkln/hdtracker/wiki/HTTPS-and-installing-as-an-app) – reverse proxy, `ORIGIN`, home screen
 - ⬆️ [Updating](https://github.com/dvnkln/hdtracker/wiki/Updating)
+- 👥 [Users](https://github.com/dvnkln/hdtracker/wiki/Users) – several accounts on one installation
 - 💾 [Backups and restore](https://github.com/dvnkln/hdtracker/wiki/Backups-and-restore)
 - 📥 [Import from Yamtrack](https://github.com/dvnkln/hdtracker/wiki/Import-from-Yamtrack)
 - 📤 [Export](https://github.com/dvnkln/hdtracker/wiki/Export) – your library as a file, compatible with Yamtrack
@@ -48,9 +49,10 @@ What changed in each version: [Changelog](CHANGELOG.md). What's planned: [Roadma
 - 📄 **Detail pages** – runtime, genres, rating, release dates and similar titles.
 - 📥 **Import and export** – take over your library from Yamtrack including statuses, watched episodes and anime progress, and download it again as a file Yamtrack can read.
 - 🔔 **Push notifications** – a message on your phone or computer when a new episode airs or a planned title is released, one by one or as a daily summary. No extra app, no third-party account – or, if you prefer, through Pushover, ntfy or a webhook (Gotify, Apprise, Home Assistant, …).
+- 👥 **Several users** – an admin adds accounts for family or flatmates. Everybody gets a library, a dashboard, settings, notifications and a profile picture of their own; nobody sees what the others track, not even the admin.
 - 🛠️ **Maintenance built in** – release dates refresh nightly; optional scheduled database backups you can download; a server overview tells you whether anything needs attention.
 - 🎨 **Themes** – follows your device (dark or light) by default; or pick dark, light, Tokyo Night, Dracula, SynthWave '84, Cyberpunk, Retro 95, Terminal and Breadbin.
-- 🔒 **Private** – runs on your own server, single account, all data in one SQLite file. No tracking, no cloud – [what is sent where](https://github.com/dvnkln/hdtracker/wiki/Privacy-and-security) is documented. Your browser only ever talks to your own server, and repeated wrong passwords block the address they come from – also behind a reverse proxy.
+- 🔒 **Private** – runs on your own server, all data in one SQLite file. No tracking, no cloud – [what is sent where](https://github.com/dvnkln/hdtracker/wiki/Privacy-and-security) is documented. Your browser only ever talks to your own server, and repeated wrong passwords block the address they come from – also behind a reverse proxy.
 
 ## 📱 Screenshots
 
