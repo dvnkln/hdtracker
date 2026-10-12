@@ -10,8 +10,9 @@ test('first start: set-up wizard, log out, wrong password, log in', async ({ pag
 	await page.locator('input[name=confirm]').fill(USER.password);
 	await page.getByRole('button', { name: 'Create account' }).click();
 	await expect(page).toHaveURL('/');
-	// The dashboard of an empty library explains what will show up here
-	await expect(page.getByText(/show up here/)).toBeVisible();
+	// The dashboard of an empty library says so and where to start
+	await expect(page.getByRole('heading', { name: 'Nothing on yet' })).toBeVisible();
+	await expect(page.getByText('Add titles via the areas below.')).toBeVisible();
 
 	// The wizard is gone once the account exists
 	await page.goto('/setup');

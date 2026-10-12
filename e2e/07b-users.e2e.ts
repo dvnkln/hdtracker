@@ -63,7 +63,7 @@ test('users: the admin creates an account; it starts with a temporary password, 
 	await expect(guest).toHaveURL('/');
 
 	// An empty library of their own, whatever the admin tracks
-	await expect(guest.getByText(/Add titles to your library/)).toBeVisible();
+	await expect(guest.getByText('Nothing on yet')).toBeVisible();
 	await page.goto('/movies');
 	await expect(page.getByRole('heading', { name: 'Movies' })).toBeVisible();
 	const adminsMovies = await posters(page).count();

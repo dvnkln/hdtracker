@@ -1,4 +1,6 @@
 <script lang="ts">
+	import EmptyState from '$lib/components/EmptyState.svelte';
+	import { Joystick, Origami, Popcorn, SearchX, Sofa } from '@lucide/svelte';
 	import { CATEGORIES } from '$lib/categories';
 	import { COLLAPSED_STATUSES, statusesFor } from '$lib/status';
 	import { m, statusLabel } from '$lib/i18n/index.svelte';
@@ -25,6 +27,8 @@
 
 	// Phones: 3 posters per row; larger screens: as many as fit (at least ~10rem wide each).
 	const gridClass = 'grid grid-cols-3 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))]';
+
+	const EMPTY_ICONS = { movies: Popcorn, series: Sofa, anime: Origami, games: Joystick };
 </script>
 
 <svelte:head><title>{label} · hdtracker</title></svelte:head>
@@ -37,7 +41,10 @@
 		<!-- Search results -->
 		<div class="mt-1 flex items-center justify-between text-sm">
 			<span class="text-zinc-400">
-				{#if !data.error}{m.library.results(data.results.length, data.q)}{/if}
+				{#if !data.error && data.results.length}{m.library.results(
+						data.results.length,
+						data.q
+					)}{/if}
 			</span>
 			<a href="/{data.category}" class="text-(--accent) hover:underline">{m.library.toLibrary}</a>
 		</div>
@@ -47,7 +54,7 @@
 				{data.error}
 			</p>
 		{:else if data.results.length === 0}
-			<p class="mt-6 text-zinc-400">{m.library.noResults}</p>
+			<EmptyState icon={SearchX} title={m.library.noResults} text={m.library.noResultsHint} />
 		{:else}
 			<ul class="mt-2 {gridClass}">
 				{#each data.results as item (item.externalId)}
@@ -65,7 +72,13 @@
 			</ul>
 		{/if}
 	{:else if sections.length === 0}
-		<p class="mt-2 text-zinc-500">{m.library.empty}</p>
+		<!-- A pictogram of its own per area – not the icon of the navigation below again -->
+		<EmptyState
+			icon={EMPTY_ICONS[data.category]}
+			title={m.library.emptyTitle[data.category]}
+			text={m.library.emptyHint}
+			tinted
+		/>
 	{:else}
 		<!-- Library, one collapsible section per status -->
 		{#each sections as section (section.status)}

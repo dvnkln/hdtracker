@@ -128,8 +128,8 @@ export const en: Messages = {
 		upcoming: 'Coming up',
 		noRecent: 'Nothing new was released in the last 4 weeks.',
 		noUpcoming: 'No upcoming dates known.',
-		emptyLibrary:
-			'New episodes, cinema dates and releases of everything you plan to watch or are currently watching or playing show up here. Add titles to your library via the areas below.',
+		emptyTitle: 'Nothing on yet',
+		emptyHint: 'Add titles via the areas below.',
 		dateOpen: 'Date not announced',
 		order: {
 			recent: { desc: 'Newest first', asc: 'Oldest first' },
@@ -155,8 +155,15 @@ export const en: Messages = {
 		searchPlaceholder: (category) => `Search ${category.toLowerCase()}…`,
 		results: (count, query) => `${count} results for “${query}”`,
 		toLibrary: 'Back to library',
-		noResults: 'No results.',
-		empty: 'Your library is still empty. Search for a title above and tap it to add it.',
+		noResults: 'No results',
+		noResultsHint: 'Try another spelling.',
+		emptyTitle: {
+			movies: 'No movies yet',
+			series: 'No series yet',
+			anime: 'No anime yet',
+			games: 'No games yet'
+		},
+		emptyHint: 'Search for a title above.',
 		searchFailed: 'Search failed.'
 	},
 
@@ -432,7 +439,7 @@ export const en: Messages = {
 		what: 'On the day of release you are told what shows up under “Recently released” on the dashboard.',
 		// Where to: the list of targets
 		targets: 'Targets',
-		noTargets: 'No target yet. Add this device, Pushover, ntfy or a webhook.',
+		noTargets: 'No target yet',
 		addTarget: 'Add a target',
 		kinds: { device: 'This device', pushover: 'Pushover', ntfy: 'ntfy', webhook: 'Webhook' },
 		kindHints: {

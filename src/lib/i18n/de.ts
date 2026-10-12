@@ -132,8 +132,8 @@ export const de = {
 		upcoming: 'Demnächst',
 		noRecent: 'In den letzten 4 Wochen ist nichts Neues erschienen.',
 		noUpcoming: 'Keine anstehenden Termine bekannt.',
-		emptyLibrary:
-			'Hier erscheinen neue Folgen, Kinostarts und Releases von allem, was du geplant hast oder gerade schaust bzw. spielst. Füge dazu Titel über die Bereiche unten zur Bibliothek hinzu.',
+		emptyTitle: 'Noch nichts los',
+		emptyHint: 'Füge Titel über die Bereiche unten hinzu.',
 		dateOpen: 'Datum offen',
 		order: {
 			recent: { desc: 'Neueste zuerst', asc: 'Älteste zuerst' },
@@ -160,9 +160,15 @@ export const de = {
 		searchPlaceholder: (category: string) => `${category} suchen…`,
 		results: (count: number, query: string) => `${count} Treffer für „${query}“`,
 		toLibrary: 'Zur Bibliothek',
-		noResults: 'Keine Treffer.',
-		empty:
-			'Deine Bibliothek ist noch leer. Suche oben nach einem Titel und tippe ihn an, um ihn hinzuzufügen.',
+		noResults: 'Keine Treffer',
+		noResultsHint: 'Probier eine andere Schreibweise.',
+		emptyTitle: {
+			movies: 'Noch keine Filme',
+			series: 'Noch keine Serien',
+			anime: 'Noch keine Anime',
+			games: 'Noch keine Spiele'
+		},
+		emptyHint: 'Suche oben nach einem Titel.',
 		searchFailed: 'Suche fehlgeschlagen.'
 	},
 
@@ -452,7 +458,7 @@ export const de = {
 		what: 'Gemeldet wird am Erscheinungstag, was im Dashboard unter „Kürzlich erschienen“ auftaucht.',
 		// Where to: the list of targets
 		targets: 'Ziele',
-		noTargets: 'Noch kein Ziel. Füge dieses Gerät hinzu, Pushover, ntfy oder einen Webhook.',
+		noTargets: 'Noch kein Ziel',
 		addTarget: 'Ziel hinzufügen',
 		kinds: {
 			device: 'Dieses Gerät',

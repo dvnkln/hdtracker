@@ -6,11 +6,13 @@
 	import { m } from '$lib/i18n/index.svelte';
 	import { img } from '$lib/images';
 	import { titles } from '$lib/titles.svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import type { DashboardEntry } from '$lib/server/dashboard';
 	import {
 		CalendarArrowDown,
 		CalendarArrowUp,
 		CalendarClock,
+		CalendarPlus,
 		ChevronRight,
 		History,
 		ImageOff
@@ -133,7 +135,7 @@
 	<!-- Main heading for screen readers (the two lists have visible headings of their own) -->
 	<h1 class="sr-only">{m.common.home}</h1>
 	{#if data.libraryEmpty}
-		<p class="mt-2 text-zinc-400">{m.home.emptyLibrary}</p>
+		<EmptyState icon={CalendarPlus} title={m.home.emptyTitle} text={m.home.emptyHint} />
 	{:else}
 		{#each sections as section (section.key)}
 			<section class="mt-8 first:mt-2">

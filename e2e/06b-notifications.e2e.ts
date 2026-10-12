@@ -51,7 +51,7 @@ test('notifications: targets are one list – add Pushover, a webhook and ntfy, 
 	const targets = page
 		.locator('section')
 		.filter({ has: page.getByRole('heading', { name: 'Targets' }) });
-	await expect(targets.getByText('No target yet.')).toBeVisible();
+	await expect(targets.getByText('No target yet')).toBeVisible();
 
 	// Adding asks for the kind first. "This device" cannot work in this browser: greyed out
 	await targets.getByRole('button', { name: 'Add a target' }).click();
@@ -105,7 +105,7 @@ test('notifications: targets are one list – add Pushover, a webhook and ntfy, 
 	await expect(toggle).toBeChecked();
 
 	await saved(page, 'targetRemove', () => row.getByRole('button', { name: 'Remove' }).click());
-	await expect(targets.getByText('No target yet.')).toBeVisible();
+	await expect(targets.getByText('No target yet')).toBeVisible();
 
 	// A webhook: address and content with placeholders; a test says what the other side answered
 	await targets.getByRole('button', { name: 'Add a target' }).click();
@@ -127,7 +127,7 @@ test('notifications: targets are one list – add Pushover, a webhook and ntfy, 
 	await hookRow.getByRole('button', { name: 'Test' }).click();
 	await expect(hookRow.getByText('Sent ✓')).toBeVisible();
 	await saved(page, 'targetRemove', () => hookRow.getByRole('button', { name: 'Remove' }).click());
-	await expect(targets.getByText('No target yet.')).toBeVisible();
+	await expect(targets.getByText('No target yet')).toBeVisible();
 
 	// ntfy: a server (ntfy.sh unless changed) and a topic; the test says why ntfy refuses
 	await targets.getByRole('button', { name: 'Add a target' }).click();
@@ -146,5 +146,5 @@ test('notifications: targets are one list – add Pushover, a webhook and ntfy, 
 	await ntfyRow.getByRole('button', { name: 'Test' }).click();
 	await expect(ntfyRow.getByText('Sent ✓')).toBeVisible();
 	await saved(page, 'targetRemove', () => ntfyRow.getByRole('button', { name: 'Remove' }).click());
-	await expect(targets.getByText('No target yet.')).toBeVisible();
+	await expect(targets.getByText('No target yet')).toBeVisible();
 });

@@ -31,5 +31,5 @@ test('movie: search, add, change status, remove', async ({ page }) => {
 	await section('Watched').getByRole('button', { name: 'Test Movie Alpha' }).click();
 	await sheet(page).getByRole('button', { name: 'Remove from library' }).click();
 	await sheet(page).getByRole('button', { name: 'Really remove from library?' }).click();
-	await expect(page.getByText('Your library is still empty')).toBeVisible();
+	await expect(page.getByText('No movies yet')).toBeVisible();
 });

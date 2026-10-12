@@ -18,7 +18,7 @@ test('export, clear the library, import: the library is the same again', async (
 	await page.locator('input[name=confirm]').fill('DELETE');
 	await clear.click();
 	await page.goto('/series');
-	await expect(page.getByText('Your library is still empty')).toBeVisible();
+	await expect(page.getByText('No series yet')).toBeVisible();
 
 	await page.goto('/settings/data');
 	const start = page.getByRole('button', { name: /Import/ }).first();

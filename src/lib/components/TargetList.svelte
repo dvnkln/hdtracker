@@ -8,6 +8,7 @@
 	import { FormFeedback, type Feedback } from '$lib/forms.svelte';
 	import { ui } from '$lib/ui';
 	import DeviceFilter from '$lib/components/DeviceFilter.svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import FeedbackText from '$lib/components/FeedbackText.svelte';
 	import PasswordInput from '$lib/components/PasswordInput.svelte';
 	import Switch from '$lib/components/Switch.svelte';
@@ -17,6 +18,7 @@
 	} from '$lib/components/SubmitButton.svelte';
 	import {
 		BellOff,
+		BellPlus,
 		BellRing,
 		ChevronDown,
 		LoaderCircle,
@@ -535,7 +537,7 @@
 			{/if}
 		</li>
 	{:else}
-		<li class="py-2 text-sm text-zinc-500">{m.notifications.noTargets}</li>
+		<li><EmptyState icon={BellPlus} title={m.notifications.noTargets} size="small" /></li>
 	{/each}
 </ul>
 

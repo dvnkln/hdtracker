@@ -15,6 +15,7 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 
 ### 🔧 Improved
 
+- An empty library, an empty dashboard and a search without results show a small pictogram and a few words instead of a paragraph of text
 - Choosing a password tells you while typing whether it is long enough and whether both entries match
 - The login page of a device now also remembers the language last used there (as it already did the theme)
 - Webhook and ntfy targets for notifications are reserved for admins unless an admin allows them for everybody (Settings → Users) – they make the server call an address of the user's choice
