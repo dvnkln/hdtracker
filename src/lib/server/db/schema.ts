@@ -219,6 +219,33 @@ export const trackingMembers = sqliteTable(
 	]
 );
 
+// An open invitation to track a title together: `fromUserId` (a member of the tracking) asks
+// `toUserId` to join it. A row only exists while the invitation is open – answering or
+// withdrawing it removes the row. It goes with the tracking and with either account.
+export const invitations = sqliteTable(
+	'invitations',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		trackingId: integer('tracking_id')
+			.notNull()
+			.references(() => trackings.id, { onDelete: 'cascade' }),
+		fromUserId: integer('from_user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		toUserId: integer('to_user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		createdAt: integer('created_at', { mode: 'timestamp' })
+			.notNull()
+			.$defaultFn(() => new Date())
+	},
+	(t) => [
+		uniqueIndex('invitations_once').on(t.trackingId, t.toUserId),
+		index('invitations_to').on(t.toUserId),
+		index('invitations_from').on(t.fromUserId)
+	]
+);
+
 // Everything the detail page of a library item shows, kept so the page opens without asking
 // the API (see server/itemDetails.ts). Removed together with the item.
 export const itemDetails = sqliteTable('item_details', {

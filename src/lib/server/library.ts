@@ -1,7 +1,7 @@
 import { and, count, eq, inArray, notExists } from 'drizzle-orm';
 import type { Category, Status } from '$lib/status';
 import { getDb } from './db';
-import { libraryItems, trackingMembers, trackings } from './db/schema';
+import { invitations, libraryItems, trackingMembers, trackings } from './db/schema';
 import { getUserSetting } from './settings';
 import type { SearchResult } from './providers/types';
 
@@ -159,10 +159,22 @@ export function removeOrphans(db: Db = getDb()) {
 }
 
 // Takes titles out of the user's library. Others who track the same title keep it – also
-// those who shared the state with this user. Returns how many titles were taken out.
+// those who shared the state with this user. Invitations the user sent for these titles
+// lapse. Returns how many titles were taken out.
 function leave(userId: number, itemIds: number[]) {
 	if (itemIds.length === 0) return 0;
 	return getDb().transaction((tx) => {
+		const left = tx
+			.select({ trackingId: trackingMembers.trackingId })
+			.from(trackingMembers)
+			.where(and(eq(trackingMembers.userId, userId), inArray(trackingMembers.itemId, itemIds)))
+			.all()
+			.map((row) => row.trackingId);
+		if (left.length > 0) {
+			tx.delete(invitations)
+				.where(and(eq(invitations.fromUserId, userId), inArray(invitations.trackingId, left)))
+				.run();
+		}
 		const removed = tx
 			.delete(trackingMembers)
 			.where(and(eq(trackingMembers.userId, userId), inArray(trackingMembers.itemId, itemIds)))
