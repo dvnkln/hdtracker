@@ -19,8 +19,9 @@
 		// While titles are being selected: whether this one is (undefined = no selection going on)
 		selected?: boolean;
 		// Selecting is possible here: called when the poster is held (phone), right-clicked or
-		// Ctrl-clicked, or when its circle is clicked (computer)
-		onselect?: () => void;
+		// Ctrl-clicked, or when its circle is clicked (computer). `range` is true for a
+		// Shift+click: everything from the poster chosen last up to this one
+		onselect?: (range: boolean) => void;
 		// Either a link (href) or a button (onclick)
 		href?: string;
 		onclick?: () => void;
@@ -50,7 +51,7 @@
 	function hold() {
 		if (held) return;
 		held = true;
-		onselect?.();
+		onselect?.(false);
 	}
 	function onpointerdown(e: PointerEvent) {
 		held = false;
@@ -77,9 +78,9 @@
 			return;
 		}
 		const circle = (e.target as HTMLElement).closest('[data-select]');
-		if (onselect && (e.ctrlKey || e.metaKey || circle)) {
+		if (onselect && (e.shiftKey || e.ctrlKey || e.metaKey || circle)) {
 			e.preventDefault();
-			onselect();
+			onselect(e.shiftKey);
 		} else onclick?.();
 	}
 </script>
@@ -93,6 +94,10 @@
 	role={href ? 'link' : 'button'}
 	onclick={href ? undefined : clicked}
 	{onpointerdown}
+	onmousedown={(e: MouseEvent) => {
+		// A Shift+click selects posters, not the text between them
+		if (onselect && e.shiftKey) e.preventDefault();
+	}}
 	{onpointermove}
 	onpointerup={cancelHold}
 	onpointercancel={cancelHold}

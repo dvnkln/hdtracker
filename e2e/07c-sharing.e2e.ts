@@ -162,6 +162,37 @@ test('tracking together: invite, accept, one state for both, leave with a copy',
 	await expect(page.getByText('1 title selected').first()).toBeVisible();
 	await page.keyboard.press('Escape');
 	await expect(invite).toHaveCount(0);
+	// A Shift+click takes everything from the poster chosen last up to the one clicked;
+	// Ctrl+A takes all one can see – what is folded away stays out
+	const shown = page.locator('main [class*="group/poster"]:visible');
+	const visible = await shown.count();
+	expect(visible).toBeGreaterThan(1);
+	const all = page.getByText(`${visible} titles selected`).first();
+	await shown.first().click({ button: 'right' });
+	await shown.last().click({ modifiers: ['Shift'] });
+	await expect(all).toBeVisible();
+	await page.keyboard.press('Escape');
+	await expect(invite).toHaveCount(0);
+	await page.keyboard.press('Control+a');
+	await expect(all).toBeVisible();
+	await page.keyboard.press('Escape');
+	// A section that is folded away is left out, until it is opened again
+	await page.goto('/series');
+	const fold = page.locator('main summary').first();
+	await fold.click();
+	await expect(page.locator('main [class*="group/poster"]:visible')).toHaveCount(0);
+	await page.keyboard.press('Control+a');
+	await expect(invite).toHaveCount(0);
+	await fold.click();
+	await page.keyboard.press('Control+a');
+	await expect(page.getByText('1 title selected').first()).toBeVisible();
+	await page.keyboard.press('Escape');
+	await page.goto('/movies');
+	// ... and in the search field it still selects the text
+	await page.locator('header input[type=search]').first().focus();
+	await page.keyboard.press('Control+a');
+	await expect(invite).toHaveCount(0);
+	await page.locator('header input[type=search]').first().blur();
 	// ... then choose whom to invite
 	await posters.first().click({ button: 'right' });
 	await invite.click();

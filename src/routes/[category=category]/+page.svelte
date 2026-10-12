@@ -2,8 +2,9 @@
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { Joystick, Origami, Popcorn, SearchX, Sofa } from '@lucide/svelte';
 	import { CATEGORIES } from '$lib/categories';
-	import { COLLAPSED_STATUSES, statusesFor } from '$lib/status';
+	import { COLLAPSED_STATUSES, statusesFor, type Status } from '$lib/status';
 	import { m, statusLabel } from '$lib/i18n/index.svelte';
+	import { NOTHING, pickAll, pickOne, pickRange } from '$lib/selection';
 	import { sharingFor } from '$lib/sharing';
 	import { toast } from '$lib/toasts.svelte';
 	import { titles } from '$lib/titles.svelte';
@@ -33,15 +34,29 @@
 	// Selecting several titles to invite somebody to all of them at once. Only offered while
 	// there is somebody to invite.
 	let selecting = $state(false);
-	let chosen = $state<number[]>([]);
 	let choosingWho = $state(false);
+	// Sections the user folded or unfolded (those not listed are as they come: watched and
+	// dropped folded). What is folded away is not selected by Ctrl+A or a Shift+click.
+	let folded = $state<Partial<Record<Status, boolean>>>({});
+	const isOpen = (status: Status) => !(folded[status] ?? COLLAPSED_STATUSES.includes(status));
+	// The posters one can see, in reading order
+	let visibleIds = $derived(
+		sections.filter((s) => isOpen(s.status)).flatMap((s) => s.items.map((item) => item.id))
+	);
+
 	// Holding a poster (phone), a right click or Ctrl+click (computer) starts selecting with that
-	// title; from then on every tap adds or takes away. With nothing left selected it is over.
-	function toggle(id: number) {
-		chosen = chosen.includes(id) ? chosen.filter((other) => other !== id) : [...chosen, id];
-		selecting = chosen.length > 0;
-		if (!selecting) choosingWho = false;
+	// title; from then on every tap adds or takes away. A Shift+click adds everything from the
+	// poster chosen last up to this one. With nothing left selected it is over.
+	// (The rules of picking – anchor, range, what stays – are in selection.ts.)
+	let selection = $state.raw(NOTHING);
+	let chosen = $derived(selection.chosen);
+	function select(next: typeof selection) {
+		selection = next;
+		selecting = next.chosen.length > 0;
+		if (!selecting) stopSelecting();
 	}
+	const pick = (id: number, range = false) =>
+		select(range ? pickRange(selection, visibleIds, id) : pickOne(selection, id));
 	let canSelect = $derived(data.people.length > 0);
 
 	// The window of the tapped title also holds its bell and tracking together – for titles of
@@ -51,7 +66,7 @@
 	);
 	function stopSelecting() {
 		selecting = false;
-		chosen = [];
+		selection = NOTHING;
 		choosingWho = false;
 	}
 	// The invitations went out: say so in passing, e.g. "3 invitations sent to Mia"
@@ -74,6 +89,20 @@
 <svelte:window
 	onkeydown={(e) => {
 		if (e.key === 'Escape' && selecting && !choosingWho) stopSelecting();
+		// Ctrl+A selects the posters – unless something is typed (there it selects the text)
+		// or a window is open
+		const typing = (e.target as HTMLElement).closest('input, textarea, select, [contenteditable]');
+		if (
+			e.key.toLowerCase() === 'a' &&
+			(e.ctrlKey || e.metaKey) &&
+			canSelect &&
+			!data.q &&
+			!typing &&
+			!document.querySelector('dialog[open]')
+		) {
+			e.preventDefault();
+			select(pickAll(visibleIds));
+		}
 	}}
 />
 
@@ -130,7 +159,8 @@
 			{@const Icon = STATUS_ICONS[section.status]}
 			<details
 				class="group mt-6 first-of-type:mt-1"
-				open={!COLLAPSED_STATUSES.includes(section.status)}
+				open={isOpen(section.status)}
+				ontoggle={(e) => (folded[section.status] = !e.currentTarget.open)}
 			>
 				<summary
 					class="group/summary flex cursor-pointer list-none items-center gap-2 select-none [&::-webkit-details-marker]:hidden"
@@ -153,8 +183,8 @@
 								loading={item.metadataUpdatedAt === null}
 								people={data.together[item.id]}
 								selected={selecting ? chosen.includes(item.id) : undefined}
-								onclick={() => (selecting ? toggle(item.id) : (selected = item))}
-								onselect={canSelect ? () => toggle(item.id) : undefined}
+								onclick={() => (selecting ? pick(item.id) : (selected = item))}
+								onselect={canSelect ? (range) => pick(item.id, range) : undefined}
 							/>
 						</li>
 					{/each}
