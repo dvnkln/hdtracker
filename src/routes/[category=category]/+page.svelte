@@ -39,6 +39,14 @@
 	// dropped folded). What is folded away is not selected by Ctrl+A or a Shift+click.
 	let folded = $state<Partial<Record<Status, boolean>>>({});
 	const isOpen = (status: Status) => !(folded[status] ?? COLLAPSED_STATUSES.includes(status));
+	// The browser reports folding a moment after it happened (the "toggle" event comes later).
+	// Before selecting by what is visible, ask the sections themselves how they stand.
+	function readFolded() {
+		for (const el of document.querySelectorAll<HTMLDetailsElement>('details[data-status]')) {
+			const status = el.dataset.status as Status;
+			if (isOpen(status) !== el.open) folded[status] = !el.open;
+		}
+	}
 	// The posters one can see, in reading order
 	let visibleIds = $derived(
 		sections.filter((s) => isOpen(s.status)).flatMap((s) => s.items.map((item) => item.id))
@@ -55,8 +63,10 @@
 		selecting = next.chosen.length > 0;
 		if (!selecting) stopSelecting();
 	}
-	const pick = (id: number, range = false) =>
+	const pick = (id: number, range = false) => {
+		if (range) readFolded();
 		select(range ? pickRange(selection, visibleIds, id) : pickOne(selection, id));
+	};
 	let canSelect = $derived(data.people.length > 0);
 
 	// The window of the tapped title also holds its bell and tracking together – for titles of
@@ -101,6 +111,7 @@
 			!document.querySelector('dialog[open]')
 		) {
 			e.preventDefault();
+			readFolded();
 			select(pickAll(visibleIds));
 		}
 	}}
@@ -160,6 +171,7 @@
 			<details
 				class="group mt-6 first-of-type:mt-1"
 				open={isOpen(section.status)}
+				data-status={section.status}
 				ontoggle={(e) => (folded[section.status] = !e.currentTarget.open)}
 			>
 				<summary
