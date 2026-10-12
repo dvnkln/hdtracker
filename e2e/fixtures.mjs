@@ -41,7 +41,13 @@ export const MOVIES = [
 			}
 		},
 		external_ids: { wikidata_id: 'Q101' },
-		recommendations: { results: [] }
+		recommendations: { results: [] },
+		videos: {
+			results: [
+				{ key: 'clipAlpha01', site: 'YouTube', type: 'Clip', official: true, iso_639_1: 'en' },
+				{ key: 'trailAlpha1', site: 'YouTube', type: 'Trailer', official: true, iso_639_1: 'en' }
+			]
+		}
 	},
 	{
 		id: 102,
@@ -95,6 +101,9 @@ export const SERIES = [
 		'watch/providers': noOffers,
 		external_ids: { wikidata_id: null },
 		recommendations: { results: [] },
+		videos: {
+			results: [{ key: 'trailGamma1', site: 'YouTube', type: 'Trailer', iso_639_1: 'en' }]
+		},
 		seasons: [{ season_number: 1 }, { season_number: 2 }],
 		'season/1': {
 			season_number: 1,

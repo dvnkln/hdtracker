@@ -24,6 +24,11 @@ test('movie: search, add, change status, remove', async ({ page }) => {
 	await page.goto('/movies/101');
 	await expect(page.getByRole('heading', { name: 'Test Movie Alpha' })).toBeVisible();
 	await expect(page.getByRole('heading', { name: 'Where to watch' })).toBeVisible();
+	// The trailer is a link to the video site – the trailer, not some clip
+	await expect(page.getByRole('link', { name: 'Trailer' })).toHaveAttribute(
+		'href',
+		'https://www.youtube.com/watch?v=trailAlpha1'
+	);
 
 	// Remove it again (asks once more)
 	await page.goto('/movies');

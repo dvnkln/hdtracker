@@ -14,6 +14,7 @@ const DEFAULTS = {
 	animeEpisodeTitles: 'on',
 	animeMappingAt: '',
 	animeMappingVersion: '', // MAPPING_VERSION of the code that read the stored list
+	detailsVersion: '', // DETAILS_VERSION of the code that loaded the stored details
 	// Key pair of this installation for push notifications (VAPID), created on first use. The
 	// public part goes to the browsers, the private part signs every message (see push.ts).
 	vapidPublicKey: '',

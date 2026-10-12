@@ -1,4 +1,5 @@
 import { cached, remember } from '../cache';
+import { anilistTrailer } from './trailer';
 import { contentMessages, serverMessages } from '../i18n';
 import { animeTextsFor, warmUpAnimeTexts } from './animeEpisodes';
 import {
@@ -111,6 +112,7 @@ query ($ids: [Int], $since: Int, $now: Int, $page: Int) {
       episodes
       duration
       siteUrl
+      trailer { id site }
       nextAiringEpisode { episode airingAt }
       airingSchedule(notYetAired: true, perPage: 25) { nodes { episode airingAt } }
       studios(isMain: true) { nodes { name } }
@@ -163,6 +165,7 @@ type AniListAnime = AniListMedia & {
 	episodes: number | null;
 	duration: number | null; // minutes per episode
 	siteUrl: string;
+	trailer?: { id: string | null; site: string | null } | null;
 	nextAiringEpisode: Airing | null;
 	airingSchedule: { nodes: Airing[] };
 	studios: { nodes: { name: string }[] };
@@ -357,6 +360,7 @@ export async function getAnimeInfo(id: string): Promise<Details> {
 		externalUrl: m.siteUrl,
 		sourceLabel: 'AniList',
 		backdropUrl: m.bannerImage,
+		trailerUrl: anilistTrailer(m.trailer ?? null),
 		genres: m.genres,
 		rating: m.averageScore ? m.averageScore / 10 : null,
 		runtime: null,

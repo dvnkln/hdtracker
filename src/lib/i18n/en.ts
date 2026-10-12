@@ -260,6 +260,7 @@ export const en: Messages = {
 	},
 
 	detail: {
+		trailer: 'Trailer',
 		watchedKept: (n) =>
 			n === 1 ? '1 episode is stored as watched.' : `${n} episodes are stored as watched.`,
 		sourceMissingNoCopy: (source) =>

@@ -8,6 +8,7 @@
 	import { CATEGORIES } from '$lib/categories';
 	import Brand from '$lib/components/Brand.svelte';
 	import HeaderSearch from '$lib/components/HeaderSearch.svelte';
+	import Toasts from '$lib/components/Toasts.svelte';
 	import UserMenu from '$lib/components/UserMenu.svelte';
 	import { m, setLocale } from '$lib/i18n/index.svelte';
 	import { setAnimeTitle } from '$lib/titles.svelte';
@@ -90,6 +91,8 @@
 			</div>
 		</div>
 	</header>
+
+	<Toasts />
 
 	<!-- pb-24 keeps content above the bottom navigation -->
 	<div class="pb-24">

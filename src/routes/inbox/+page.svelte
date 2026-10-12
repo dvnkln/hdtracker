@@ -13,7 +13,7 @@
 	import Notice from '$lib/components/Notice.svelte';
 	import { BUTTON_PRIMARY, BUTTON_SECONDARY } from '$lib/components/SubmitButton.svelte';
 	import type { NoticeLine } from '$lib/server/notices';
-	import { ChevronRight, ImageOff, Inbox, Mail, Newspaper, Send } from '@lucide/svelte';
+	import { ChevronRight, ImageOff, Inbox, Mail, Newspaper, Play, Send } from '@lucide/svelte';
 
 	let { data, form } = $props();
 
@@ -136,7 +136,7 @@
 							)}
 						</div>
 						{#if invitation.own}
-							<p class="mt-1 text-sm text-amber-400">{m.share.replaces}</p>
+							<Notice kind="warning" class="mt-2">{m.share.replaces}</Notice>
 						{/if}
 						<div class="mt-2 flex gap-2">
 							<form method="POST" action="?/accept" use:enhance>
@@ -147,6 +147,14 @@
 								<input type="hidden" name="id" value={invitation.id} />
 								<button class="{BUTTON_SECONDARY} {small}">{m.share.decline}</button>
 							</form>
+							{#if invitation.trailerUrl}
+								<a
+									href={invitation.trailerUrl}
+									target="_blank"
+									rel="noreferrer"
+									class="{BUTTON_SECONDARY} {small} ml-auto"><Play size={15} />{m.detail.trailer}</a
+								>
+							{/if}
 						</div>
 					</li>
 				{/each}

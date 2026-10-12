@@ -1,5 +1,6 @@
 import { env } from '$env/dynamic/private';
 import { cached, remember } from '../cache';
+import { tmdbTrailer, type TmdbVideo } from './trailer';
 import { getStreamingLinks, preloadStreamingLinks, type StreamingLinks } from './wikidata';
 import { contentMessages } from '../i18n';
 import {
@@ -51,6 +52,12 @@ function tmdb<T>(path: string, params: Record<string, string>) {
 		headers: { Authorization: `Bearer ${env.TMDB_API_TOKEN}`, Accept: 'application/json' }
 	});
 }
+
+// Videos (trailers) come with the details: in the content language, English and without a
+// language – which one is linked decides tmdbTrailer().
+const videoLanguages = (language: string) => ({
+	include_video_language: `${language.split('-')[0]},en,null`
+});
 
 function poster(path: string | null) {
 	return path ? POSTER + path : null;
@@ -118,6 +125,7 @@ type TmdbCommon = {
 	vote_average: number;
 	vote_count: number;
 	backdrop_path: string | null;
+	videos?: { results: TmdbVideo[] };
 	'watch/providers': TmdbWatch;
 	external_ids: { wikidata_id: string | null };
 };
@@ -181,10 +189,11 @@ export async function watchFor(
 	return { link: r.link ?? null, flatrate: list(r.flatrate), rent: list(r.rent), buy: list(r.buy) };
 }
 
-function common(data: TmdbCommon) {
+function common(data: TmdbCommon, language: string) {
 	return {
 		sourceLabel: 'TMDB' as const,
 		backdropUrl: data.backdrop_path ? BACKDROP + data.backdrop_path : null,
+		trailerUrl: tmdbTrailer(data.videos?.results, language),
 		genres: data.genres.map((g) => g.name),
 		rating: data.vote_count > 0 ? Math.round(data.vote_average * 10) / 10 : null,
 		format: null,
@@ -212,7 +221,8 @@ function loadMovie(id: string, language: string) {
 	return cached(`tmdb:movie:${id}:${language}`, CACHE_MS, () =>
 		tmdb<TmdbMovieFull>(`/movie/${id}`, {
 			language,
-			append_to_response: 'release_dates,watch/providers,recommendations,external_ids'
+			...videoLanguages(language),
+			append_to_response: 'release_dates,watch/providers,recommendations,external_ids,videos'
 		})
 	);
 }
@@ -239,7 +249,7 @@ export async function getMovieInfo(id: string, language: string, region: string)
 	if (home) facts.push({ key: 'home', value: home, isDate: true });
 
 	return {
-		...common(m),
+		...common(m, language),
 		item: movieToResult(m),
 		externalUrl: `https://www.themoviedb.org/movie/${m.id}`,
 		runtime: m.runtime || null,
@@ -275,10 +285,10 @@ type TmdbTvWithSeasons = TmdbTvFull & {
 
 // TMDB allows 20 extra parts per request (append_to_response).
 const PARTS_PER_REQUEST = 20;
-const TV_PARTS = ['watch/providers', 'recommendations', 'external_ids'];
+const TV_PARTS = ['watch/providers', 'recommendations', 'external_ids', 'videos'];
 
 // The detail page and all seasons with their episodes. The first request asks for the parts
-// of the detail page plus seasons 0–16 (seasons that do not exist are simply left out), so
+// of the detail page plus seasons 0–15 (seasons that do not exist are simply left out), so
 // almost every series needs a single request; longer ones get the rest in batches of 20.
 function loadTv(id: string, language: string) {
 	return cached(`tmdb:tv:${id}:${language}`, CACHE_MS, async () => {
@@ -286,6 +296,7 @@ function loadTv(id: string, language: string) {
 		const guessed = Array.from({ length: PARTS_PER_REQUEST - TV_PARTS.length }, (_, n) => n);
 		const show = await tmdb<TmdbTvWithSeasons>(`/tv/${id}`, {
 			language,
+			...videoLanguages(language),
 			append_to_response: [...TV_PARTS, ...guessed.map(seasonPart)].join(',')
 		});
 		const numbers = show.seasons.map((s) => s.season_number);
@@ -322,7 +333,7 @@ export async function getTvInfo(id: string, language: string, region: string): P
 	facts.push({ key: 'episodes', value: String(s.number_of_episodes) });
 
 	return {
-		...common(s),
+		...common(s, language),
 		item: tvToResult(s),
 		externalUrl: `https://www.themoviedb.org/tv/${s.id}`,
 		runtime: null,

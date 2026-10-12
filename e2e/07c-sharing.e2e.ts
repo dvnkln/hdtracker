@@ -62,6 +62,11 @@ test('tracking together: invite, accept, one state for both, leave with a copy',
 	await expect(mate).toHaveURL('/inbox');
 	await expect(mate.getByRole('heading', { name: 'Invitations for you' })).toBeVisible();
 	await expect(mate.getByText('tester invites you · Watched')).toBeVisible();
+	// ... with a trailer to look at before answering
+	await expect(mate.getByRole('link', { name: 'Trailer' })).toHaveAttribute(
+		'href',
+		'https://www.youtube.com/watch?v=trailGamma1'
+	);
 	// The one who asked sees it waiting, and could take it back there
 	await page.goto('/inbox');
 	await expect(page.getByRole('heading', { name: 'Waiting for an answer' })).toBeVisible();
@@ -75,6 +80,7 @@ test('tracking together: invite, accept, one state for both, leave with a copy',
 	await expect(mate).toHaveURL(SERIES);
 	await expect(mate.getByText('tester invites you to track this together')).toBeVisible();
 	await expect(mate.getByText('Their status: Watched')).toBeVisible();
+	await expect(mate.getByRole('link', { name: 'Trailer' })).toHaveCount(1); // not a second one in the card
 	await expect(mate.getByRole('button', { name: 'Add to library' })).toBeVisible();
 	await mate.getByRole('button', { name: 'Accept' }).click();
 	await expect(mate.getByText('tester invites you')).toHaveCount(0);
@@ -160,7 +166,10 @@ test('tracking together: invite, accept, one state for both, leave with a copy',
 	await posters.first().click({ button: 'right' });
 	await invite.click();
 	await sheet(page).getByRole('button', { name: 'Invite mate' }).click();
-	await expect(page.getByText('1 invitation sent to mate.')).toBeVisible();
+	// Said in passing: a small message above the navigation that goes away by itself
+	const said = page.getByRole('status').getByText('1 invitation sent to mate.');
+	await expect(said).toBeVisible();
+	await expect(said).toHaveCount(0, { timeout: 8000 });
 	await expect(invite).toHaveCount(0); // selecting is over
 	await mate.goto('/inbox');
 	await expect(mate.getByRole('heading', { name: 'Invitations for you' })).toBeVisible();

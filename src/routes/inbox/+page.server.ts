@@ -1,5 +1,6 @@
 import { fail } from '@sveltejs/kit';
 import { serverMessages } from '$lib/server/i18n';
+import { trailersOf } from '$lib/server/itemDetails';
 import { allItems } from '$lib/server/library';
 import { listNotices, markRead } from '$lib/server/notices';
 import {
@@ -17,14 +18,18 @@ import type { Actions, PageServerLoad } from './$types';
 export const load: PageServerLoad = ({ locals }) => {
 	const me = locals.user!.id;
 	const mine = new Map(allItems(me).map((item) => [item.id, item.status]));
+	const invitations = incoming(me);
+	// A trailer to look at before answering, where the title has one
+	const trailers = trailersOf(invitations.map((invitation) => invitation.item.id));
 	return {
-		incoming: incoming(me).map(({ id, item, from, status }) => ({
+		incoming: invitations.map(({ id, item, from, status }) => ({
 			id,
 			item,
 			from,
 			status,
 			// Set if the user tracks the title already: accepting replaces that state
-			own: mine.get(item.id) ?? null
+			own: mine.get(item.id) ?? null,
+			trailerUrl: trailers.get(item.id) ?? null
 		})),
 		notices: listNotices(me),
 		outgoing: outgoing(me).map(({ id, item, to }) => ({ id, item, to }))

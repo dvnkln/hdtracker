@@ -1,5 +1,6 @@
 import { env } from '$env/dynamic/private';
 import { cached, remember } from '../cache';
+import { igdbTrailer } from './trailer';
 import { serverMessages } from '../i18n';
 import {
 	ProviderError,
@@ -187,6 +188,7 @@ type IgdbGameFull = IgdbGame & {
 	artworks?: { image_id: string }[];
 	screenshots?: { image_id: string }[];
 	involved_companies?: { developer: boolean; company: { name: string } }[];
+	videos?: { id: number; video_id: string; name?: string }[];
 	similar_games?: IgdbGame[];
 };
 
@@ -201,6 +203,8 @@ const FULL_FIELDS = [
 	'total_rating',
 	'artworks.image_id',
 	'screenshots.image_id',
+	'videos.video_id',
+	'videos.name',
 	'involved_companies.developer',
 	'involved_companies.company.name',
 	...GAME_FIELDS.map((f) => `similar_games.${f}`)
@@ -278,6 +282,7 @@ export async function getGameInfo(id: string): Promise<Details> {
 		externalUrl: g.url,
 		sourceLabel: 'IGDB',
 		backdropUrl: backdrop ? `${BACKDROP}${backdrop.image_id}.jpg` : null,
+		trailerUrl: igdbTrailer(g.videos),
 		genres: (g.genres ?? []).map((x) => x.name),
 		rating: g.total_rating ? Math.round(g.total_rating) / 10 : null,
 		runtime: null,

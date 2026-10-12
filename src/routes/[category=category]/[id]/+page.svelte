@@ -19,6 +19,7 @@
 		BellOff,
 		ExternalLink,
 		ImageOff,
+		Play,
 		Plus,
 		Star,
 		UserPlus
@@ -214,6 +215,17 @@
 							{/if}
 						</button>
 					{/if}
+					{#if info.trailerUrl}
+						<!-- Opens the video site; nothing of it is loaded before that -->
+						<a
+							href={info.trailerUrl}
+							target="_blank"
+							rel="noreferrer"
+							class="ui-btn inline-flex items-center gap-1.5 rounded-full border border-zinc-600 bg-zinc-900/80 px-3 py-1.5 text-sm font-medium transition hover:bg-zinc-800"
+						>
+							<Play size={15} />{m.detail.trailer}
+						</a>
+					{/if}
 					{#if info.externalUrl}
 						<a
 							href={info.externalUrl}
@@ -249,10 +261,10 @@
 					<p class="text-zinc-400">
 						{m.share.theirStatus(statusLabel(data.category, invitation.status))}
 					</p>
-					{#if data.status}
-						<p class="mt-1 text-amber-400">{m.share.replaces}</p>
-					{/if}
 				</div>
+				{#if data.status}
+					<Notice kind="warning" class="basis-full">{m.share.replaces}</Notice>
+				{/if}
 				<div class="flex gap-2">
 					<form method="POST" action="?/accept" use:enhance>
 						<input type="hidden" name="id" value={invitation.id} />

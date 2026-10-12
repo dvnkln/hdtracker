@@ -20,7 +20,7 @@ import {
 	type ReleaseEvent,
 	type ReleaseInfo
 } from './providers/types';
-import { shownCategories, getSetting } from './settings';
+import { getSetting, setSettings, shownCategories } from './settings';
 
 // Episodes are kept from this many days ago on (the dashboard shows the last 4 weeks).
 const KEEP_DAYS = 60;
@@ -307,6 +307,23 @@ export async function prepareAnimeTitles() {
 	if (!current()) return;
 	getDb().update(libraryItems).set({ metadataUpdatedAt: null }).where(anime).run();
 	refreshPending();
+}
+
+// Raised whenever the stored details get something new that should not wait for each title's
+// regular refresh (which may be a month away): 1 = trailer links.
+export const DETAILS_VERSION = '1';
+
+// Called at startup. After an update that changes what is stored about a title, the whole
+// library is loaded again once – in the background, with the usual pauses, like after
+// changing the content language. A new installation has nothing to load again.
+export function prepareStoredDetails() {
+	if (getSetting('detailsVersion') === DETAILS_VERSION) return;
+	const any = getDb().select({ id: libraryItems.id }).from(libraryItems).limit(1).get();
+	if (any) {
+		getDb().update(libraryItems).set({ metadataUpdatedAt: null }).run();
+		refreshPending();
+	}
+	setSettings({ detailsVersion: DETAILS_VERSION });
 }
 
 // How many items still wait for their details, and roughly how long that takes (seconds).

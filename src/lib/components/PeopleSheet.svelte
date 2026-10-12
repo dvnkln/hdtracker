@@ -14,8 +14,8 @@
 		// The selected titles
 		ids: number[];
 		onclose: () => void;
-		// Called when the invitations went out
-		ondone: () => void;
+		// Called when the invitations went out, with what the server answered
+		ondone: (answer: { invited: number; already: number; to: number }) => void;
 	};
 	let { open, people, ids, onclose, ondone }: Props = $props();
 
@@ -32,8 +32,9 @@
 		return async ({ result, update }) => {
 			await update({ reset: false });
 			busy = false;
-			if (result.type === 'success') ondone();
-			else onclose();
+			if (result.type === 'success') {
+				ondone(result.data as { invited: number; already: number; to: number });
+			} else onclose();
 		};
 	};
 </script>

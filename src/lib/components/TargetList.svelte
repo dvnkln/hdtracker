@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import Notice from '$lib/components/Notice.svelte';
 	import { deserialize, enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
 	import type { SubmitFunction } from '@sveltejs/kit';
@@ -17,7 +18,6 @@
 		BUTTON_SECONDARY
 	} from '$lib/components/SubmitButton.svelte';
 	import {
-		BellOff,
 		BellPlus,
 		BellRing,
 		ChevronDown,
@@ -262,9 +262,7 @@
 {/snippet}
 
 {#if paused && targets.length}
-	<p class="mt-3 flex items-start gap-2 text-sm text-amber-400">
-		<BellOff size={18} class="mt-px shrink-0" />{m.notifications.paused}
-	</p>
+	<Notice kind="warning" class="mt-3">{m.notifications.paused}</Notice>
 {/if}
 <!-- The fields of an ntfy target (new or existing) -->
 {#snippet ntfyFields(target: Target | null)}

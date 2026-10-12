@@ -156,6 +156,8 @@ export type Details = {
 	externalUrl: string;
 	sourceLabel: 'TMDB' | 'AniList' | 'IGDB';
 	backdropUrl: string | null;
+	// A trailer at a video site (see trailer.ts). Missing in details stored before it existed
+	trailerUrl?: string | null;
 	genres: string[];
 	rating: number | null; // 0–10
 	// Short facts for the header line; the page words them in the interface language.

@@ -5,6 +5,7 @@
 	import { COLLAPSED_STATUSES, statusesFor } from '$lib/status';
 	import { m, statusLabel } from '$lib/i18n/index.svelte';
 	import { sharingFor } from '$lib/sharing';
+	import { toast } from '$lib/toasts.svelte';
 	import { titles } from '$lib/titles.svelte';
 	import Notice from '$lib/components/Notice.svelte';
 	import PeopleSheet from '$lib/components/PeopleSheet.svelte';
@@ -53,15 +54,15 @@
 		chosen = [];
 		choosingWho = false;
 	}
-	// What the last round of invitations did, e.g. "3 invitations sent to Mia"
-	let sent = $derived.by(() => {
-		if (form?.invited === undefined) return null;
-		const name = data.people.find((person) => person.id === form.to)?.name ?? '';
-		return (
-			m.share.sent(form.invited, name) +
-			(form.already ? ` ${m.share.sentAlready(form.already)}` : '')
+	// The invitations went out: say so in passing, e.g. "3 invitations sent to Mia"
+	function invited(answer: { invited: number; already: number; to: number }) {
+		stopSelecting();
+		const name = data.people.find((person) => person.id === answer.to)?.name ?? '';
+		toast(
+			m.share.sent(answer.invited, name) +
+				(answer.already ? ` ${m.share.sentAlready(answer.already)}` : '')
 		);
-	});
+	}
 
 	// Phones: 3 posters per row; larger screens: as many as fit (at least ~10rem wide each).
 	const gridClass = 'grid grid-cols-3 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))]';
@@ -123,7 +124,6 @@
 			tinted
 		/>
 	{:else}
-		{#if sent}<Notice class="mb-3">{sent}</Notice>{/if}
 		{#if form?.error}<Notice kind="warning" class="mb-3">{form.error}</Notice>{/if}
 		<!-- Library, one collapsible section per status -->
 		{#each sections as section (section.status)}
@@ -206,7 +206,7 @@
 			people={data.people}
 			ids={chosen}
 			onclose={() => (choosingWho = false)}
-			ondone={stopSelecting}
+			ondone={invited}
 		/>
 	{/if}
 </main>

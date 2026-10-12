@@ -8,7 +8,7 @@ import { pruneImages } from '../images';
 import { pruneWikidataLinks } from '../providers/wikidata';
 import { tasks } from '../db/schema';
 import { prepareNotificationPictures, sendDueNotifications } from '../notifications';
-import { prepareAnimeTitles, refreshAll, refreshPending } from '../releases';
+import { prepareAnimeTitles, prepareStoredDetails, refreshAll, refreshPending } from '../releases';
 import { createBackup } from './backups';
 
 export type TaskRow = typeof tasks.$inferSelect;
@@ -252,6 +252,7 @@ export function startScheduler() {
 	setTimeout(safeTick, 30_000).unref();
 	// Details still missing (e.g. an import interrupted by a restart): continue loading them.
 	setTimeout(() => {
+		prepareStoredDetails();
 		refreshPending();
 		void prepareAnimeTitles();
 		prepareNotificationPictures();

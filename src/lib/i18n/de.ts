@@ -265,6 +265,7 @@ export const de = {
 	},
 
 	detail: {
+		trailer: 'Trailer',
 		watchedKept: (n: number) =>
 			n === 1
 				? '1 Folge ist als gesehen gespeichert.'

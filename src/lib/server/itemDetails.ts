@@ -1,4 +1,4 @@
-import { eq, notInArray, sql } from 'drizzle-orm';
+import { eq, inArray, notInArray, sql } from 'drizzle-orm';
 import { hasEpisodes, type Category } from '$lib/status';
 import { getDb } from './db';
 import { itemDetails, libraryItems } from './db/schema';
@@ -39,6 +39,19 @@ function withAiredToday(show: ShowDetails): ShowDetails {
 			}))
 		}))
 	};
+}
+
+// The stored trailer links of some titles (title -> address); titles without one are left out.
+export function trailersOf(itemIds: number[]) {
+	if (itemIds.length === 0) return new Map<number, string>();
+	const rows = getDb()
+		.select({ itemId: itemDetails.itemId, info: itemDetails.info })
+		.from(itemDetails)
+		.where(inArray(itemDetails.itemId, itemIds))
+		.all();
+	return new Map(
+		rows.flatMap((row) => (row.info.trailerUrl ? [[row.itemId, row.info.trailerUrl] as const] : []))
+	);
 }
 
 // What a detail page needs. The one place that decides between "stored" and "live":
