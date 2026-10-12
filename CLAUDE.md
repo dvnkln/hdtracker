@@ -172,6 +172,8 @@ Optisch getrennte Bereiche (keine Filter): **Filme, Serien, Anime, Spiele**.
 - Technische Notizen zu den Punkten (nicht in der Roadmap):
   - Streaming-Übersicht: Anbieter ohne Treffer ausblenden. Offen: eigener Menüpunkt oder Teil des Dashboards.
   - Gemeinsam tracken (0.9.0): Regeln und Etappen 6–11 im Plan (`/home/cc/.claude/plans/ok-da-wir-ja-wondrous-wind.md`).
+  - Läden bei Spielen (Wunsch des Users, 12.10.2026): IGDB kennt Laden-Links und Plattformen (`websites`, `external_games`, `platforms`) – in `FULL_FIELDS` (`providers/igdb.ts`) aufnehmen, also in der einen Abfrage je Spiel und ohne neue Verbindung; Anzeige wie „Where to watch“. Lückenhaft bei kleinen Spielen, keine Preise.
+  - Demos (derselbe Wunsch): IGDB hat kein verlässliches Merkmal dafür. Steam nennt Demos je Spiel, aber über eine nicht offiziell dokumentierte, mengenbegrenzte Schnittstelle → **neue Verbindung nach außen** (Wiki „Privacy and security“, abschaltbar, sparsam abfragen), und nur für Steam-Spiele; die Steam-Kennung käme aus IGDB. Die Meldung „Demo ist da“ braucht einen Vergleich vorher/nachher im nächtlichen Lauf – dieselbe Grundlage wie die Meldungen bei verschobenen Terminen, zusammen planen. **Alles hier aus dem Gedächtnis, nicht nachgelesen: vor dem Bauen Felder und Grenzen an den echten Schnittstellen prüfen.**
 - Nicht geplant: eingebautes HTTPS – das Projekt geht von einem Reverse Proxy aus (Wiki: „HTTPS and installing as an app“).
 
 ## Dokumentation (Wiki)

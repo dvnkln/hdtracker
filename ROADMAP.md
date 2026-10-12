@@ -14,4 +14,6 @@ What is already done: [Changelog](CHANGELOG.md).
 - [x] **Episode titles for anime** – show episode titles and descriptions for anime where a matching TMDB entry is known.
 - [x] **Multiple users** – an admin manages accounts; every user has their own library and personal settings.
 - [x] **Track together** – invite another user to a title: you share its status and watched episodes from then on, and both keep them up to date.
+- [ ] **Where to get a game** – the stores a game is available in (Steam, Epic, GOG, console stores), with a direct link.
+- [ ] **Demos** – mark games that have a demo, and tell you when one becomes available.
 - [ ] **Filters in the library** – for example only the titles you track together with somebody.
