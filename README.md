@@ -28,7 +28,7 @@ The guides live in the **[wiki](https://github.com/dvnkln/hdtracker/wiki)**:
 - 🐳 [Installation](https://github.com/dvnkln/hdtracker/wiki/Installation) – Docker Compose, the `.env` file, API keys
 - 🔐 [HTTPS and installing as an app](https://github.com/dvnkln/hdtracker/wiki/HTTPS-and-installing-as-an-app) – reverse proxy, `ORIGIN`, home screen
 - ⬆️ [Updating](https://github.com/dvnkln/hdtracker/wiki/Updating)
-- 👥 [Users](https://github.com/dvnkln/hdtracker/wiki/Users) – several accounts on one installation
+- 👥 [Users](https://github.com/dvnkln/hdtracker/wiki/Users) – several accounts on one installation, tracking together
 - 💾 [Backups and restore](https://github.com/dvnkln/hdtracker/wiki/Backups-and-restore)
 - 📥 [Import from Yamtrack](https://github.com/dvnkln/hdtracker/wiki/Import-from-Yamtrack)
 - 📤 [Export](https://github.com/dvnkln/hdtracker/wiki/Export) – your library as a file, compatible with Yamtrack
@@ -48,8 +48,9 @@ What changed in each version: [Changelog](CHANGELOG.md). What's planned: [Roadma
 - 🔎 **Quick search** – always at the top of the screen; on a computer, press <kbd>/</kbd> to start typing.
 - 📄 **Detail pages** – runtime, genres, rating, release dates and similar titles.
 - 📥 **Import and export** – take over your library from Yamtrack including statuses, watched episodes and anime progress, and download it again as a file Yamtrack can read.
-- 🔔 **Push notifications** – a message on your phone or computer when a new episode airs or a planned title is released, one by one or as a daily summary. No extra app, no third-party account – or, if you prefer, through Pushover, ntfy or a webhook (Gotify, Apprise, Home Assistant, …).
-- 👥 **Several users** – an admin adds accounts for family or flatmates. Everybody gets a library, a dashboard, settings, notifications and a profile picture of their own; nobody sees what the others track, not even the admin.
+- 🔔 **Inbox and push notifications** – the bell in the app collects what is new for you. On top of that, a message on your phone or computer when a new episode airs or a planned title is released, one by one or as a daily summary. No extra app, no third-party account – or, if you prefer, through Pushover, ntfy or a webhook (Gotify, Apprise, Home Assistant, …).
+- 👥 **Several users** – an admin adds accounts for family or flatmates. Everybody gets a library, a dashboard, settings, notifications and a profile picture of their own; nobody sees what the others track, not even the admin – unless you decide to share a title.
+- 🛋️ **Track together** – invite somebody to a title and share its status and watched episodes from then on: one ticks off the episode, it is done for both. Everybody can go on alone again and keeps the state as a copy.
 - 🛠️ **Maintenance built in** – release dates refresh nightly; optional scheduled database backups you can download; a server overview tells you whether anything needs attention.
 - 🎨 **Themes** – follows your device (dark or light) by default; or pick dark, light, Tokyo Night, Dracula, SynthWave '84, Cyberpunk, Retro 95, Terminal and Breadbin.
 - 🔒 **Private** – runs on your own server, all data in one SQLite file. No tracking, no cloud – [what is sent where](https://github.com/dvnkln/hdtracker/wiki/Privacy-and-security) is documented. Your browser only ever talks to your own server, and repeated wrong passwords block the address they come from – also behind a reverse proxy.
