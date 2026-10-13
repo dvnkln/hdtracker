@@ -122,8 +122,6 @@ export const en: Messages = {
 		replaces: 'Your own status and watched episodes are replaced by theirs.',
 		accept: 'Accept',
 		decline: 'Decline',
-		short: 'Together',
-		pendingShort: 'Invited',
 		endSelection: 'End selection',
 		// Selecting several titles in the library
 		select: 'Select',
@@ -250,8 +248,6 @@ export const en: Messages = {
 	},
 
 	sheet: {
-		notifyOn: 'Notify me',
-		notifyOff: 'Muted',
 		details: 'Details',
 		detailsAndEpisodes: 'Details & episodes',
 		remove: 'Remove from library',
@@ -770,7 +766,7 @@ export const en: Messages = {
 	about: {
 		title: 'About',
 		tagline:
-			'Self-hosted tracker for movies, series, anime and games – made for watching together on the couch.',
+			'Self-hosted tracker for movies, series, anime and games – made for tracking together on the couch.',
 		version: (v) => `Version: v${v}`,
 		docs: 'Documentation (wiki)',
 		source: 'Source code on GitHub',

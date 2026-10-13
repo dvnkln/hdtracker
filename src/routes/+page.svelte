@@ -142,6 +142,12 @@
 							{#each data.together[entry.itemId].slice(0, 3) as person (person.id)}
 								<Avatar {person} class="size-6 text-[10px] ring-2 ring-zinc-950" />
 							{/each}
+							{#if data.together[entry.itemId].length > 3}
+								<span
+									class="flex size-6 items-center justify-center rounded-full bg-zinc-800 text-[10px] font-semibold ring-2 ring-zinc-950"
+									>+{data.together[entry.itemId].length - 3}</span
+								>
+							{/if}
 						</span>
 					{/if}
 				</a>
@@ -182,9 +188,15 @@
 								class="absolute top-1.5 right-1.5 flex -space-x-1.5"
 								title={m.share.together(data.together[entry.itemId].map((p) => p.name).join(', '))}
 							>
-								{#each data.together[entry.itemId].slice(0, 3) as person (person.id)}
+								{#each data.together[entry.itemId].slice(0, 2) as person (person.id)}
 									<Avatar {person} class="size-6 text-[10px] ring-2 ring-zinc-950" />
 								{/each}
+								{#if data.together[entry.itemId].length > 2}
+									<span
+										class="flex size-6 items-center justify-center rounded-full bg-zinc-800 text-[10px] font-semibold ring-2 ring-zinc-950"
+										>+{data.together[entry.itemId].length - 2}</span
+									>
+								{/if}
 							</span>
 						{/if}
 					</div>

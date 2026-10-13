@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  Self-hosted tracker for <b>movies</b>, <b>series</b>, <b>anime</b> and <b>games</b> – made for watching together on the couch.
+  Self-hosted tracker for <b>movies</b>, <b>series</b>, <b>anime</b> and <b>games</b> – made for tracking together on the couch.
 </p>
 
 <p align="center">

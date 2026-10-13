@@ -7,6 +7,19 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
+## Upcoming release
+
+### 🔧 Improved
+
+- In the window that changes the status of a title, the bell and the symbol for tracking together now look and sit like on the page of the title: round, right below title and year
+- In an invitation in the inbox, the link to the trailer now sits next to the title instead of beside “Accept” and “Decline”
+- The line that describes hdtracker under Settings → About now speaks of tracking together, not watching
+
+### 🐛 Fixed
+
+- On the dashboard, a title tracked with more people than there is room for pictures now shows “+2” for the rest instead of leaving them out
+- In the library, Ctrl+A or a Shift+click right after unfolding a section could miss the titles in it
+
 ## 0.9.0 – 2026-10-12
 
 Track a title together with somebody: one state for both, an inbox for what is new, and a link to the trailer.

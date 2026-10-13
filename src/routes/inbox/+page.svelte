@@ -125,7 +125,7 @@
 						style:--accent={cat.accent}
 						class="ui-card rounded-xl border border-zinc-800 bg-zinc-900/40 p-3"
 					>
-						<div class="flex">
+						<div class="flex items-center gap-2">
 							{@render title(
 								invitation.item,
 								[invitation.from],
@@ -134,6 +134,16 @@
 									statusLabel(invitation.item.category, invitation.status)
 								)
 							)}
+							<!-- Belongs to the title, not to the answer: round like on the page of the title -->
+							{#if invitation.trailerUrl}
+								<a
+									href={invitation.trailerUrl}
+									target="_blank"
+									rel="noreferrer"
+									class="ui-btn inline-flex shrink-0 items-center gap-1.5 rounded-full border border-zinc-600 px-3 py-1.5 text-sm font-medium transition hover:bg-zinc-800"
+									><Play size={15} />{m.detail.trailer}</a
+								>
+							{/if}
 						</div>
 						{#if invitation.own}
 							<Notice kind="warning" class="mt-2">{m.share.replaces}</Notice>
@@ -147,14 +157,6 @@
 								<input type="hidden" name="id" value={invitation.id} />
 								<button class="{BUTTON_SECONDARY} {small}">{m.share.decline}</button>
 							</form>
-							{#if invitation.trailerUrl}
-								<a
-									href={invitation.trailerUrl}
-									target="_blank"
-									rel="noreferrer"
-									class="{BUTTON_SECONDARY} {small} ml-auto"><Play size={15} />{m.detail.trailer}</a
-								>
-							{/if}
 						</div>
 					</li>
 				{/each}

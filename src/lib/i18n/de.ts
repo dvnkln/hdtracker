@@ -126,8 +126,6 @@ export const de = {
 		replaces: 'Dein eigener Status und deine gesehenen Folgen werden dadurch ersetzt.',
 		accept: 'Annehmen',
 		decline: 'Ablehnen',
-		short: 'Gemeinsam',
-		pendingShort: 'Eingeladen',
 		endSelection: 'Auswahl beenden',
 		// Selecting several titles in the library
 		select: 'Auswählen',
@@ -255,8 +253,6 @@ export const de = {
 	},
 
 	sheet: {
-		notifyOn: 'Benachrichtigen',
-		notifyOff: 'Stumm',
 		details: 'Details',
 		detailsAndEpisodes: 'Details & Folgen',
 		remove: 'Aus Bibliothek entfernen',
@@ -803,7 +799,7 @@ export const de = {
 	about: {
 		title: 'Über',
 		tagline:
-			'Selbst gehosteter Tracker für Filme, Serien, Anime und Spiele – gemacht fürs gemeinsame Schauen auf der Couch.',
+			'Selbst gehosteter Tracker für Filme, Serien, Anime und Spiele – gemacht fürs gemeinsame Tracken auf der Couch.',
 		version: (v: string) => `Version: v${v}`,
 		docs: 'Dokumentation (Wiki)',
 		source: 'Quellcode auf GitHub',

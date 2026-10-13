@@ -176,6 +176,59 @@
 								>{:else}<span title={m.common.tbaHint}>{m.common.tba}</span>{/if}
 						</p>
 					{/key}
+					{#if item.status && (notify !== null || sharing)}
+						<!-- Notifications about this title, and tracking it together – as on its page -->
+						<div class="mt-2 flex items-center gap-2">
+							{#if notify !== null}
+								<form method="POST" action="{titlePath}?/notify" use:enhance={stay}>
+									<input type="hidden" name="notify" value={notify ? '0' : '1'} />
+									<button
+										class="ui-btn inline-flex items-center rounded-full border border-zinc-600 p-2 transition hover:bg-zinc-800 {notify
+											? ''
+											: 'text-zinc-500'}"
+										aria-pressed={notify}
+										aria-label={m.notifications.bell}
+										title={notify ? m.notifications.mute : m.notifications.unmute}
+									>
+										{#if notify}<Bell size={16} />{:else}<BellOff size={16} />{/if}
+									</button>
+								</form>
+							{/if}
+							{#if sharing}
+								<button
+									type="button"
+									onclick={() => (shareOpen = true)}
+									aria-label={shareLabel}
+									title={shareLabel}
+									class="ui-btn relative inline-flex items-center rounded-full border transition hover:bg-zinc-800 {sharing
+										.companions.length > 0
+										? 'ui-keep border-(--accent) p-1'
+										: 'border-zinc-600 p-2 text-zinc-400'}"
+								>
+									{#if sharing.companions.length > 0}
+										<span class="flex -space-x-1.5">
+											{#each sharing.companions.slice(0, 3) as person (person.id)}
+												<Avatar {person} class="size-6 text-[10px] ring-2 ring-zinc-900" />
+											{/each}
+										</span>
+										{#if sharing.companions.length > 3}
+											<span class="px-1.5 text-xs font-medium"
+												>+{sharing.companions.length - 3}</span
+											>
+										{/if}
+									{:else}
+										<UserPlus size={16} />
+										{#if waiting}
+											<!-- Somebody is invited and has not answered yet -->
+											<span
+												class="absolute -top-0.5 -right-0.5 size-2.5 rounded-full bg-amber-400 ring-2 ring-zinc-900"
+											></span>
+										{/if}
+									{/if}
+								</button>
+							{/if}
+						</div>
+					{/if}
 				</div>
 				<button
 					type="button"
@@ -239,59 +292,6 @@
 					</button>
 				{/each}
 			</form>
-
-			{#if item.status && (notify !== null || sharing)}
-				<!-- Notifications about this title, and tracking it together -->
-				<div class="mt-4 flex items-center gap-2">
-					{#if notify !== null}
-						<form method="POST" action="{titlePath}?/notify" use:enhance={stay} class="flex-1">
-							<input type="hidden" name="notify" value={notify ? '0' : '1'} />
-							<button
-								class="ui-btn flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-700 p-3 text-sm font-medium transition-colors hover:bg-zinc-800 {notify
-									? ''
-									: 'text-zinc-500'}"
-								aria-pressed={notify}
-								aria-label={m.notifications.bell}
-								title={notify ? m.notifications.mute : m.notifications.unmute}
-							>
-								{#if notify}<Bell size={18} />{m.sheet.notifyOn}{:else}<BellOff size={18} />{m.sheet
-										.notifyOff}{/if}
-							</button>
-						</form>
-					{/if}
-					{#if sharing}
-						<button
-							type="button"
-							onclick={() => (shareOpen = true)}
-							aria-label={shareLabel}
-							title={shareLabel}
-							class="ui-btn relative flex flex-1 items-center justify-center gap-2 rounded-xl border p-3 text-sm font-medium transition-colors hover:bg-zinc-800 {sharing
-								.companions.length > 0
-								? 'ui-keep border-(--accent)'
-								: 'border-zinc-700'}"
-						>
-							{#if sharing.companions.length > 0}
-								<span class="flex -space-x-1.5">
-									{#each sharing.companions.slice(0, 3) as person (person.id)}
-										<Avatar {person} class="size-5 text-[10px] ring-2 ring-zinc-900" />
-									{/each}
-								</span>
-								{m.share.short}
-							{:else}
-								<span class="relative">
-									<UserPlus size={18} />
-									{#if waiting}
-										<span
-											class="absolute -top-1 -right-1 size-2.5 rounded-full bg-amber-400 ring-2 ring-zinc-900"
-										></span>
-									{/if}
-								</span>
-								{waiting ? m.share.pendingShort : m.share.inviteAction}
-							{/if}
-						</button>
-					{/if}
-				</div>
-			{/if}
 
 			{#if item.status}
 				<form method="POST" action="{actionPath}?/remove" use:enhance={submit} class="mt-4">
