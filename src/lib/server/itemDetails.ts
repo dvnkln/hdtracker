@@ -54,6 +54,28 @@ export function trailersOf(itemIds: number[]) {
 	);
 }
 
+// What the library can be filtered by, from the stored details of some titles: their genres
+// and the streaming services that have them in their flat rate (renting and buying do not
+// count – the question is "what of this runs at …"). Titles without stored details are left out.
+export function filterFactsOf(itemIds: number[]) {
+	type Facts = { genres: string[]; services: { name: string; logoUrl: string }[] };
+	if (itemIds.length === 0) return new Map<number, Facts>();
+	const rows = getDb()
+		.select({ itemId: itemDetails.itemId, info: itemDetails.info })
+		.from(itemDetails)
+		.where(inArray(itemDetails.itemId, itemIds))
+		.all();
+	return new Map<number, Facts>(
+		rows.map((row) => [
+			row.itemId,
+			{
+				genres: row.info.genres ?? [],
+				services: (row.info.watch?.flatrate ?? []).map(({ name, logoUrl }) => ({ name, logoUrl }))
+			}
+		])
+	);
+}
+
 // What a detail page needs. The one place that decides between "stored" and "live":
 // a title of somebody's library with stored details comes from the database, everything else
 // (search results, similar titles, a title that is still loading) is asked from the API.

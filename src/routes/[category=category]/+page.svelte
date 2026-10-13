@@ -1,6 +1,12 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
+	import { browser } from '$app/environment';
+	import { afterNavigate, replaceState } from '$app/navigation';
+	import { page } from '$app/state';
 	import EmptyState from '$lib/components/EmptyState.svelte';
-	import { Joystick, Origami, Popcorn, SearchX, Sofa } from '@lucide/svelte';
+	import LibraryFilter from '$lib/components/LibraryFilter.svelte';
+	import { known, offered, passes } from '$lib/libraryFilter';
+	import { FunnelX, Joystick, Origami, Popcorn, SearchX, Sofa } from '@lucide/svelte';
 	import { CATEGORIES } from '$lib/categories';
 	import { COLLAPSED_STATUSES, statusesFor, type Status } from '$lib/status';
 	import { m, statusLabel } from '$lib/i18n/index.svelte';
@@ -21,10 +27,39 @@
 	let cat = $derived(CATEGORIES[data.category]);
 	let label = $derived(m.categories[data.category]);
 
+	// The filter (who tracks along, streaming service, genre – rules in libraryFilter.ts). Which
+	// filters are on stands in the address (?f=…), so a reload and the way back keep them;
+	// nothing is stored. Changing them does not ask the server: everything is on the page.
+	let filterable = $derived(
+		data.library.map((item) => ({
+			...item,
+			people: data.together[item.id] ?? [],
+			services: data.facts[item.id]?.services ?? [],
+			genres: data.facts[item.id]?.genres ?? []
+		}))
+	);
+	let offer = $derived(offered(filterable));
+	// (Read from the address bar itself where there is one: `page.url` does not follow
+	// replaceState(), so coming back from a title it would no longer name the filters.)
+	const inAddress = () => (browser ? new URL(location.href) : page.url).searchParams.getAll('f');
+	let wanted = $state<string[]>(untrack(inAddress));
+	// (This page stays when one goes from one area to another: read the address again then.)
+	afterNavigate(() => (wanted = inAddress()));
+	let filters = $derived(known(wanted, offer));
+	let shown = $derived(filterable.filter((item) => passes(item, filters)));
+	let canFilter = $derived(offer.people.length + offer.services.length + offer.genres.length > 0);
+	function setFilters(keys: string[]) {
+		wanted = keys;
+		const url = new URL(location.href);
+		url.searchParams.delete('f');
+		for (const key of keys) url.searchParams.append('f', key);
+		replaceState(url, page.state);
+	}
+
 	// Library grouped by status, in section order; empty sections are skipped.
 	let sections = $derived(
 		statusesFor(data.category)
-			.map((status) => ({ status, items: data.library.filter((i) => i.status === status) }))
+			.map((status) => ({ status, items: shown.filter((i) => i.status === status) }))
 			.filter((s) => s.items.length > 0)
 	);
 
@@ -155,7 +190,7 @@
 				{/each}
 			</ul>
 		{/if}
-	{:else if sections.length === 0}
+	{:else if data.library.length === 0}
 		<!-- A pictogram of its own per area – not the icon of the navigation below again -->
 		<EmptyState
 			icon={EMPTY_ICONS[data.category]}
@@ -165,44 +200,64 @@
 		/>
 	{:else}
 		{#if form?.error}<Notice kind="warning" class="mb-3">{form.error}</Notice>{/if}
-		<!-- Library, one collapsible section per status -->
-		{#each sections as section (section.status)}
-			{@const Icon = STATUS_ICONS[section.status]}
-			<details
-				class="group mt-6 first-of-type:mt-1"
-				open={isOpen(section.status)}
-				data-status={section.status}
-				ontoggle={(e) => (folded[section.status] = !e.currentTarget.open)}
-			>
-				<summary
-					class="group/summary flex cursor-pointer list-none items-center gap-2 select-none [&::-webkit-details-marker]:hidden"
+		<!-- (The box the funnel sits in: at the right edge, in the line of the first heading) -->
+		<div class="relative">
+			{#if canFilter}
+				<LibraryFilter
+					{offer}
+					items={filterable}
+					chosen={filters}
+					left={shown.length}
+					onchange={setFilters}
+				/>
+			{/if}
+			{#if sections.length === 0}
+				<EmptyState
+					icon={FunnelX}
+					title={m.library.filter.noneTitle}
+					text={m.library.filter.noneHint}
+					size="small"
+				/>
+			{/if}
+			<!-- Library, one collapsible section per status -->
+			{#each sections as section (section.status)}
+				{@const Icon = STATUS_ICONS[section.status]}
+				<details
+					class="group mt-6 first-of-type:mt-1"
+					open={isOpen(section.status)}
+					data-status={section.status}
+					ontoggle={(e) => (folded[section.status] = !e.currentTarget.open)}
 				>
-					<ChevronRight
-						size={18}
-						class="text-zinc-500 transition group-open:rotate-90 group-hover/summary:text-zinc-200"
-					/>
-					<Icon size={18} class="text-(--accent)" />
-					<h2 class="text-lg font-semibold">{statusLabel(data.category, section.status)}</h2>
-				</summary>
-				<ul class="mt-3 {gridClass}">
-					{#each section.items as item (item.id)}
-						<li>
-							<PosterCard
-								title={titles(data.category, item).main}
-								year={item.year}
-								earlyAccess={item.earlyAccess}
-								posterUrl={item.posterUrl}
-								loading={item.metadataUpdatedAt === null}
-								people={data.together[item.id]}
-								selected={selecting ? chosen.includes(item.id) : undefined}
-								onclick={() => (selecting ? pick(item.id) : (selected = item))}
-								onselect={canSelect ? (range) => pick(item.id, range) : undefined}
-							/>
-						</li>
-					{/each}
-				</ul>
-			</details>
-		{/each}
+					<summary
+						class="group/summary flex cursor-pointer list-none items-center gap-2 select-none [&::-webkit-details-marker]:hidden"
+					>
+						<ChevronRight
+							size={18}
+							class="text-zinc-500 transition group-open:rotate-90 group-hover/summary:text-zinc-200"
+						/>
+						<Icon size={18} class="text-(--accent)" />
+						<h2 class="text-lg font-semibold">{statusLabel(data.category, section.status)}</h2>
+					</summary>
+					<ul class="mt-3 {gridClass}">
+						{#each section.items as item (item.id)}
+							<li>
+								<PosterCard
+									title={titles(data.category, item).main}
+									year={item.year}
+									earlyAccess={item.earlyAccess}
+									posterUrl={item.posterUrl}
+									loading={item.metadataUpdatedAt === null}
+									people={data.together[item.id]}
+									selected={selecting ? chosen.includes(item.id) : undefined}
+									onclick={() => (selecting ? pick(item.id) : (selected = item))}
+									onselect={canSelect ? (range) => pick(item.id, range) : undefined}
+								/>
+							</li>
+						{/each}
+					</ul>
+				</details>
+			{/each}
+		</div>
 	{/if}
 
 	<ItemSheet

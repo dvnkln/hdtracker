@@ -45,6 +45,7 @@ What changed in each version: [Changelog](CHANGELOG.md). What's planned: [Roadma
 - 📺 **Episode tracking** – tick off single episodes, whole seasons or entire shows; see upcoming episodes and announced seasons with dates. Anime get episode titles and images too.
 - 🙈 **Spoiler protection** – images and descriptions of episodes you have not watched yet are blurred (can be switched off).
 - 🍿 **Where to watch** – streaming, rent and buy offers for your region (via JustWatch), with direct links where possible.
+- 🧲 **Filters** – narrow an area down by genre, by streaming service or by who you track a title with – or all three at once.
 - 🔎 **Quick search** – always at the top of the screen; on a computer, press <kbd>/</kbd> to start typing.
 - 📄 **Detail pages** – runtime, genres, rating, release dates and similar titles.
 - 📥 **Import and export** – take over your library from Yamtrack including statuses, watched episodes and anime progress, and download it again as a file Yamtrack can read.

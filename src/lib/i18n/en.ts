@@ -247,6 +247,24 @@ export const en: Messages = {
 			games: 'No games yet'
 		},
 		emptyHint: 'Search for a title above.',
+		// The funnel above the library
+		filter: {
+			open: 'Filter',
+			title: 'Filter',
+			reset: 'Reset',
+			together: 'Together',
+			shared: 'Tracked together',
+			alone: 'Not shared',
+			withName: (name) => `With ${name}`,
+			services: 'Streaming service',
+			genres: 'Genre',
+			show: (n) => (n === 1 ? 'Show 1 title' : `Show ${n} titles`),
+			left: (n) => (n === 1 ? '1 title' : `${n} titles`),
+			clearAll: 'Clear all filters',
+			clearOne: (name) => `Remove the filter “${name}”`,
+			noneTitle: 'Nothing fits',
+			noneHint: 'No title of this area passes these filters.'
+		},
 		searchFailed: 'Search failed.'
 	},
 

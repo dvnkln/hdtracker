@@ -11,6 +11,7 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 
 ### ✨ New
 
+- **Filter the library:** a funnel next to the first heading of an area narrows it down – to what you track together (with everybody, with one person, or not shared at all), to a streaming service that has the title in its flat rate, to a genre. Several filters work together: “comedies or action films, at this service, with this person”. The numbers behind the entries tell how many titles each choice would leave, and the address of the page remembers the filters, so a reload or the way back from a title keeps them
 - **Quieter marking of shared titles:** who tracks a title along is now shown small in the lower corner of its poster instead of large at the top. And under Settings → General you choose how – with the profile pictures of the others or with just a small symbol
 - **Empty the inbox:** a small bin next to “News” deletes the news you have read, without waiting for the week to pass
 

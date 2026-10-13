@@ -16,6 +16,7 @@ import { ProviderError, today, type SearchResult } from '$lib/server/providers/t
 import { searchCategory } from '$lib/server/search';
 import { refreshPending } from '$lib/server/releases';
 import { serverMessages } from '$lib/server/i18n';
+import { filterFactsOf } from '$lib/server/itemDetails';
 import { companionsByItem, inviteMany, outgoing, shareablePeople } from '$lib/server/sharing';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -47,6 +48,8 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 			q,
 			library,
 			together,
+			// Genres and streaming services of the titles, for the filter (from the stored details)
+			facts: Object.fromEntries(filterFactsOf(library.map((item) => item.id))),
 			people: shareablePeople(me),
 			// The user's open invitations: title -> (invited user -> invitation)
 			pending: pendingByItem(me),
@@ -74,6 +77,10 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 		q,
 		library: [] as LibraryItem[],
 		together: {} as Record<number, Person[]>,
+		facts: {} as Record<
+			number,
+			{ genres: string[]; services: { name: string; logoUrl: string }[] }
+		>,
 		people: [] as Person[],
 		pending: {} as Record<number, Record<number, number>>,
 		results,

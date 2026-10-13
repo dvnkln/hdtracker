@@ -252,6 +252,24 @@ export const de = {
 			games: 'Noch keine Spiele'
 		},
 		emptyHint: 'Suche oben nach einem Titel.',
+		// The funnel above the library
+		filter: {
+			open: 'Filtern',
+			title: 'Filtern',
+			reset: 'Zurücksetzen',
+			together: 'Gemeinsam',
+			shared: 'Gemeinsam getrackt',
+			alone: 'Nicht geteilt',
+			withName: (name: string) => `Mit ${name}`,
+			services: 'Streaming-Dienst',
+			genres: 'Genre',
+			show: (n: number) => (n === 1 ? '1 Titel anzeigen' : `${n} Titel anzeigen`),
+			left: (n: number) => `${n} Titel`,
+			clearAll: 'Alle Filter aufheben',
+			clearOne: (name: string) => `Filter „${name}“ aufheben`,
+			noneTitle: 'Nichts passt',
+			noneHint: 'Kein Titel dieses Bereichs passt zu diesen Filtern.'
+		},
 		searchFailed: 'Suche fehlgeschlagen.'
 	},
 
