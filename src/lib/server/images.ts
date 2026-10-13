@@ -103,6 +103,34 @@ export function readCollageAddress(url: URL, now = Date.now()) {
 	return { layout, addresses };
 }
 
+// ---- The profile picture of whoever a notification is about ----
+
+// Opens the profile picture of this one user for a week (the address also names the version
+// of the picture, so a new picture has a new address).
+const avatarSignature = (id: number, version: string, expires: string) =>
+	createHmac('sha256', env.SECRET ?? '')
+		.update(`avatar:${id}:${version}:${expires}`)
+		.digest('base64url');
+
+export function signedAvatarPath(id: number, version: number, now = Date.now()) {
+	const expires = String(Math.floor(now / 1000) + COLLAGE_DAYS * 24 * 60 * 60);
+	const query = new URLSearchParams({ v: String(version), e: expires });
+	query.set('s', avatarSignature(id, String(version), expires));
+	return `/avatar/${id}?${query}`;
+}
+
+export function isSignedAvatar(url: URL, now = Date.now()) {
+	const id = /^\/avatar\/(\d+)$/.exec(url.pathname)?.[1];
+	const expires = url.searchParams.get('e') ?? '';
+	if (!id || !env.SECRET) return false;
+	const given = Buffer.from(url.searchParams.get('s') ?? '');
+	const expected = Buffer.from(
+		avatarSignature(Number(id), url.searchParams.get('v') ?? '', expires)
+	);
+	if (given.length !== expected.length || !timingSafeEqual(given, expected)) return false;
+	return Number(expires) * 1000 > now;
+}
+
 export function isSignedImage(url: URL) {
 	const address = url.searchParams.get('u');
 	const given = Buffer.from(url.searchParams.get('s') ?? '');

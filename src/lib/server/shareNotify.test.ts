@@ -172,6 +172,14 @@ describe('the message', () => {
 		});
 	});
 
+	it('shows the photo of whoever did it, or two people in the colours of the logo', () => {
+		expect(shareMessage('invited', mia, [item('Dune', 1)]).icon).toBe('/icons/share.png');
+		const withPhoto = shareMessage('invited', { ...mia, picture: 1234 }, [item('Dune', 1)]);
+		expect(withPhoto.icon).toMatch(/^\/avatar\/7\?v=1234&e=\d+&s=/);
+		const many = ['A', 'B'].map((title, n) => item(title, n + 1));
+		expect(shareMessage('left', { ...mia, picture: 1234 }, many).icon).toMatch(/^\/avatar\/7\?/);
+	});
+
 	it('is written in the language of who gets it', () => {
 		const german = withLocale('de', () => shareMessage('declined', mia, [item('Dune', 1)]));
 		expect(german.body).toBe('Mia hat deine Einladung abgelehnt');

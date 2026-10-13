@@ -2,7 +2,7 @@
 	import { m } from '$lib/i18n/index.svelte';
 	import { img } from '$lib/images';
 	import type { Person } from '$lib/avatar';
-	import Avatar from '$lib/components/Avatar.svelte';
+	import TogetherMark from '$lib/components/TogetherMark.svelte';
 	import { Check, ImageOff } from '@lucide/svelte';
 
 	type Props = {
@@ -126,19 +126,6 @@
 				<ImageOff size={28} />
 			</div>
 		{/if}
-		{#if people.length > 0}
-			<span class="absolute top-1 right-1 flex -space-x-1.5">
-				{#each people.slice(0, 2) as person (person.id)}
-					<Avatar {person} class="size-6 text-[10px] ring-2 ring-zinc-950" />
-				{/each}
-				{#if people.length > 2}
-					<span
-						class="flex size-6 items-center justify-center rounded-full bg-zinc-800 text-[10px] font-semibold ring-2 ring-zinc-950"
-						>+{people.length - 2}</span
-					>
-				{/if}
-			</span>
-		{/if}
 		{#if onselect && selected === undefined}
 			<!-- Computer: a circle appears while the mouse is over the poster – click it to select -->
 			<span
@@ -157,6 +144,8 @@
 				<Check size={15} strokeWidth={3} />
 			</span>
 		{/if}
+		<!-- Who tracks along: small in the corner (above the status strip of a search hit) -->
+		<TogetherMark {people} corner class="absolute right-1 {badge ? 'bottom-7' : 'bottom-1'}" />
 		{#if badge}
 			<span
 				class="absolute inset-x-1 bottom-1 truncate rounded bg-(--accent) px-1.5 py-0.5 text-center text-[11px] font-semibold text-white"

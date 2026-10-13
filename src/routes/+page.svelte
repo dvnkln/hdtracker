@@ -9,7 +9,7 @@
 	import { img } from '$lib/images';
 	import { reportSeen } from '$lib/seen';
 	import { titles } from '$lib/titles.svelte';
-	import Avatar from '$lib/components/Avatar.svelte';
+	import TogetherMark from '$lib/components/TogetherMark.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import type { DashboardEntry } from '$lib/server/dashboard';
 	import {
@@ -134,22 +134,7 @@
 							<span class="truncate">{eventLabel(entry, m)}</span>
 						</p>
 					</div>
-					{#if data.together[entry.itemId]}
-						<span
-							class="flex shrink-0 -space-x-1.5"
-							title={m.share.together(data.together[entry.itemId].map((p) => p.name).join(', '))}
-						>
-							{#each data.together[entry.itemId].slice(0, 3) as person (person.id)}
-								<Avatar {person} class="size-6 text-[10px] ring-2 ring-zinc-950" />
-							{/each}
-							{#if data.together[entry.itemId].length > 3}
-								<span
-									class="flex size-6 items-center justify-center rounded-full bg-zinc-800 text-[10px] font-semibold ring-2 ring-zinc-950"
-									>+{data.together[entry.itemId].length - 3}</span
-								>
-							{/if}
-						</span>
-					{/if}
+					<TogetherMark people={data.together[entry.itemId] ?? []} max={3} />
 				</a>
 			</li>
 		{/each}
@@ -183,22 +168,11 @@
 								<ImageOff size={24} />
 							</div>
 						{/if}
-						{#if data.together[entry.itemId]}
-							<span
-								class="absolute top-1.5 right-1.5 flex -space-x-1.5"
-								title={m.share.together(data.together[entry.itemId].map((p) => p.name).join(', '))}
-							>
-								{#each data.together[entry.itemId].slice(0, 2) as person (person.id)}
-									<Avatar {person} class="size-6 text-[10px] ring-2 ring-zinc-950" />
-								{/each}
-								{#if data.together[entry.itemId].length > 2}
-									<span
-										class="flex size-6 items-center justify-center rounded-full bg-zinc-800 text-[10px] font-semibold ring-2 ring-zinc-950"
-										>+{data.together[entry.itemId].length - 2}</span
-									>
-								{/if}
-							</span>
-						{/if}
+						<TogetherMark
+							people={data.together[entry.itemId] ?? []}
+							corner
+							class="absolute right-1 bottom-1"
+						/>
 					</div>
 					<p
 						class="mt-1.5 truncate text-sm font-medium transition-colors duration-100 group-hover/row:text-(--accent)"

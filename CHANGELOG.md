@@ -7,6 +7,22 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
+## Upcoming release
+
+### ✨ New
+
+- **Quieter marking of shared titles:** who tracks a title along is now shown small in the lower corner of its poster instead of large at the top. And under Settings → General you choose how – with the profile pictures of the others or with just a small symbol
+- **Empty the inbox:** a small bin next to “News” deletes the news you have read, without waiting for the week to pass
+
+### 🔧 Improved
+
+- The inbox puts first what waits for a decision: invitations for you, then the ones you sent, then the news. Long lists show their first three entries and unfold on a tap – news you have not read are never folded away
+- A push message about tracking together now shows the profile photo of the person it is about – or two figures in the colours of the logo, if they have none – instead of the app icon a second time
+
+### 🐛 Fixed
+
+- The search for games now also finds editions of a game (“Spiritfarer: Farewell Edition”); they are listed after the games themselves
+
 ## 0.9.1 – 2026-10-13
 
 Small touch-ups after 0.9.0: the same things now look the same wherever they are, and a few rare slips are fixed.

@@ -2,7 +2,7 @@ import { fail } from '@sveltejs/kit';
 import { serverMessages } from '$lib/server/i18n';
 import { trailersOf } from '$lib/server/itemDetails';
 import { allItems } from '$lib/server/library';
-import { listNotices, markRead } from '$lib/server/notices';
+import { clearRead, listNotices, markRead } from '$lib/server/notices';
 import {
 	accept,
 	decline,
@@ -47,6 +47,13 @@ export const actions: Actions = {
 	// The page is on screen: everything on it counts as read.
 	seen: ({ locals }) => {
 		markRead(locals.user!.id);
+	},
+	// The bin next to "News": removes what was read. Whatever is on the page counts as read
+	// (it is on screen), also if the report of that has not arrived yet.
+	clear: ({ locals }) => {
+		markRead(locals.user!.id);
+		clearRead(locals.user!.id);
+		return { done: true };
 	},
 	accept: async ({ request, locals }) => {
 		const id = await invitationId(request);

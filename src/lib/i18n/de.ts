@@ -94,6 +94,9 @@ export const de = {
 		left: (name: string) => `${name} trackt das nicht mehr mit dir`,
 		emptyTitle: 'Nichts Neues',
 		emptyHint: 'Neuerscheinungen und Einladungen landen hier.',
+		more: (n: number) => `${n} weitere`,
+		less: 'Weniger anzeigen',
+		clearRead: 'Gelesene Neuigkeiten löschen',
 		pushSettings: 'Auch als Push-Meldung'
 	},
 	share: {
@@ -477,6 +480,9 @@ export const de = {
 		animeTitle: 'Anime-Titel',
 		animeTitleEnglish: 'Englischer Titel oben, Romaji darunter',
 		animeTitleRomaji: 'Romaji oben, englischer Titel darunter',
+		sharedMarker: 'Gemeinsam getrackte Titel',
+		sharedMarkerPictures: 'Profilbilder der anderen zeigen',
+		sharedMarkerSubtle: 'Nur ein kleines Symbol',
 
 		hideSpoilers: 'Spoiler-Schutz',
 		hideSpoilersHint:

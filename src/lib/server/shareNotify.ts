@@ -10,7 +10,7 @@ import { LAYOUTS } from './collage';
 import { getDb } from './db';
 import { libraryItems, users } from './db/schema';
 import { localeOf, serverMessages, withLocale } from './i18n';
-import { signedCollagePath } from './images';
+import { signedAvatarPath, signedCollagePath } from './images';
 import { getUserSetting, type UserSettingKey } from './settings';
 import { deliver, hasEnabledTarget, type Notice } from './targets';
 
@@ -28,7 +28,14 @@ const SWITCH: Record<ShareKind, UserSettingKey> = {
 export const wantsShareNotice = (userId: number, kind: ShareKind) =>
 	getUserSetting(userId, SWITCH[kind]) === 'on';
 
-const ICON = '/icons/icon-192.png';
+// The small picture of such a message: the photo of whoever did it, if they uploaded one –
+// otherwise two people in the colours of the logo (the server cannot draw the letter on a
+// colour that stands in for a photo inside the app).
+const ICON = '/icons/share.png';
+// `picture` is the version of the photo, as in a Person (avatar.ts); null without one.
+type Actor = { id: number; name: string; picture?: number | null };
+const iconOf = (actor: Actor) =>
+	actor.picture != null ? signedAvatarPath(actor.id, actor.picture) : ICON;
 // So many titles are named in a message about several; the rest is counted.
 const NAMED = 3;
 
@@ -37,12 +44,7 @@ type Item = typeof libraryItems.$inferSelect;
 // The message for one person about what one other person did – with one title, or several
 // at once (inviting to a selection, emptying a library): then one message, not one each.
 // Written in the language the work runs in.
-export function shareMessage(
-	kind: ShareKind,
-	actor: { id: number; name: string },
-	items: Item[],
-	romaji = false
-): Notice {
+export function shareMessage(kind: ShareKind, actor: Actor, items: Item[], romaji = false): Notice {
 	const m = serverMessages().notifications.share;
 	const shown = (item: Item) =>
 		(romaji && item.category === 'anime' && item.originalTitle) || item.title;
@@ -58,7 +60,7 @@ export function shareMessage(
 			// An invitation is answered in the inbox; the rest is about the title
 			url: kind === 'invited' ? '/inbox' : `/${item.category}/${item.externalId}`,
 			tag: `share-${kind}-${actor.id}-${item.id}`,
-			icon: ICON,
+			icon: iconOf(actor),
 			count: 1,
 			...(posters.length
 				? {
@@ -76,7 +78,7 @@ export function shareMessage(
 		body: names.join('\n'),
 		url: '/inbox',
 		tag: `share-${kind}-${actor.id}-many`,
-		icon: ICON,
+		icon: iconOf(actor),
 		count: items.length,
 		...(wide.length >= 2
 			? {
@@ -101,7 +103,11 @@ export async function announce(events: ShareEvent[]) {
 			if (!wantsShareNotice(to, kind) || !hasEnabledTarget(to)) continue;
 			const db = getDb();
 			const actor = db
-				.select({ username: users.username, displayName: users.displayName })
+				.select({
+					username: users.username,
+					displayName: users.displayName,
+					avatarUpdatedAt: users.avatarUpdatedAt
+				})
 				.from(users)
 				.where(eq(users.id, actorId))
 				.get();
@@ -114,9 +120,10 @@ export async function announce(events: ShareEvent[]) {
 			if (!actor || items.length === 0) continue;
 			// (The name others see – the same rule as shownName() in users.ts.)
 			const name = actor.displayName?.trim() || actor.username;
+			const picture = actor.avatarUpdatedAt?.getTime() ?? null;
 			const romaji = getUserSetting(to, 'animeTitle') === 'romaji';
 			await withLocale(localeOf(to), () =>
-				deliver(to, shareMessage(kind, { id: actorId, name }, items, romaji))
+				deliver(to, shareMessage(kind, { id: actorId, name, picture }, items, romaji))
 			);
 		} catch (err) {
 			console.error(`Message about tracking together for user ${to} failed`, err);

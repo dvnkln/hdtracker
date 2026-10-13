@@ -38,6 +38,11 @@ const USER_DEFAULTS = {
 	hideSpoilers: 'on', // blur stills and descriptions of unwatched episodes: 'on' | 'off'
 	autoStatus: 'on', // change the status automatically when episodes are ticked: 'on' | 'off'
 	categories: 'movies,series,anime,games', // areas shown in the app (comma-separated)
+	// How a title tracked together is marked on posters and in lists: 'pictures' (the profile
+	// pictures of the others) | 'subtle' (a small symbol)
+	sharedMarker: 'pictures',
+	// When the user last emptied their inbox (milliseconds; see clearRead() in notices.ts)
+	inboxClearedAt: '',
 	// Order of the dashboard lists: 'asc' | 'desc'
 	dashboardRecent: 'desc', // newest first
 	dashboardUpcoming: 'asc', // next first

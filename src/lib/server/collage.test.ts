@@ -1,7 +1,7 @@
 import sharp from 'sharp';
 import { describe, expect, it } from 'vitest';
 import { LAYOUTS, composePosters } from './collage';
-import { readCollageAddress, signedCollagePath } from './images';
+import { isSignedAvatar, readCollageAddress, signedAvatarPath, signedCollagePath } from './images';
 
 // A poster (2:3) in one colour, as a file of the given kind.
 function poster(
@@ -80,6 +80,40 @@ describe('composePosters', () => {
 		const withMore = (await composePosters([await poster(RED), await poster(BLUE)], 'banner'))!;
 		expect(withMore.equals(alone)).toBe(true);
 		expect(near(await colourOfField(alone, 0, 3), BLUE)).toBe(false);
+	});
+});
+
+describe('address of a profile picture in a notification', () => {
+	const url = (path: string) => new URL(path, 'https://tracker.example');
+	const NOW = Date.parse('2026-10-05T09:00:00Z');
+	const DAY = 24 * 60 * 60 * 1000;
+
+	it('opens the picture of this one user only', () => {
+		const good = url(signedAvatarPath(7, 1234, NOW));
+		expect(isSignedAvatar(good, NOW)).toBe(true);
+		// Somebody else's picture with the same signature
+		const other = new URL(good.href);
+		other.pathname = '/avatar/8';
+		expect(isSignedAvatar(other, NOW)).toBe(false);
+		// ... and nothing else on the server
+		const elsewhere = new URL(good.href);
+		elsewhere.pathname = '/settings/account';
+		expect(isSignedAvatar(elsewhere, NOW)).toBe(false);
+	});
+
+	it('is refused when it was changed, has no signature or is older than a week', () => {
+		const good = url(signedAvatarPath(7, 1234, NOW));
+		const changed = (change: (query: URLSearchParams) => void, now = NOW) => {
+			const copy = new URL(good.href);
+			change(copy.searchParams);
+			return isSignedAvatar(copy, now);
+		};
+		expect(changed((q) => q.set('v', '999'))).toBe(false);
+		expect(changed((q) => q.set('e', String(Number(q.get('e')) + 1000)))).toBe(false);
+		expect(changed((q) => q.delete('s'))).toBe(false);
+		expect(isSignedAvatar(url('/avatar/7'), NOW)).toBe(false);
+		expect(changed(() => {}, NOW + 6 * DAY)).toBe(true);
+		expect(changed(() => {}, NOW + 8 * DAY)).toBe(false);
 	});
 });
 

@@ -3,13 +3,14 @@
 // sharing.ts.) Independent of push notifications: these notices are written for everybody.
 //
 // Unread until the user has seen it; read notices are removed after a week.
-import { and, eq, isNull, lt, type SQL } from 'drizzle-orm';
+import { and, eq, isNotNull, isNull, lt, ne, or, type SQL } from 'drizzle-orm';
 import type { Person } from '$lib/avatar';
 import type { Category } from '$lib/status';
 import { trackedEvents } from './dashboard';
 import { getDb } from './db';
 import { libraryItems, notices, users, type NoticeKind, type ReleaseKind } from './db/schema';
 import { today } from './providers/types';
+import { getUserSetting, setUserSettings } from './settings';
 import { countIncoming } from './sharing';
 import { toPerson } from './users';
 
@@ -84,6 +85,7 @@ export type NoticeLine = {
 
 // The user's notices, newest first.
 export function listNotices(userId: number): NoticeLine[] {
+	const clearedAt = Number(getUserSetting(userId, 'inboxClearedAt')) || 0;
 	const rows = getDb()
 		.select({
 			notice: notices,
@@ -106,7 +108,9 @@ export function listNotices(userId: number): NoticeLine[] {
 		.innerJoin(libraryItems, eq(libraryItems.id, notices.itemId))
 		.leftJoin(users, eq(users.id, notices.actorId))
 		.where(eq(notices.userId, userId))
-		.all();
+		.all()
+		// What was read before the inbox was last emptied is not shown again (see clearRead)
+		.filter(({ notice }) => !(notice.readAt && notice.readAt.getTime() <= clearedAt));
 
 	const lines: NoticeLine[] = [];
 	// New episodes of a title: one line for the unread ones, one for those already read
@@ -189,6 +193,25 @@ export function markRead(userId: number, only?: 'release') {
 		.set({ readAt: new Date() })
 		.where(and(...where))
 		.run();
+}
+
+// The user empties their inbox before the week is over: what they have read goes, what is
+// unread stays (invitations are not notices and are not touched). Releases of the last days
+// cannot be deleted yet – the hourly run would note them again as new – so those stay in the
+// table as "already told", hidden from the list, until they are removed like any read notice.
+export function clearRead(userId: number, now = new Date()) {
+	const since = daysBefore(now.toLocaleDateString('sv-SE'), CATCH_UP_DAYS);
+	getDb()
+		.delete(notices)
+		.where(
+			and(
+				eq(notices.userId, userId),
+				isNotNull(notices.readAt),
+				or(ne(notices.kind, 'release'), lt(notices.date, since))
+			)
+		)
+		.run();
+	setUserSettings(userId, { inboxClearedAt: String(now.getTime()) });
 }
 
 // Removes what was read long enough ago. Unread notices stay until they are read.

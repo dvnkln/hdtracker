@@ -6,6 +6,7 @@
 	import { eventLabel } from '$lib/eventLabel';
 	import { formatDate, m, statusLabel } from '$lib/i18n/index.svelte';
 	import { img } from '$lib/images';
+	import { FOLD, newsShown } from '$lib/inboxFold';
 	import { reportSeen } from '$lib/seen';
 	import { titles } from '$lib/titles.svelte';
 	import Avatar from '$lib/components/Avatar.svelte';
@@ -13,7 +14,17 @@
 	import Notice from '$lib/components/Notice.svelte';
 	import { BUTTON_PRIMARY, BUTTON_SECONDARY } from '$lib/components/SubmitButton.svelte';
 	import type { NoticeLine } from '$lib/server/notices';
-	import { ChevronRight, ImageOff, Inbox, Mail, Newspaper, Play, Send } from '@lucide/svelte';
+	import {
+		ChevronDown,
+		ChevronRight,
+		ImageOff,
+		Inbox,
+		Mail,
+		Newspaper,
+		Play,
+		Send,
+		Trash2
+	} from '@lucide/svelte';
 
 	let { data, form } = $props();
 
@@ -44,6 +55,12 @@
 				? m.inbox.declined(name)
 				: m.inbox.left(name);
 	}
+
+	// Long lists show their first entries, the rest unfolds – so that what waits for a decision
+	// is not pushed off the screen. News that are unread are never folded away: opening this
+	// page marks everything as read, so everything unread has to be on it.
+	let all = $state({ news: false, waiting: false });
+	let shown = $derived(newsShown(data.notices.map((line) => line.unread)));
 
 	let empty = $derived(data.incoming.length + data.notices.length + data.outgoing.length === 0);
 	const heading = 'flex items-center gap-2 text-lg font-bold';
@@ -102,6 +119,21 @@
 			</span>
 		{/if}
 	</a>
+{/snippet}
+
+<!-- "4 more" below a folded list, "Show less" below an unfolded one -->
+{#snippet more(list: 'news' | 'waiting', hidden: number)}
+	{#if hidden > 0}
+		<button
+			type="button"
+			aria-expanded={all[list]}
+			onclick={() => (all[list] = !all[list])}
+			class="mt-1 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-zinc-100"
+		>
+			<ChevronDown size={16} class="transition-transform {all[list] ? 'rotate-180' : ''}" />
+			{all[list] ? m.inbox.less : m.inbox.more(hidden)}
+		</button>
+	{/if}
 {/snippet}
 
 <main class="mx-auto max-w-screen-md px-4 py-6">
@@ -210,21 +242,6 @@
 		</section>
 	{/if}
 
-	{#if data.notices.length > 0}
-		<section class="mb-8">
-			<h2 class={heading}>
-				<Newspaper size={20} class="text-zinc-400" />{m.inbox.news}
-			</h2>
-			<ul class="mt-1">
-				{#each data.notices as line (line.key)}
-					<li class="flex items-center">
-						{@render title(line.item, line.actor ? [line.actor] : [], said(line), line.unread)}
-					</li>
-				{/each}
-			</ul>
-		</section>
-	{/if}
-
 	{#if data.outgoing.length > 0}
 		<section class="mb-8">
 			<h2 class={heading}>
@@ -232,7 +249,7 @@
 				<span class="text-sm font-normal text-zinc-500">{data.outgoing.length}</span>
 			</h2>
 			<ul class="mt-1">
-				{#each data.outgoing as invitation (invitation.id)}
+				{#each all.waiting ? data.outgoing : data.outgoing.slice(0, FOLD) as invitation (invitation.id)}
 					<li class="flex items-center gap-2">
 						{@render title(
 							invitation.item,
@@ -249,6 +266,34 @@
 					</li>
 				{/each}
 			</ul>
+			{@render more('waiting', data.outgoing.length - FOLD)}
+		</section>
+	{/if}
+
+	{#if data.notices.length > 0}
+		<section class="mb-8">
+			<h2 class={heading}>
+				<Newspaper size={20} class="text-zinc-400" />{m.inbox.news}
+				<!-- Empties the list before the week is over (only what was read – and opening this
+				     page reads everything) -->
+				<form method="POST" action="?/clear" use:enhance class="ml-auto">
+					<button
+						class="rounded-lg p-1.5 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-100"
+						title={m.inbox.clearRead}
+						aria-label={m.inbox.clearRead}
+					>
+						<Trash2 size={18} />
+					</button>
+				</form>
+			</h2>
+			<ul class="mt-1">
+				{#each all.news ? data.notices : data.notices.slice(0, shown) as line (line.key)}
+					<li class="flex items-center">
+						{@render title(line.item, line.actor ? [line.actor] : [], said(line), line.unread)}
+					</li>
+				{/each}
+			</ul>
+			{@render more('news', data.notices.length - shown)}
 		</section>
 	{/if}
 

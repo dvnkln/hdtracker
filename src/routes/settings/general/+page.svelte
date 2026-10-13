@@ -77,6 +77,26 @@
 			{/each}
 		</fieldset>
 
+		{#if data.canShare}
+			<fieldset class="flex flex-col gap-2">
+				<legend class="{labelText} mb-1">{m.settings.sharedMarker}</legend>
+				{#each [['pictures', m.settings.sharedMarkerPictures], ['subtle', m.settings.sharedMarkerSubtle]] as [value, text] (value)}
+					<label
+						class="flex cursor-pointer items-center gap-3 rounded-lg border border-zinc-800 px-3 py-2.5 transition-colors hover:border-zinc-600 has-checked:border-zinc-400"
+					>
+						<input
+							type="radio"
+							name="sharedMarker"
+							{value}
+							checked={data.values.sharedMarker === value}
+							class="size-4 accent-zinc-100"
+						/>
+						<span class="text-sm">{text}</span>
+					</label>
+				{/each}
+			</fieldset>
+		{/if}
+
 		<div class="flex items-start justify-between gap-4">
 			<label for="hideSpoilers" class="flex cursor-pointer flex-col gap-1">
 				<span class={labelText}>{m.settings.hideSpoilers}</span>

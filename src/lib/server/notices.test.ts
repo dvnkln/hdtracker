@@ -4,7 +4,7 @@ import { addItem } from '../../tests/helpers';
 import { getDb } from './db';
 import { libraryItems, notices, releases, trackingMembers, users } from './db/schema';
 import { removeItem, setNotify } from './library';
-import { collectReleases, countOpen, listNotices, markRead, pruneRead } from './notices';
+import { clearRead, collectReleases, countOpen, listNotices, markRead, pruneRead } from './notices';
 import { sendDueNotifications } from './notifications';
 import { accept, decline, invite, leaveShared, withdraw } from './sharing';
 
@@ -145,6 +145,39 @@ describe('reading', () => {
 		expect(pruneRead(later(8))).toBe(2);
 		// Gone, and not noted a second time by a later run on the same day
 		expect(listNotices(ann)).toEqual([]);
+	});
+
+	it('emptying the inbox removes what was read – for good, and only in the own inbox', () => {
+		// (The real day: emptying goes by the clock, like reading does.)
+		const now = new Date().toLocaleDateString('sv-SE');
+		title({ title: 'Film', category: 'movies' }, [['cinema', now]]);
+		collectReleases(ann, now);
+		const film = title({ title: 'Shared', category: 'movies' }, []);
+		decline(ben, invited(ann, film.id, ben));
+		accept(ann, invited(ben, addItem({ externalId: 'b1', userId: ben, title: 'Bens' }).id, ann));
+		expect(listNotices(ann)).toHaveLength(2);
+		expect(listNotices(ben)).toHaveLength(1);
+
+		// Nothing read yet: nothing goes
+		clearRead(ann);
+		expect(listNotices(ann)).toHaveLength(2);
+
+		markRead(ann, 'release');
+		clearRead(ann);
+		expect(listNotices(ann).map((line) => line.kind)).toEqual(['declined']); // unread stays
+		expect(listNotices(ben)).toHaveLength(1); // somebody else's inbox is not touched
+		// The release of today is not noted again by the next hourly run
+		expect(collectReleases(ann, now)).toBe(0);
+		expect(listNotices(ann)).toHaveLength(1);
+		expect(countOpen(ann)).toBe(1);
+
+		markRead(ann);
+		clearRead(ann);
+		expect(listNotices(ann)).toEqual([]);
+		// What comes afterwards shows up as usual
+		title({ title: 'Next', category: 'movies' }, [['cinema', now]]);
+		expect(collectReleases(ann, now)).toBe(1);
+		expect(listNotices(ann).map((line) => line.item.title)).toEqual(['Next']);
 	});
 
 	it('what was not read stays, however old', () => {

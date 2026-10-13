@@ -90,6 +90,9 @@ export const en: Messages = {
 		left: (name: string) => `${name} no longer tracks this with you`,
 		emptyTitle: 'Nothing new',
 		emptyHint: 'Releases and invitations show up here.',
+		more: (n: number) => `${n} more`,
+		less: 'Show less',
+		clearRead: 'Delete read news',
 		pushSettings: 'Also as a push message'
 	},
 	share: {
@@ -460,6 +463,9 @@ export const en: Messages = {
 		animeTitle: 'Anime titles',
 		animeTitleEnglish: 'English title on top, Romaji below',
 		animeTitleRomaji: 'Romaji on top, English title below',
+		sharedMarker: 'Titles tracked together',
+		sharedMarkerPictures: 'Show the profile pictures of the others',
+		sharedMarkerSubtle: 'Only a small symbol',
 
 		hideSpoilers: 'Spoiler protection',
 		hideSpoilersHint: 'Images and descriptions of episodes you have not watched yet are blurred.',

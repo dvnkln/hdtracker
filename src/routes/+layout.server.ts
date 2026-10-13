@@ -31,6 +31,9 @@ export const load: LayoutServerLoad = ({ locals, url, depends }) => {
 		open: me === undefined ? 0 : countOpen(me),
 		locale: locals.locale,
 		animeTitle,
+		// Marking of titles tracked together (see TogetherMark.svelte)
+		sharedMarker:
+			me !== undefined && getUserSetting(me, 'sharedMarker') === 'subtle' ? 'subtle' : 'pictures',
 		// Logged out (login page, first-run wizard): no navigation is shown
 		categories: me === undefined ? [] : enabledCategories(me)
 	};

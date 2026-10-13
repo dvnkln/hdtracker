@@ -91,37 +91,52 @@ async function igdb<T>(endpoint: string, body: string, retry = true): Promise<T>
 	}
 }
 
-const SEARCH_FIELDS = `fields ${GAME_FIELDS.join(',')},total_rating_count;`;
+const SEARCH_FIELDS = `fields ${GAME_FIELDS.join(',')},total_rating_count,version_parent;`;
 const SEARCH_LIMIT = 30;
 
 // IGDB's full-text search ignores very common words, so a title made only of them
 // ("We Were Here") finds nothing. Therefore a second query looks for names containing
-// the text. Order: exact name, names starting with the text, full-text hits, other names.
+// the text.
 export async function searchGames(query: string): Promise<SearchResult[]> {
 	const safe = query.replace(/["\\]/g, ' ').trim();
 	const [byText, byName] = await Promise.all([
-		igdb<IgdbGame[]>(
+		igdb<SearchHit[]>('games', `search "${safe}"; ${SEARCH_FIELDS} limit ${SEARCH_LIMIT};`),
+		igdb<SearchHit[]>(
 			'games',
-			`search "${safe}"; ${SEARCH_FIELDS} where version_parent = null; limit ${SEARCH_LIMIT};`
-		),
-		igdb<(IgdbGame & { total_rating_count?: number })[]>(
-			'games',
-			`${SEARCH_FIELDS} where name ~ *"${safe}"* & version_parent = null; sort total_rating_count desc; limit 20;`
+			`${SEARCH_FIELDS} where name ~ *"${safe}"*; sort total_rating_count desc; limit ${SEARCH_LIMIT};`
 		)
 	]);
+	return orderGames(safe, byName, byText).slice(0, SEARCH_LIMIT).map(gameToResult);
+}
 
-	const wanted = safe.toLowerCase();
+type SearchHit = IgdbGame & { total_rating_count?: number; version_parent?: number };
+
+// The order of the results: the exact name, names starting with the text, full-text hits,
+// other names. Within each of these the games themselves come before their editions
+// ("Farewell Edition", "Digital Deluxe Edition" – entries with a `version_parent`): editions
+// used to be left out altogether, but some are what people own and track, and then they could
+// not be found (reported 13.10.2026: "Spiritfarer: Farewell Edition").
+export function orderGames<G extends { id: number; name: string; version_parent?: number }>(
+	text: string,
+	byName: G[],
+	byText: G[]
+): G[] {
+	const wanted = text.toLowerCase();
 	const rank = (name: string) => {
 		const n = name.toLowerCase();
 		return n === wanted ? 0 : n.startsWith(wanted) ? 1 : 2;
 	};
-	const top = byName.filter((g) => rank(g.name) < 2).sort((a, b) => rank(a.name) - rank(b.name));
-	const rest = byName.filter((g) => rank(g.name) === 2);
+	const edition = (game: G) => (game.version_parent ? 1 : 0);
+	// (sort() keeps the given order among equals)
+	const gamesFirst = (list: G[]) => [...list].sort((a, b) => edition(a) - edition(b));
+	const groups = [
+		byName.filter((g) => rank(g.name) === 0),
+		byName.filter((g) => rank(g.name) === 1),
+		byText,
+		byName.filter((g) => rank(g.name) === 2)
+	];
 	const seen = new Set<number>();
-	return [...top, ...byText, ...rest]
-		.filter((g) => !seen.has(g.id) && seen.add(g.id))
-		.slice(0, SEARCH_LIMIT)
-		.map(gameToResult);
+	return groups.flatMap(gamesFirst).filter((g) => !seen.has(g.id) && seen.add(g.id));
 }
 
 // Unix seconds -> YYYY-MM-DD in the server timezone.

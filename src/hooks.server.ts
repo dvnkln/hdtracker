@@ -1,5 +1,5 @@
 import type { Handle, RequestEvent, ServerInit } from '@sveltejs/kit';
-import { isSignedImage, readCollageAddress } from '$lib/server/images';
+import { isSignedAvatar, isSignedImage, readCollageAddress } from '$lib/server/images';
 import { runMigrations } from '$lib/server/db';
 import {
 	SESSION_COOKIE,
@@ -101,7 +101,8 @@ function route(event: RequestEvent, resolve: Parameters<Handle>[0]['resolve']) {
 	const open =
 		PUBLIC_PATHS.includes(path) ||
 		(path === '/img' && isSignedImage(event.url)) ||
-		(path === '/img/collage' && readCollageAddress(event.url) !== null);
+		(path === '/img/collage' && readCollageAddress(event.url) !== null) ||
+		isSignedAvatar(event.url);
 	if (!event.locals.user && !open) return redirectTo('/login');
 	if (event.locals.user && path === '/login') return redirectTo('/');
 

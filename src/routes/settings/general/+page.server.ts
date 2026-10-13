@@ -5,6 +5,7 @@ import { countByCategory } from '$lib/server/library';
 import { refreshPending } from '$lib/server/releases';
 import { rememberLocale, serverMessages } from '$lib/server/i18n';
 import { enabledCategories, getUserSetting, setUserSettings } from '$lib/server/settings';
+import { canShare } from '$lib/server/sharing';
 import type { Actions, PageServerLoad } from './$types';
 
 // Personal preferences: how hdtracker looks and behaves.
@@ -13,8 +14,11 @@ export const load: PageServerLoad = ({ locals }) => ({
 		uiLanguage: locals.locale,
 		animeTitle: getUserSetting(locals.user!.id, 'animeTitle'),
 		hideSpoilers: getUserSetting(locals.user!.id, 'hideSpoilers') === 'on',
+		sharedMarker: getUserSetting(locals.user!.id, 'sharedMarker'),
 		autoStatus: getUserSetting(locals.user!.id, 'autoStatus') === 'on'
 	},
+	// The marking of shared titles can only be chosen while there is somebody to share with
+	canShare: canShare(locals.user!.id),
 	// Entries per area (hint when an area with entries is hidden)
 	libraryCounts: countByCategory(locals.user!.id)
 });
@@ -28,7 +32,11 @@ export const actions: Actions = {
 			return fail(400, { section: 'display', error: serverMessages().common.invalidData });
 		}
 		const hideSpoilers = data.get('hideSpoilers') === 'on' ? 'on' : 'off';
-		setUserSettings(locals.user!.id, { uiLanguage, animeTitle, hideSpoilers });
+		// (Only sent while there is somebody to share with – otherwise it stays as it is.)
+		const marker = data.get('sharedMarker');
+		const sharedMarker =
+			marker === 'pictures' || marker === 'subtle' ? { sharedMarker: marker } : {};
+		setUserSettings(locals.user!.id, { uiLanguage, animeTitle, hideSpoilers, ...sharedMarker });
 		// The login page of this device follows the account
 		rememberLocale(cookies, request, url, uiLanguage);
 		return { section: 'display', message: serverMessages().settings.saved };

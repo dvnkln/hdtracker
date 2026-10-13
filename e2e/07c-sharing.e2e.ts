@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { loginOk, sheet } from './helpers';
+import { loginOk, saved, sheet } from './helpers';
 
 // A second account, created by the admin in this test and removed again at its end.
 const MATE = { name: 'mate', password: 'mate-password-6789' };
@@ -114,6 +114,10 @@ test('tracking together: invite, accept, one state for both, leave with a copy',
 	await page.goto('/inbox');
 	await expect(answer).toBeVisible();
 	await expect(answer.getByText('new', { exact: true })).toHaveCount(0);
+	// The bin next to "News" removes what was read, before the week is over
+	await page.getByRole('button', { name: 'Delete read news' }).click();
+	await expect(answer).toHaveCount(0);
+	await expect(page.getByRole('heading', { name: 'News' })).toHaveCount(0);
 
 	// One state for both: what one changes, the other sees
 	await setStatus(mate, 'Watched', 'Paused');
@@ -126,7 +130,29 @@ test('tracking together: invite, accept, one state for both, leave with a copy',
 	// In the library and on the dashboard the poster carries the picture of who tracks along
 	await page.goto('/series');
 	const poster = page.getByRole('button', { name: /Test Series Gamma/ });
-	await expect(poster.getByTitle('mate')).toBeVisible();
+	await expect(poster.getByTitle('mate', { exact: true })).toBeVisible();
+	// ... small, in the lower right corner of the poster
+	const inCorner = async () => {
+		const picture = (await poster.locator('[class*="aspect-"]').boundingBox())!;
+		const mark = (await poster.locator('[data-together]').boundingBox())!;
+		const right = picture.x + picture.width - (mark.x + mark.width);
+		const bottom = picture.y + picture.height - (mark.y + mark.height);
+		return right >= 0 && right < 8 && bottom >= 0 && bottom < 8 && mark.height <= 16;
+	};
+	expect(await inCorner()).toBe(true);
+	// Whoever finds the pictures too loud gets a small symbol instead (Settings → General)
+	await page.goto('/settings/general');
+	await saved(page, 'display', () => page.getByText('Only a small symbol').click());
+	await page.goto('/series');
+	await expect(poster.locator('[data-together=subtle]')).toBeVisible();
+	expect(await inCorner()).toBe(true);
+	await expect(poster.getByTitle('mate', { exact: true })).toHaveCount(0);
+	await page.goto('/settings/general');
+	await saved(page, 'display', () =>
+		page.getByText('Show the profile pictures of the others').click()
+	);
+	await page.goto('/series');
+	await expect(poster.getByTitle('mate', { exact: true })).toBeVisible();
 	await page.goto(SERIES);
 	await page.getByRole('button', { name: 'Tracking together with mate' }).click();
 
