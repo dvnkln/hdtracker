@@ -21,6 +21,7 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 
 ### 🐛 Fixed
 
+- Inviting somebody to several titles in more than one go now gives them a push message each time – before, a later message silently replaced the earlier one on their device
 - The search for games now also finds editions of a game (“Spiritfarer: Farewell Edition”); they are listed after the games themselves
 
 ## 0.9.1 – 2026-10-13

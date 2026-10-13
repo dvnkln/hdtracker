@@ -4,6 +4,7 @@
 //
 // The inbox gets the same events as notices (noticeLog.ts) whether or not anything is sent.
 // This file knows the tables only – library.ts and sharing.ts use it, it uses neither.
+import { createHash } from 'node:crypto';
 import { eq, inArray } from 'drizzle-orm';
 import { imageSource } from '$lib/images';
 import { LAYOUTS } from './collage';
@@ -41,6 +42,18 @@ const NAMED = 3;
 
 type Item = typeof libraryItems.$inferSelect;
 
+// Short and the same for the same titles, whatever their order
+const batchOf = (items: Item[]) =>
+	createHash('sha1')
+		.update(
+			items
+				.map((item) => item.id)
+				.sort((a, b) => a - b)
+				.join(',')
+		)
+		.digest('hex')
+		.slice(0, 12);
+
 // The message for one person about what one other person did – with one title, or several
 // at once (inviting to a selection, emptying a library): then one message, not one each.
 // Written in the language the work runs in.
@@ -77,7 +90,10 @@ export function shareMessage(kind: ShareKind, actor: Actor, items: Item[], romaj
 		title: m.several[kind](actor.name, items.length),
 		body: names.join('\n'),
 		url: '/inbox',
-		tag: `share-${kind}-${actor.id}-many`,
+		// A message with the same tag replaces the one before it on the device – silently. So
+		// the tag names these very titles: inviting to the films and then to the series are two
+		// messages that each make themselves heard, not one that quietly changes its text.
+		tag: `share-${kind}-${actor.id}-${batchOf(items)}`,
 		icon: iconOf(actor),
 		count: items.length,
 		...(wide.length >= 2

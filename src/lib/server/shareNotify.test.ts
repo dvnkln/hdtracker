@@ -180,6 +180,15 @@ describe('the message', () => {
 		expect(shareMessage('left', { ...mia, picture: 1234 }, many).icon).toMatch(/^\/avatar\/7\?/);
 	});
 
+	it('two invitations to several titles are two messages, not one that replaces the other', () => {
+		const films = ['A', 'B'].map((title, n) => item(title, n + 1));
+		const shows = ['C', 'D'].map((title, n) => item(title, n + 11));
+		const first = shareMessage('invited', mia, films).tag;
+		expect(shareMessage('invited', mia, shows).tag).not.toBe(first);
+		// The same titles again (in any order) are the same message
+		expect(shareMessage('invited', mia, [...films].reverse()).tag).toBe(first);
+	});
+
 	it('is written in the language of who gets it', () => {
 		const german = withLocale('de', () => shareMessage('declined', mia, [item('Dune', 1)]));
 		expect(german.body).toBe('Mia hat deine Einladung abgelehnt');
