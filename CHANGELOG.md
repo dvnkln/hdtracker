@@ -7,7 +7,9 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
-## Upcoming release
+## 0.9.1 – 2026-10-13
+
+Small touch-ups after 0.9.0: the same things now look the same wherever they are, and a few rare slips are fixed.
 
 ### 🔧 Improved
 
@@ -20,6 +22,10 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 - On the dashboard, a title tracked with more people than there is room for pictures now shows “+2” for the rest instead of leaving them out
 - In settings that save at once, a second choice made right after the first could flip back by itself and get lost
 - In the library, Ctrl+A or a Shift+click right after unfolding a section could miss the titles in it
+
+### ⬆️ Updating
+
+Just pull the new image.
 
 ## 0.9.0 – 2026-10-12
 
