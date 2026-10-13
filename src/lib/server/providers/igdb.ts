@@ -91,7 +91,7 @@ async function igdb<T>(endpoint: string, body: string, retry = true): Promise<T>
 	}
 }
 
-const SEARCH_FIELDS = `fields ${GAME_FIELDS.join(',')},total_rating_count,version_parent;`;
+const SEARCH_FIELDS = `fields ${GAME_FIELDS.join(',')},total_rating_count,version_parent,game_type;`;
 const SEARCH_LIMIT = 30;
 
 // IGDB's full-text search ignores very common words, so a title made only of them
@@ -109,18 +109,25 @@ export async function searchGames(query: string): Promise<SearchResult[]> {
 	return orderGames(safe, byName, byText).slice(0, SEARCH_LIMIT).map(gameToResult);
 }
 
-type SearchHit = IgdbGame & { total_rating_count?: number; version_parent?: number };
+type SearchHit = IgdbGame & {
+	total_rating_count?: number;
+	version_parent?: number;
+	game_type?: number;
+};
+
+// Kinds of entries (IGDB `game_types`) that are no titles one tracks: 5 = mod, 13 = pack or
+// add-on, 14 = update ("Spiritfarer: Lily Update"). Everything else stays – games, expansions,
+// remakes, bundles, ports, DLC.
+const NOT_A_TITLE = [5, 13, 14];
 
 // The order of the results: the exact name, names starting with the text, full-text hits,
 // other names. Within each of these the games themselves come before their editions
 // ("Farewell Edition", "Digital Deluxe Edition" – entries with a `version_parent`): editions
 // used to be left out altogether, but some are what people own and track, and then they could
 // not be found (reported 13.10.2026: "Spiritfarer: Farewell Edition").
-export function orderGames<G extends { id: number; name: string; version_parent?: number }>(
-	text: string,
-	byName: G[],
-	byText: G[]
-): G[] {
+export function orderGames<
+	G extends { id: number; name: string; version_parent?: number; game_type?: number }
+>(text: string, byName: G[], byText: G[]): G[] {
 	const wanted = text.toLowerCase();
 	const rank = (name: string) => {
 		const n = name.toLowerCase();
@@ -136,7 +143,10 @@ export function orderGames<G extends { id: number; name: string; version_parent?
 		byName.filter((g) => rank(g.name) === 2)
 	];
 	const seen = new Set<number>();
-	return groups.flatMap(gamesFirst).filter((g) => !seen.has(g.id) && seen.add(g.id));
+	return groups
+		.flatMap(gamesFirst)
+		.filter((g) => !NOT_A_TITLE.includes(g.game_type ?? 0))
+		.filter((g) => !seen.has(g.id) && seen.add(g.id));
 }
 
 // Unix seconds -> YYYY-MM-DD in the server timezone.

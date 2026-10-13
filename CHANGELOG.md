@@ -7,6 +7,18 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
+## 0.10.1 – 2026-10-13
+
+A tidier search for games.
+
+### 🐛 Fixed
+
+- The search for games no longer lists single updates, packs and mods of a game (“Spiritfarer: Lily Update”)
+
+### ⬆️ Updating
+
+Just pull the new image.
+
 ## 0.10.0 – 2026-10-13
 
 Find things in a big library: filters by genre, streaming service and who you track with – and tracking together got quieter.
