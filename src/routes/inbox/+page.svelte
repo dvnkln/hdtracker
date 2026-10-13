@@ -48,6 +48,9 @@
 	let empty = $derived(data.incoming.length + data.notices.length + data.outgoing.length === 0);
 	const heading = 'flex items-center gap-2 text-lg font-bold';
 	const small = 'px-3 py-1.5 text-sm';
+	// Round buttons of an invitation, as on the page of a title
+	const pill =
+		'ui-btn inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors sm:px-3.5';
 </script>
 
 <svelte:head><title>{m.inbox.title} · hdtracker</title></svelte:head>
@@ -125,39 +128,82 @@
 						style:--accent={cat.accent}
 						class="ui-card rounded-xl border border-zinc-800 bg-zinc-900/40 p-3"
 					>
-						<div class="flex items-center gap-2">
-							{@render title(
-								invitation.item,
-								[invitation.from],
-								m.share.fromWithStatus(
-									invitation.from.name,
-									statusLabel(invitation.item.category, invitation.status)
-								)
-							)}
-							<!-- Belongs to the title, not to the answer: round like on the page of the title -->
-							{#if invitation.trailerUrl}
-								<a
-									href={invitation.trailerUrl}
-									target="_blank"
-									rel="noreferrer"
-									class="ui-btn inline-flex shrink-0 items-center gap-1.5 rounded-full border border-zinc-600 px-3 py-1.5 text-sm font-medium transition hover:bg-zinc-800"
-									><Play size={15} />{m.detail.trailer}</a
-								>
-							{/if}
+						<!-- Like the head of a title's page in small: poster, beside it title, who invites,
+						     and below one row of round buttons that all start where the text starts -->
+						<div class="flex gap-3">
+							<a
+								href="/{invitation.item.category}/{invitation.item.externalId}"
+								tabindex="-1"
+								aria-hidden="true"
+								class="aspect-[2/3] w-14 shrink-0 self-start overflow-hidden rounded-lg bg-zinc-900 ring-1 ring-zinc-800 transition-shadow duration-100 hover:ring-(--accent) sm:w-16"
+							>
+								{#if img(invitation.item.posterUrl)}
+									<img
+										src={img(invitation.item.posterUrl)}
+										alt=""
+										loading="lazy"
+										referrerpolicy="no-referrer"
+										class="h-full w-full object-cover"
+									/>
+								{:else}
+									<div class="flex h-full items-center justify-center text-zinc-600">
+										<ImageOff size={18} />
+									</div>
+								{/if}
+							</a>
+							<div class="min-w-0 flex-1">
+								<div class="flex items-start gap-2">
+									<a
+										href="/{invitation.item.category}/{invitation.item.externalId}"
+										class="group/row min-w-0 flex-1"
+									>
+										<p
+											class="line-clamp-2 leading-snug font-medium transition-colors duration-100 group-hover/row:text-(--accent)"
+										>
+											{titles(invitation.item.category, invitation.item).main}
+										</p>
+										<p class="mt-0.5 flex items-start gap-1.5 text-sm text-zinc-400">
+											<cat.icon size={14} class="mt-[3px] shrink-0 text-(--accent)" />
+											<span
+												>{m.share.fromWithStatus(
+													invitation.from.name,
+													statusLabel(invitation.item.category, invitation.status)
+												)}</span
+											>
+										</p>
+									</a>
+									<Avatar person={invitation.from} class="size-7 shrink-0 text-xs" />
+								</div>
+								<div class="mt-2.5 flex flex-wrap items-center gap-1.5 sm:gap-2">
+									<form method="POST" action="?/accept" use:enhance>
+										<input type="hidden" name="id" value={invitation.id} />
+										<button class="{pill} ui-primary bg-zinc-100 text-zinc-900 hover:bg-zinc-300"
+											>{m.share.accept}</button
+										>
+									</form>
+									<form method="POST" action="?/decline" use:enhance>
+										<input type="hidden" name="id" value={invitation.id} />
+										<button class="{pill} border border-zinc-600 hover:bg-zinc-800"
+											>{m.share.decline}</button
+										>
+									</form>
+									{#if invitation.trailerUrl}
+										<!-- On a phone only the symbol: three words do not fit next to each other -->
+										<a
+											href={invitation.trailerUrl}
+											target="_blank"
+											rel="noreferrer"
+											title={m.detail.trailer}
+											class="{pill} self-stretch border border-zinc-600 hover:bg-zinc-800 max-sm:px-2"
+											><Play size={15} /><span class="max-sm:sr-only">{m.detail.trailer}</span></a
+										>
+									{/if}
+								</div>
+							</div>
 						</div>
 						{#if invitation.own}
-							<Notice kind="warning" class="mt-2">{m.share.replaces}</Notice>
+							<Notice kind="warning" class="mt-3">{m.share.replaces}</Notice>
 						{/if}
-						<div class="mt-2 flex gap-2">
-							<form method="POST" action="?/accept" use:enhance>
-								<input type="hidden" name="id" value={invitation.id} />
-								<button class="{BUTTON_PRIMARY} {small}">{m.share.accept}</button>
-							</form>
-							<form method="POST" action="?/decline" use:enhance>
-								<input type="hidden" name="id" value={invitation.id} />
-								<button class="{BUTTON_SECONDARY} {small}">{m.share.decline}</button>
-							</form>
-						</div>
 					</li>
 				{/each}
 			</ul>

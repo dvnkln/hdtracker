@@ -12,7 +12,6 @@
 	import Episodes from '$lib/components/Episodes.svelte';
 	import Avatar from '$lib/components/Avatar.svelte';
 	import ShareSheet from '$lib/components/ShareSheet.svelte';
-	import { BUTTON_PRIMARY, BUTTON_SECONDARY } from '$lib/components/SubmitButton.svelte';
 	import {
 		ArrowLeft,
 		Bell,
@@ -252,29 +251,37 @@
 
 		<!-- Somebody invited the user to track this title together -->
 		{#each data.invitations as invitation (invitation.id)}
-			<div
-				class="ui-card mt-4 flex max-w-3xl flex-wrap items-center gap-3 rounded-lg border border-(--accent)/60 bg-zinc-900 p-3"
-			>
-				<Avatar person={invitation.from} class="size-10 text-base" />
-				<div class="min-w-0 flex-1 basis-48 text-sm">
-					<p class="font-medium">{m.share.invitedBy(invitation.from.name)}</p>
-					<p class="text-zinc-400">
-						{m.share.theirStatus(statusLabel(data.category, invitation.status))}
-					</p>
+			<!-- Built like the invitation in the inbox: who, and below one row of round buttons
+			     that start where the text starts (no trailer here – it is in the row above) -->
+			<div class="ui-card mt-4 max-w-3xl rounded-lg border border-(--accent)/60 bg-zinc-900 p-3">
+				<div class="flex gap-3">
+					<Avatar person={invitation.from} class="size-10 shrink-0 text-base" />
+					<div class="min-w-0 flex-1">
+						<p class="leading-snug font-medium">{m.share.invitedBy(invitation.from.name)}</p>
+						<p class="text-sm text-zinc-400">
+							{m.share.theirStatus(statusLabel(data.category, invitation.status))}
+						</p>
+						<div class="mt-2.5 flex flex-wrap items-center gap-2">
+							<form method="POST" action="?/accept" use:enhance>
+								<input type="hidden" name="id" value={invitation.id} />
+								<button
+									class="ui-btn ui-primary inline-flex items-center rounded-full bg-zinc-100 px-3.5 py-1.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-300"
+									>{m.share.accept}</button
+								>
+							</form>
+							<form method="POST" action="?/decline" use:enhance>
+								<input type="hidden" name="id" value={invitation.id} />
+								<button
+									class="ui-btn inline-flex items-center rounded-full border border-zinc-600 px-3.5 py-1.5 text-sm font-medium transition-colors hover:bg-zinc-800"
+									>{m.share.decline}</button
+								>
+							</form>
+						</div>
+					</div>
 				</div>
 				{#if data.status}
-					<Notice kind="warning" class="basis-full">{m.share.replaces}</Notice>
+					<Notice kind="warning" class="mt-3">{m.share.replaces}</Notice>
 				{/if}
-				<div class="flex gap-2">
-					<form method="POST" action="?/accept" use:enhance>
-						<input type="hidden" name="id" value={invitation.id} />
-						<button class="{BUTTON_PRIMARY} px-3 py-1.5 text-sm">{m.share.accept}</button>
-					</form>
-					<form method="POST" action="?/decline" use:enhance>
-						<input type="hidden" name="id" value={invitation.id} />
-						<button class="{BUTTON_SECONDARY} px-3 py-1.5 text-sm">{m.share.decline}</button>
-					</form>
-				</div>
 			</div>
 		{/each}
 		{#if form?.error}

@@ -19,7 +19,14 @@ test('settings: language, theme and hidden areas are kept', async ({ page }) => 
 	await expect(page.getByRole('heading', { name: 'General' })).toBeVisible();
 
 	// Two quick choices in a row: both arrive, the last one counts
-	// (wait for the save that carries both: Romaji, and no spoiler protection any more)
+	// (wait for the save that carries both: Romaji, and no spoiler protection any more).
+	// The server is slowed down so that the second choice surely falls into the first save –
+	// its answer must not take the second choice back.
+	const slow = '**/settings/general?/display';
+	await page.route(slow, async (route) => {
+		await new Promise((done) => setTimeout(done, 300));
+		await route.continue();
+	});
 	await anzeige.getByText('Romaji on top').click();
 	await saved(
 		page,
@@ -27,6 +34,7 @@ test('settings: language, theme and hidden areas are kept', async ({ page }) => 
 		() => anzeige.locator('label[for=hideSpoilers]').click(),
 		(body) => body.includes('romaji') && !body.includes('hideSpoilers')
 	);
+	await page.unroute(slow);
 	await page.reload();
 	await expect(anzeige.locator('input[name=animeTitle][value=romaji]')).toBeChecked();
 	await expect(anzeige.locator('input[name=hideSpoilers]')).not.toBeChecked();
