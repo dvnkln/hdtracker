@@ -7,7 +7,9 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
-## Upcoming release
+## 0.10.2 – 2026-10-15
+
+A small update: the library keeps its headings in view while you scroll.
 
 ### 🔧 Improved
 
@@ -16,6 +18,10 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 ### 🐛 Fixed
 
 - The filter of the library no longer slides over the header when scrolling
+
+### ⬆️ Updating
+
+Just pull the new image – nothing else to do.
 
 ## 0.10.1 – 2026-10-13
 
