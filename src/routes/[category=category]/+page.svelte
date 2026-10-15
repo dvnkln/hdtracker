@@ -76,6 +76,16 @@
 	const isOpen = (status: Status) => !(folded[status] ?? COLLAPSED_STATUSES.includes(status));
 	// The browser reports folding a moment after it happened (the "toggle" event comes later).
 	// Before selecting by what is visible, ask the sections themselves how they stand.
+	// Folding a section whose heading sticks at the top would leave one somewhere further down
+	// the page: then go back up to where the section starts.
+	function folding(status: Status, section: HTMLDetailsElement) {
+		folded[status] = !section.open;
+		const header = document.querySelector('[data-chrome="header"]')?.getBoundingClientRect();
+		const top = section.getBoundingClientRect().top;
+		if (!section.open && header && top < header.bottom) {
+			window.scrollBy({ top: top - header.bottom, behavior: 'instant' });
+		}
+	}
 	function readFolded() {
 		for (const el of document.querySelectorAll<HTMLDetailsElement>('details[data-status]')) {
 			const status = el.dataset.status as Status;
@@ -203,13 +213,17 @@
 		<!-- (The box the funnel sits in: at the right edge, in the line of the first heading) -->
 		<div class="relative">
 			{#if canFilter}
-				<LibraryFilter
-					{offer}
-					items={filterable}
-					chosen={filters}
-					left={shown.length}
-					onchange={setFilters}
-				/>
+				<!-- Sticks below the header while the library scrolls, like the headings: a box of
+				     no height, the funnel hangs at its right edge -->
+				<div class="sticky top-(--header-h) z-[3] h-0">
+					<LibraryFilter
+						{offer}
+						items={filterable}
+						chosen={filters}
+						left={shown.length}
+						onchange={setFilters}
+					/>
+				</div>
 			{/if}
 			{#if sections.length === 0}
 				<EmptyState
@@ -223,13 +237,16 @@
 			{#each sections as section (section.status)}
 				{@const Icon = STATUS_ICONS[section.status]}
 				<details
-					class="group mt-6 first-of-type:mt-1"
+					class="group mt-4 first-of-type:mt-0"
 					open={isOpen(section.status)}
 					data-status={section.status}
-					ontoggle={(e) => (folded[section.status] = !e.currentTarget.open)}
+					ontoggle={(e) => folding(section.status, e.currentTarget)}
 				>
+					<!-- The heading sticks below the header while its titles scroll by; once the last
+					     of them is gone, the next heading pushes it away (sticky only works within
+					     its own section – that is the whole trick) -->
 					<summary
-						class="group/summary flex cursor-pointer list-none items-center gap-2 select-none [&::-webkit-details-marker]:hidden"
+						class="group/summary sticky top-(--header-h) z-[2] -mx-4 flex cursor-pointer list-none items-center gap-2 bg-zinc-950 px-4 py-2 select-none [&::-webkit-details-marker]:hidden"
 					>
 						<ChevronRight
 							size={18}

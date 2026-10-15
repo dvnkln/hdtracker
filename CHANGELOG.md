@@ -7,6 +7,16 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
+## Upcoming release
+
+### 🔧 Improved
+
+- In the library, the heading of a section stays at the top while its titles scroll by, until the next section takes over – and the filter stays next to it
+
+### 🐛 Fixed
+
+- The filter of the library no longer slides over the header when scrolling
+
 ## 0.10.1 – 2026-10-13
 
 A tidier search for games.

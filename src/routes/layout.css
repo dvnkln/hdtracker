@@ -9,6 +9,12 @@
 /* Width of the header and the poster pages: uses big screens, but on computers always keeps
    a margin of about 6.5 % of the screen width on each side (~3/4 of a poster).
    Text pages (dashboard, settings) stay narrower. */
+/* The height of the sticky header (measured by +layout.svelte); what sticks below it – the
+   headings of the library and its filter – sits at this distance from the top. */
+:root {
+	--header-h: 4.25rem;
+}
+
 @utility app-width {
 	margin-inline: auto;
 	max-width: var(--container-app);

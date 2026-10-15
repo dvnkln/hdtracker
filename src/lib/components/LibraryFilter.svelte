@@ -71,7 +71,7 @@
 	</button>
 {/snippet}
 
-<div class="absolute top-0 right-0 z-10 flex max-w-[75%] items-start justify-end gap-1.5">
+<div class="absolute top-1.5 right-0 flex max-w-[75%] items-start justify-end gap-1.5">
 	{#if chosen.length > 0}
 		<!-- With room (computer): one mark per filter. On a phone that would run into the heading,
 		     so there it is only how many titles are left, with the way back. -->

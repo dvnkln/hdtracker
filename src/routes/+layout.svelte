@@ -34,6 +34,22 @@
 	// page and when it comes back to the foreground; if there is, the next change of page
 	// loads the app afresh.
 	const checkVersion = () => void updated.check().catch(() => {});
+	// Its height, for what sticks below it (the headings of the library, its filter): it differs
+	// per theme and grows on a phone with a notch. On a phone it is rarely a whole number of
+	// pixels: rounded up, a sliver of the posters showed between header and heading. So the
+	// exact height, one pixel less – what sticks slides that pixel under the header.
+	let header = $state<HTMLElement>();
+	$effect(() => {
+		if (!header) return;
+		const root = document.documentElement;
+		const measure = () =>
+			root.style.setProperty('--header-h', `${header!.getBoundingClientRect().height - 1}px`);
+		const watcher = new ResizeObserver(measure);
+		watcher.observe(header, { box: 'border-box' });
+		measure();
+		return () => watcher.disconnect();
+	});
+
 	afterNavigate(({ type }) => {
 		if (type !== 'enter') checkVersion();
 	});
@@ -54,6 +70,7 @@
 {#if data.user && data.profile && !data.user.mustChangePassword}
 	<!-- Stays at the top while scrolling -->
 	<header
+		bind:this={header}
 		data-chrome="header"
 		class="sticky top-0 z-10 border-b border-zinc-800 bg-zinc-950/95 pt-[env(safe-area-inset-top)] backdrop-blur"
 	>
