@@ -120,9 +120,11 @@
 		{@render children()}
 	</div>
 
+	<!-- Above the page like the header (z-10): the sticking headings of the library have a level of
+	     their own and would otherwise cover it -->
 	<nav
 		data-chrome="nav"
-		class="fixed inset-x-0 bottom-0 bg-zinc-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
+		class="fixed inset-x-0 bottom-0 z-10 bg-zinc-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
 	>
 		<!-- One column per area that is switched on in the settings -->
 		<div
