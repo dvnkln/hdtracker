@@ -30,3 +30,6 @@ vite.config.ts.timestamp-*
 # Browser tests
 /playwright-report
 /test-results
+
+# Local tools and data of the developer (demo library, screenshot scripts) – survive a reboot
+/.local
