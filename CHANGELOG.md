@@ -7,6 +7,18 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
+## 0.10.4 – 2026-10-15
+
+A quick fix for the library.
+
+### 🐛 Fixed
+
+- In the library, a section heading near the bottom no longer covers the labels of the navigation bar
+
+### ⬆️ Updating
+
+Just pull the new image – nothing else to do.
+
 ## 0.10.3 – 2026-10-15
 
 A touch of polish for the library's headings.
