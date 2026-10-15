@@ -91,6 +91,26 @@
 			window.scrollBy({ top: top - header.bottom, behavior: 'instant' });
 		}
 	}
+	// A heading that has titles scrolling by beneath it gets a soft edge (data-stuck): its section
+	// starts above it then. At rest – also the first heading at the top of the page – it stays
+	// hard, so the edge never shades the posters of a heading that is just standing there.
+	let frame = 0;
+	function markStuck() {
+		cancelAnimationFrame(frame);
+		frame = requestAnimationFrame(() => {
+			for (const section of document.querySelectorAll<HTMLDetailsElement>('details[data-status]')) {
+				const heading = section.querySelector('summary');
+				if (!heading) continue;
+				const stuck =
+					section.getBoundingClientRect().top < heading.getBoundingClientRect().top - 0.5;
+				heading.toggleAttribute('data-stuck', stuck);
+			}
+		});
+	}
+	$effect(() => {
+		void sections;
+		markStuck();
+	});
 	function readFolded() {
 		for (const el of document.querySelectorAll<HTMLDetailsElement>('details[data-status]')) {
 			const status = el.dataset.status as Status;
@@ -147,6 +167,8 @@
 
 <svelte:head><title>{label} · hdtracker</title></svelte:head>
 <svelte:window
+	onscroll={markStuck}
+	onresize={markStuck}
 	onkeydown={(e) => {
 		if (e.key === 'Escape' && selecting && !choosingWho) stopSelecting();
 		// Ctrl+A selects the posters – unless something is typed (there it selects the text)
@@ -218,9 +240,11 @@
 		<!-- (The box the funnel sits in: at the right edge, in the line of the first heading) -->
 		<div class="relative">
 			{#if canFilter}
-				<!-- Sticks below the header while the library scrolls, like the headings: a box of
-				     no height, the funnel hangs at its right edge -->
-				<div class="sticky top-(--header-h) z-[3] h-0">
+				<!-- Sticks while the library scrolls, like the headings: a box of no height, the
+				     funnel hangs at its right edge. It sticks where it already stands (the padding of
+				     the page below the header; 17 px = 16 px of padding plus the pixel --header-h is short
+				     of the header), so it never moves before sticking -->
+				<div class="sticky top-[calc(var(--header-h)+17px)] z-[3] h-0">
 					<LibraryFilter
 						{offer}
 						items={filterable}
@@ -242,16 +266,20 @@
 			{#each sections as section (section.status)}
 				{@const Icon = STATUS_ICONS[section.status]}
 				<details
-					class="group mt-4 first-of-type:mt-0"
+					class="group first-of-type:-mt-[17px]"
 					open={isOpen(section.status)}
 					data-status={section.status}
 					ontoggle={(e) => folding(section.status, e.currentTarget)}
 				>
 					<!-- The heading sticks below the header while its titles scroll by; once the last
 					     of them is gone, the next heading pushes it away (sticky only works within
-					     its own section – that is the whole trick) -->
+					     its own section – that is the whole trick). The space above a heading belongs to
+					     it (pt-6), not to the page: so the heading sticks right where it stands, instead
+					     of first sliding up by the page's padding. Below it, while titles scroll by, a short fade
+					     into them instead of a hard edge (data-stuck, see markStuck). It starts one pixel inside
+					     the heading: touching edges let a thin line of the posters show through on phones -->
 					<summary
-						class="group/summary sticky top-(--header-h) z-[2] -mx-4 flex cursor-pointer list-none items-center gap-2 bg-zinc-950 px-4 py-2 select-none [&::-webkit-details-marker]:hidden"
+						class="group/summary sticky top-(--header-h) z-[2] -mx-4 flex cursor-pointer list-none items-center gap-2 bg-zinc-950 px-4 pt-6 pb-2 select-none after:pointer-events-none after:absolute after:inset-x-0 after:top-[calc(100%-1px)] after:h-[17px] after:bg-linear-to-b after:from-zinc-950 after:to-transparent after:opacity-0 after:transition-opacity after:duration-150 data-stuck:after:opacity-100 [&::-webkit-details-marker]:hidden"
 					>
 						<ChevronRight
 							size={18}
