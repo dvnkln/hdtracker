@@ -2,17 +2,17 @@
 	import '@fontsource/outfit/600.css';
 	import '@fontsource/outfit/800.css';
 	import './layout.css';
-	import favicon from '$lib/assets/favicon.svg';
+	import favicon from '#lib/assets/favicon.svg';
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
 	import { page, updated } from '$app/state';
-	import { CATEGORIES } from '$lib/categories';
-	import Brand from '$lib/components/Brand.svelte';
-	import HeaderSearch from '$lib/components/HeaderSearch.svelte';
-	import ScrollThumb from '$lib/components/ScrollThumb.svelte';
-	import Toasts from '$lib/components/Toasts.svelte';
-	import UserMenu from '$lib/components/UserMenu.svelte';
-	import { m, setLocale } from '$lib/i18n/index.svelte';
-	import { setAnimeTitle } from '$lib/titles.svelte';
+	import { CATEGORIES } from '#lib/categories.js';
+	import Brand from '#lib/components/Brand.svelte';
+	import HeaderSearch from '#lib/components/HeaderSearch.svelte';
+	import ScrollThumb from '#lib/components/ScrollThumb.svelte';
+	import Toasts from '#lib/components/Toasts.svelte';
+	import UserMenu from '#lib/components/UserMenu.svelte';
+	import { m, setLocale } from '#lib/i18n/index.svelte.js';
+	import { setAnimeTitle } from '#lib/titles.svelte.js';
 	import { Bell } from '@lucide/svelte';
 
 	let { data, children } = $props();
@@ -50,10 +50,13 @@
 		return () => watcher.disconnect();
 	});
 
-	afterNavigate(({ type }) => {
+	afterNavigate(({ type, shallow }) => {
+		if (shallow && type === 'goto') return;
 		if (type !== 'enter') checkVersion();
 	});
-	beforeNavigate(({ willUnload, to }) => {
+
+	beforeNavigate(({ willUnload, to, shallow, type }) => {
+		if (shallow && type === 'goto') return;
 		if (updated.current && !willUnload && to?.url) location.href = to.url.href;
 	});
 
@@ -63,9 +66,8 @@
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 <ScrollThumb />
-<svelte:document
-	onvisibilitychange={() => document.visibilityState === 'visible' && checkVersion()}
-/>
+<svelte:document onvisibilitychange={() => document.visibilityState === 'visible' && checkVersion()}
+></svelte:document>
 
 {#if data.user && data.profile && !data.user.mustChangePassword}
 	<!-- Stays at the top while scrolling -->

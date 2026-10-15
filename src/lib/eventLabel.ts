@@ -1,5 +1,5 @@
-import type { Messages } from '$lib/i18n/de';
-import type { DashboardEntry } from '$lib/server/dashboard';
+import type { Messages } from '#lib/i18n/de.js';
+import type { DashboardEntry } from '#lib/server/dashboard.js';
 
 // What happens on a date, e.g. "Kinostart", "S03E01 · Staffelstart", "S02E03–E05",
 // "Folgen 3–5" – the same words on the dashboard and in notifications.

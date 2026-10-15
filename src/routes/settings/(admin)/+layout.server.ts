@@ -1,4 +1,4 @@
-import { requireAdmin } from '$lib/server/auth';
+import { requireAdmin } from '#lib/server/auth.js';
 import type { LayoutServerLoad } from './$types';
 
 // Pages in this group change the whole installation: admins only.

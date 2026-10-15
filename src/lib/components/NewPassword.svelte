@@ -1,8 +1,8 @@
 <script lang="ts">
-	import PasswordInput from '$lib/components/PasswordInput.svelte';
-	import { m } from '$lib/i18n/index.svelte';
-	import { MIN_PASSWORD_LENGTH } from '$lib/limits';
-	import { ui } from '$lib/ui';
+	import PasswordInput from '#lib/components/PasswordInput.svelte';
+	import { m } from '#lib/i18n/index.svelte.js';
+	import { MIN_PASSWORD_LENGTH } from '#lib/limits.js';
+	import { ui } from '#lib/ui.js';
 	import { Check } from '@lucide/svelte';
 
 	// The two fields for choosing a password (fields "password" and "confirm"). They say while

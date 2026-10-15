@@ -9,7 +9,7 @@ import {
 	Users,
 	Wrench
 } from '@lucide/svelte';
-import { m } from '$lib/i18n/index.svelte';
+import { m } from '#lib/i18n/index.svelte.js';
 
 // Areas of the settings, in display order. "personal": for each user; "admin": for the whole
 // installation (later only for admins); "about" stands on its own at the end.

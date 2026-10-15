@@ -1,15 +1,15 @@
 import { fail } from '@sveltejs/kit';
-import { isCategory } from '$lib/categories';
-import { serverMessages } from '$lib/server/i18n';
-import { clearLibrary } from '$lib/server/library';
+import { isCategory } from '#lib/categories.js';
+import { serverMessages } from '#lib/server/i18n.js';
+import { clearLibrary } from '#lib/server/library.js';
 import {
 	HiddenAreasError,
 	ImportError,
 	importYamtrack,
 	type HiddenChoice
-} from '$lib/server/import/yamtrack';
-import { animeWithoutMalId } from '$lib/server/export/yamtrack';
-import { pendingStatus } from '$lib/server/releases';
+} from '#lib/server/import/yamtrack.js';
+import { animeWithoutMalId } from '#lib/server/export/yamtrack.js';
+import { pendingStatus } from '#lib/server/releases.js';
 import type { Actions, PageServerLoad } from './$types';
 
 // Import, export and deleting your own data.

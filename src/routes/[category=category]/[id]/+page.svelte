@@ -1,17 +1,23 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import Notice from '$lib/components/Notice.svelte';
-	import { CATEGORIES } from '$lib/categories';
-	import { hasEpisodes } from '$lib/status';
-	import { formatDate, formatRating, formatRuntime, m, statusLabel } from '$lib/i18n/index.svelte';
-	import { STATUS_ICONS } from '$lib/statusIcons';
-	import { img } from '$lib/images';
-	import { titles } from '$lib/titles.svelte';
-	import ItemSheet from '$lib/components/ItemSheet.svelte';
-	import PosterCard from '$lib/components/PosterCard.svelte';
-	import Episodes from '$lib/components/Episodes.svelte';
-	import Avatar from '$lib/components/Avatar.svelte';
-	import ShareSheet from '$lib/components/ShareSheet.svelte';
+	import Notice from '#lib/components/Notice.svelte';
+	import { CATEGORIES } from '#lib/categories.js';
+	import { hasEpisodes } from '#lib/status.js';
+	import {
+		formatDate,
+		formatRating,
+		formatRuntime,
+		m,
+		statusLabel
+	} from '#lib/i18n/index.svelte.js';
+	import { STATUS_ICONS } from '#lib/statusIcons.js';
+	import { img } from '#lib/images.js';
+	import { titles } from '#lib/titles.svelte.js';
+	import ItemSheet from '#lib/components/ItemSheet.svelte';
+	import PosterCard from '#lib/components/PosterCard.svelte';
+	import Episodes from '#lib/components/Episodes.svelte';
+	import Avatar from '#lib/components/Avatar.svelte';
+	import ShareSheet from '#lib/components/ShareSheet.svelte';
 	import {
 		ArrowLeft,
 		Bell,

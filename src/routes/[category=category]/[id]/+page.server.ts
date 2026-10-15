@@ -1,18 +1,18 @@
 import { error, fail } from '@sveltejs/kit';
-import type { Category } from '$lib/categories';
-import type { Status } from '$lib/status';
+import type { Category } from '#lib/categories.js';
+import type { Status } from '#lib/status.js';
 import {
 	airedEpisodes,
 	findItem,
 	hasEpisodes,
 	setEpisodes,
 	watchedKeys
-} from '$lib/server/episodes';
-import { detailsFor } from '$lib/server/itemDetails';
-import { findTitle, libraryStatusFor, setNotify } from '$lib/server/library';
-import { ProviderError, type Details, type ShowDetails } from '$lib/server/providers/types';
-import { serverMessages } from '$lib/server/i18n';
-import { getUserSetting } from '$lib/server/settings';
+} from '#lib/server/episodes.js';
+import { detailsFor } from '#lib/server/itemDetails.js';
+import { findTitle, libraryStatusFor, setNotify } from '#lib/server/library.js';
+import { ProviderError, type Details, type ShowDetails } from '#lib/server/providers/types.js';
+import { serverMessages } from '#lib/server/i18n.js';
+import { getUserSetting } from '#lib/server/settings.js';
 import {
 	accept,
 	companions,
@@ -23,7 +23,7 @@ import {
 	leaveShared,
 	withdraw,
 	type SharingError
-} from '$lib/server/sharing';
+} from '#lib/server/sharing.js';
 import type { Actions, PageServerLoad } from './$types';
 
 const ID_PATTERN = /^\d{1,12}$/;

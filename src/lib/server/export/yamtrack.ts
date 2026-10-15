@@ -1,4 +1,4 @@
-import type { Status } from '$lib/status';
+import type { Status } from '#lib/status.js';
 import { getDb } from '../db';
 import { itemDetails, watchedEpisodes } from '../db/schema';
 import { allItems } from '../library';

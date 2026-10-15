@@ -1,4 +1,4 @@
-import { env } from '$env/dynamic/private';
+import { IGDB_CLIENT_ID, IGDB_CLIENT_SECRET } from '$app/env/private';
 import { cached, remember } from '../cache';
 import { igdbTrailer } from './trailer';
 import { serverMessages } from '../i18n';
@@ -43,13 +43,13 @@ const GAME_FIELDS = [
 let cachedToken: { value: string; expiresAt: number } | null = null;
 
 async function getToken() {
-	if (!env.IGDB_CLIENT_ID) throw missingKey('IGDB_CLIENT_ID');
-	if (!env.IGDB_CLIENT_SECRET) throw missingKey('IGDB_CLIENT_SECRET');
+	if (!IGDB_CLIENT_ID) throw missingKey('IGDB_CLIENT_ID');
+	if (!IGDB_CLIENT_SECRET) throw missingKey('IGDB_CLIENT_SECRET');
 	if (cachedToken && cachedToken.expiresAt > Date.now()) return cachedToken.value;
 
 	const url = new URL('https://id.twitch.tv/oauth2/token');
-	url.searchParams.set('client_id', env.IGDB_CLIENT_ID);
-	url.searchParams.set('client_secret', env.IGDB_CLIENT_SECRET);
+	url.searchParams.set('client_id', IGDB_CLIENT_ID);
+	url.searchParams.set('client_secret', IGDB_CLIENT_SECRET);
 	url.searchParams.set('grant_type', 'client_credentials');
 	let data: { access_token: string; expires_in: number };
 	try {
@@ -75,7 +75,7 @@ async function igdb<T>(endpoint: string, body: string, retry = true): Promise<T>
 		return await fetchJson<T>('IGDB', `https://api.igdb.com/v4/${endpoint}`, {
 			method: 'POST',
 			headers: {
-				'Client-ID': env.IGDB_CLIENT_ID!,
+				'Client-ID': IGDB_CLIENT_ID!,
 				Authorization: `Bearer ${token}`,
 				Accept: 'application/json'
 			},

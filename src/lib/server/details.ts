@@ -1,4 +1,4 @@
-import type { Category } from '$lib/status';
+import type { Category } from '#lib/status.js';
 import { getAnimeInfo } from './providers/anilist';
 import { getGameInfo } from './providers/igdb';
 import { getMovieInfo, getTvInfo } from './providers/tmdb';

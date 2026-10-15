@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { autosave } from '$lib/autosave';
-	import { m } from '$lib/i18n/index.svelte';
-	import { FormFeedback } from '$lib/forms.svelte';
-	import { ui } from '$lib/ui';
-	import FeedbackText from '$lib/components/FeedbackText.svelte';
-	import Switch from '$lib/components/Switch.svelte';
-	import TargetList from '$lib/components/TargetList.svelte';
+	import { autosave } from '#lib/autosave.js';
+	import { m } from '#lib/i18n/index.svelte.js';
+	import { FormFeedback } from '#lib/forms.svelte.js';
+	import { ui } from '#lib/ui.js';
+	import FeedbackText from '#lib/components/FeedbackText.svelte';
+	import Switch from '#lib/components/Switch.svelte';
+	import TargetList from '#lib/components/TargetList.svelte';
 	import { CalendarClock, Send, Users } from '@lucide/svelte';
 
 	let { data } = $props();

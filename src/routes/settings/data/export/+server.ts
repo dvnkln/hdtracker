@@ -1,5 +1,5 @@
-import { exportYamtrack } from '$lib/server/export/yamtrack';
-import { today } from '$lib/server/providers/types';
+import { exportYamtrack } from '#lib/server/export/yamtrack.js';
+import { today } from '#lib/server/providers/types.js';
 import type { RequestHandler } from './$types';
 
 // Download of the user's whole library as a Yamtrack-compatible CSV file (only for logged-in users,

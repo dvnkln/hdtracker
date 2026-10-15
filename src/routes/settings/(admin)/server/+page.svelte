@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { autosave } from '$lib/autosave';
-	import { formatDateTime, formatFileSize, m } from '$lib/i18n/index.svelte';
-	import { FormFeedback } from '$lib/forms.svelte';
-	import { proxySnippets } from '$lib/proxySnippets';
-	import { ui } from '$lib/ui';
-	import FeedbackText from '$lib/components/FeedbackText.svelte';
-	import Notice from '$lib/components/Notice.svelte';
-	import Switch from '$lib/components/Switch.svelte';
-	import SubmitButton, { BUTTON_SECONDARY } from '$lib/components/SubmitButton.svelte';
+	import { autosave } from '#lib/autosave.js';
+	import { formatDateTime, formatFileSize, m } from '#lib/i18n/index.svelte.js';
+	import { FormFeedback } from '#lib/forms.svelte.js';
+	import { proxySnippets } from '#lib/proxySnippets.js';
+	import { ui } from '#lib/ui.js';
+	import FeedbackText from '#lib/components/FeedbackText.svelte';
+	import Notice from '#lib/components/Notice.svelte';
+	import Switch from '#lib/components/Switch.svelte';
+	import SubmitButton, { BUTTON_SECONDARY } from '#lib/components/SubmitButton.svelte';
 	import {
 		Activity,
 		Check,

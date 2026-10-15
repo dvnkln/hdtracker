@@ -1,5 +1,5 @@
 import type { Cookies, RequestEvent } from '@sveltejs/kit';
-import { DEFAULT_THEME, isTheme, type Theme } from '$lib/themes';
+import { DEFAULT_THEME, isTheme, type Theme } from '#lib/themes.js';
 import { isHttps } from './origins';
 import { getDb } from './db';
 import { users } from './db/schema';

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { m } from '$lib/i18n/index.svelte';
-	import { ui } from '$lib/ui';
+	import { m } from '#lib/i18n/index.svelte.js';
+	import { ui } from '#lib/ui.js';
 	import { BookOpen, Bug, Database, ExternalLink, History, Link, Scale } from '@lucide/svelte';
 
 	let { data } = $props();

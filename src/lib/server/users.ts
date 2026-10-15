@@ -1,7 +1,7 @@
 import { randomBytes, randomInt } from 'node:crypto';
 import { and, count, eq, ne } from 'drizzle-orm';
-import type { Person } from '$lib/avatar';
-import { USERNAME_PATTERN } from '$lib/limits';
+import type { Person } from '#lib/avatar.js';
+import { USERNAME_PATTERN } from '#lib/limits.js';
 import { hashPassword, type Role } from './auth';
 import { getDb } from './db';
 import { sessions, trackingMembers, users } from './db/schema';

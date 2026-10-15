@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 import { getDb } from './db';
 import { settings, userSettings, users } from './db/schema';
-import { CATEGORY_KEYS, isCategory, type Category } from '$lib/categories';
+import { CATEGORY_KEYS, isCategory, type Category } from '#lib/categories.js';
 
 // Settings of the whole installation (changed by an admin), with the values used until
 // somebody changes them.

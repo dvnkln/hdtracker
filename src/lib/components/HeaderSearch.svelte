@@ -2,8 +2,8 @@
 	import { flushSync } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { navigating, page } from '$app/state';
-	import { CATEGORIES, isCategory, type Category } from '$lib/categories';
-	import { m } from '$lib/i18n/index.svelte';
+	import { CATEGORIES, isCategory, type Category } from '#lib/categories.js';
+	import { m } from '#lib/i18n/index.svelte.js';
 	import { ChevronDown, LoaderCircle, Search, X } from '@lucide/svelte';
 
 	// Areas switched on in the settings
@@ -84,7 +84,7 @@
 	// Emptying the field (e.g. with its x button) on a results page goes back to the library.
 	function onInput() {
 		if (query === '' && page.url.searchParams.get('q')) {
-			goto(`/${category}`, { keepFocus: true });
+			goto(`/${category}`, { reset: false });
 		}
 	}
 

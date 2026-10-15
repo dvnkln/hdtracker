@@ -1,8 +1,8 @@
 import { fail } from '@sveltejs/kit';
-import { serverMessages } from '$lib/server/i18n';
-import { trailersOf } from '$lib/server/itemDetails';
-import { allItems } from '$lib/server/library';
-import { clearRead, listNotices, markRead } from '$lib/server/notices';
+import { serverMessages } from '#lib/server/i18n.js';
+import { trailersOf } from '#lib/server/itemDetails.js';
+import { allItems } from '#lib/server/library.js';
+import { clearRead, listNotices, markRead } from '#lib/server/notices.js';
 import {
 	accept,
 	decline,
@@ -10,7 +10,7 @@ import {
 	outgoing,
 	withdraw,
 	type SharingError
-} from '$lib/server/sharing';
+} from '#lib/server/sharing.js';
 import type { Actions, PageServerLoad } from './$types';
 
 // The inbox: invitations waiting for an answer, what was released and what others did with

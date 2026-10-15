@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { FormFeedback } from '$lib/forms.svelte';
-	import { formatDateTime, formatFileSize, m } from '$lib/i18n/index.svelte';
-	import { ui } from '$lib/ui';
+	import { FormFeedback } from '#lib/forms.svelte.js';
+	import { formatDateTime, formatFileSize, m } from '#lib/i18n/index.svelte.js';
+	import { ui } from '#lib/ui.js';
 	import { Download, Trash2 } from '@lucide/svelte';
-	import Notice from '$lib/components/Notice.svelte';
+	import Notice from '#lib/components/Notice.svelte';
 	import TaskRow from './TaskRow.svelte';
 
 	let { data } = $props();
@@ -71,7 +71,7 @@
 									action="?/deleteAllBackups"
 									use:enhance={() => {
 										return async ({ update }) => {
-											await update();
+											await update({ navigate: false });
 											confirmDeleteAll = false;
 										};
 									}}

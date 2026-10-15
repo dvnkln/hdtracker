@@ -1,8 +1,8 @@
 import { fail } from '@sveltejs/kit';
-import { serverMessages } from '$lib/server/i18n';
-import { setUserSettings } from '$lib/server/settings';
-import { rememberTheme, savedTheme } from '$lib/server/theme';
-import { isTheme } from '$lib/themes';
+import { serverMessages } from '#lib/server/i18n.js';
+import { setUserSettings } from '#lib/server/settings.js';
+import { rememberTheme, savedTheme } from '#lib/server/theme.js';
+import { isTheme } from '#lib/themes.js';
 import type { Actions, PageServerLoad } from './$types';
 
 // Personal: the colour theme.

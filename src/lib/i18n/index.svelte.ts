@@ -1,4 +1,4 @@
-import type { Category, Status } from '$lib/status';
+import type { Category, Status } from '#lib/status.js';
 import { de, type Messages } from './de';
 import { en } from './en';
 

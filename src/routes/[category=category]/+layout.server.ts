@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
-import { isCategory } from '$lib/categories';
-import { enabledCategories } from '$lib/server/settings';
+import { isCategory } from '#lib/categories.js';
+import { enabledCategories } from '#lib/server/settings.js';
 import type { LayoutServerLoad } from './$types';
 
 // Areas the user has hidden in the settings are not reachable: back to the dashboard.

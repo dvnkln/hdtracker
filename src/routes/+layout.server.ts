@@ -1,8 +1,8 @@
-import type { Person } from '$lib/avatar';
-import { enabledCategories, getUserSetting } from '$lib/server/settings';
-import { countOpen } from '$lib/server/notices';
-import { shownName } from '$lib/server/users';
-import type { AnimeTitle } from '$lib/titles.svelte';
+import type { Person } from '#lib/avatar.js';
+import { enabledCategories, getUserSetting } from '#lib/server/settings.js';
+import { countOpen } from '#lib/server/notices.js';
+import { shownName } from '#lib/server/users.js';
+import type { AnimeTitle } from '#lib/titles.svelte.js';
 import type { LayoutServerLoad } from './$types';
 
 // Makes the logged-in user and the display settings available to all pages.

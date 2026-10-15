@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Person } from '$lib/avatar';
+import type { Person } from '#lib/avatar.js';
 import { countWith, known, offered, passes } from './libraryFilter';
 
 const hans: Person = { id: 3, name: 'Hans', color: 20, picture: null };

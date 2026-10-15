@@ -1,5 +1,5 @@
 import { error } from '@sveltejs/kit';
-import { avatarOf } from '$lib/server/users';
+import { avatarOf } from '#lib/server/users.js';
 import type { RequestHandler } from './$types';
 
 // The profile picture of a user (only for logged-in users, see hooks.server.ts). Its address

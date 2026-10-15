@@ -1,17 +1,17 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import NewPassword from '$lib/components/NewPassword.svelte';
-	import PasswordInput from '$lib/components/PasswordInput.svelte';
-	import { m } from '$lib/i18n/index.svelte';
-	import { MIN_PASSWORD_LENGTH } from '$lib/limits';
-	import { FormFeedback } from '$lib/forms.svelte';
-	import { ui } from '$lib/ui';
-	import FeedbackText from '$lib/components/FeedbackText.svelte';
-	import SubmitButton, { BUTTON_SECONDARY } from '$lib/components/SubmitButton.svelte';
+	import NewPassword from '#lib/components/NewPassword.svelte';
+	import PasswordInput from '#lib/components/PasswordInput.svelte';
+	import { m } from '#lib/i18n/index.svelte.js';
+	import { MIN_PASSWORD_LENGTH } from '#lib/limits.js';
+	import { FormFeedback } from '#lib/forms.svelte.js';
+	import { ui } from '#lib/ui.js';
+	import FeedbackText from '#lib/components/FeedbackText.svelte';
+	import SubmitButton, { BUTTON_SECONDARY } from '#lib/components/SubmitButton.svelte';
 	import { deserialize } from '$app/forms';
-	import { invalidateAll } from '$app/navigation';
-	import Avatar from '$lib/components/Avatar.svelte';
-	import type { Feedback } from '$lib/forms.svelte';
+	import { refreshAll } from '$app/navigation';
+	import Avatar from '#lib/components/Avatar.svelte';
+	import type { Feedback } from '#lib/forms.svelte.js';
 	import {
 		AtSign,
 		Dices,
@@ -74,7 +74,7 @@
 			} else if (result.type !== 'success') {
 				pictureFeedback = { ok: false, text: m.profile.uploadFailed };
 			}
-			await invalidateAll();
+			await refreshAll();
 		} catch {
 			pictureFeedback = { ok: false, text: m.profile.uploadFailed };
 		} finally {

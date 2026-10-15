@@ -1,6 +1,6 @@
 import { inArray } from 'drizzle-orm';
-import { isOrder, sortByDate, type Order } from '$lib/dashboardOrder';
-import type { Category, Status } from '$lib/status';
+import { isOrder, sortByDate, type Order } from '#lib/dashboardOrder.js';
+import type { Category, Status } from '#lib/status.js';
 import { getDb } from './db';
 import { releases, watchedEpisodes, type ReleaseKind } from './db/schema';
 import { allItems, type LibraryItem } from './library';

@@ -1,19 +1,19 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { enhance } from '$app/forms';
-	import type { Person } from '$lib/avatar';
-	import { CATEGORIES, type Category } from '$lib/categories';
-	import { eventLabel } from '$lib/eventLabel';
-	import { formatDate, m, statusLabel } from '$lib/i18n/index.svelte';
-	import { img } from '$lib/images';
-	import { FOLD, newsShown } from '$lib/inboxFold';
-	import { reportSeen } from '$lib/seen';
-	import { titles } from '$lib/titles.svelte';
-	import Avatar from '$lib/components/Avatar.svelte';
-	import EmptyState from '$lib/components/EmptyState.svelte';
-	import Notice from '$lib/components/Notice.svelte';
-	import { BUTTON_PRIMARY, BUTTON_SECONDARY } from '$lib/components/SubmitButton.svelte';
-	import type { NoticeLine } from '$lib/server/notices';
+	import type { Person } from '#lib/avatar.js';
+	import { CATEGORIES, type Category } from '#lib/categories.js';
+	import { eventLabel } from '#lib/eventLabel.js';
+	import { formatDate, m, statusLabel } from '#lib/i18n/index.svelte.js';
+	import { img } from '#lib/images.js';
+	import { FOLD, newsShown } from '#lib/inboxFold.js';
+	import { reportSeen } from '#lib/seen.js';
+	import { titles } from '#lib/titles.svelte.js';
+	import Avatar from '#lib/components/Avatar.svelte';
+	import EmptyState from '#lib/components/EmptyState.svelte';
+	import Notice from '#lib/components/Notice.svelte';
+	import { BUTTON_PRIMARY, BUTTON_SECONDARY } from '#lib/components/SubmitButton.svelte';
+	import type { NoticeLine } from '#lib/server/notices.js';
 	import {
 		ChevronDown,
 		ChevronRight,

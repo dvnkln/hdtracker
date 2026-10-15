@@ -4,15 +4,15 @@ import {
 	removeChannel,
 	saveChannel,
 	setChannelEnabled
-} from '$lib/server/channels';
-import { serverMessages } from '$lib/server/i18n';
+} from '#lib/server/channels.js';
+import { serverMessages } from '#lib/server/i18n.js';
 import {
 	NOTIFY_MODES,
 	prefsFor,
 	sampleMessage,
 	savePrefs,
 	type NotifyMode
-} from '$lib/server/notifications';
+} from '#lib/server/notifications.js';
 import {
 	addDevice,
 	parseSubscription,
@@ -20,10 +20,10 @@ import {
 	removeDevice,
 	renameDevice,
 	setDeviceEnabled
-} from '$lib/server/push';
-import { getUserSetting, setUserSettings } from '$lib/server/settings';
-import { canShare } from '$lib/server/sharing';
-import { deliver, listTargets, parseTargetKey } from '$lib/server/targets';
+} from '#lib/server/push.js';
+import { getUserSetting, setUserSettings } from '#lib/server/settings.js';
+import { canShare } from '#lib/server/sharing.js';
+import { deliver, listTargets, parseTargetKey } from '#lib/server/targets.js';
 import type { Actions, PageServerLoad } from './$types';
 
 // Notifications are personal: every user has their own targets (devices, Pushover, ...).

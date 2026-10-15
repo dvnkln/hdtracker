@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { CATEGORIES, CATEGORY_KEYS } from '$lib/categories';
-	import type { Theme } from '$lib/themes';
+	import { CATEGORIES, CATEGORY_KEYS } from '#lib/categories.js';
+	import type { Theme } from '#lib/themes.js';
 
 	let { theme }: { theme: Theme } = $props();
 </script>

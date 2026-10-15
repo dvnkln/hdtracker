@@ -1,11 +1,11 @@
 import { and, eq, lt } from 'drizzle-orm';
-import { eventLabel } from '$lib/eventLabel';
+import { eventLabel } from '#lib/eventLabel.js';
 import { byEpisode, getDashboard, toEntry, trackedEvents, type DashboardEntry } from './dashboard';
 import { getDb } from './db';
 import { itemDetails, libraryItems, notificationsSent, releases, users } from './db/schema';
 import { localeOf, serverMessages, withLocale } from './i18n';
 import { collectReleases, pruneRead } from './notices';
-import { imageSource } from '$lib/images';
+import { imageSource } from '#lib/images.js';
 import { LAYOUTS, preparePictures, type Layout } from './collage';
 import { signedCollagePath, signedImagePath } from './images';
 import { today } from './providers/types';

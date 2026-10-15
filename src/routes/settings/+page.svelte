@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { m } from '$lib/i18n/index.svelte';
-	import { settingsGroups } from '$lib/settingsNav';
+	import { m } from '#lib/i18n/index.svelte.js';
+	import { settingsGroups } from '#lib/settingsNav.js';
 	import { ChevronRight } from '@lucide/svelte';
 
 	let { data } = $props();

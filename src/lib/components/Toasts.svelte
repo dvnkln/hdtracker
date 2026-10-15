@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { fade, fly } from 'svelte/transition';
 	import { Check } from '@lucide/svelte';
-	import { m } from '$lib/i18n/index.svelte';
-	import { dismiss, toasts } from '$lib/toasts.svelte';
+	import { m } from '#lib/i18n/index.svelte.js';
+	import { dismiss, toasts } from '#lib/toasts.svelte.js';
 
 	// Where the confirmations of toasts.svelte.ts show up: at the bottom, just above the
 	// navigation, never wider than a phone. A bar fills from left to right while one is there;

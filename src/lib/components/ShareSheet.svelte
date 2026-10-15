@@ -1,10 +1,9 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
-	import type { SubmitFunction } from '@sveltejs/kit';
+	import { enhance, type SubmitFunction } from '$app/forms';
 	import { Check, LogOut, UserPlus, X } from '@lucide/svelte';
-	import type { Person } from '$lib/avatar';
-	import { m } from '$lib/i18n/index.svelte';
-	import Avatar from '$lib/components/Avatar.svelte';
+	import type { Person } from '#lib/avatar.js';
+	import { m } from '#lib/i18n/index.svelte.js';
+	import Avatar from '#lib/components/Avatar.svelte';
 
 	// The window behind the "together" symbol of a title: who tracks along, who is invited, who
 	// could be. The actions (invite, withdraw, leave) live on the page of the title.
@@ -37,7 +36,7 @@
 	const submit: SubmitFunction = () => {
 		busy = true;
 		return async ({ update }) => {
-			await update({ reset: false });
+			await update({ reset: false, navigate: false });
 			busy = false;
 			confirmLeave = false;
 		};
@@ -78,7 +77,9 @@
 				{#each companions as person (person.id)}
 					<li class="flex items-center gap-3 py-2.5">
 						<Avatar {person} class="size-9 text-sm" />
+
 						<span class="min-w-0 flex-1 truncate text-sm font-medium">{person.name}</span>
+
 						<Check size={18} class="shrink-0 text-emerald-400" aria-hidden="true" />
 					</li>
 				{/each}
@@ -134,17 +135,18 @@
 						use:enhance={submit}
 						class="mt-3 flex gap-2"
 					>
-						<button class="{small} border-red-900 text-red-400" disabled={busy}>
-							<LogOut size={16} />{m.share.leaveNow}
-						</button>
-						<button type="button" class={small} onclick={() => (confirmLeave = false)}>
-							{m.common.cancel}
-						</button>
+						<button class="{small} border-red-900 text-red-400" disabled={busy}
+							><LogOut size={16} />{m.share.leaveNow}</button
+						>
+
+						<button type="button" class={small} onclick={() => (confirmLeave = false)}
+							>{m.common.cancel}</button
+						>
 					</form>
 				{:else}
-					<button type="button" class={small} onclick={() => (confirmLeave = true)}>
-						<LogOut size={16} />{m.share.leave}
-					</button>
+					<button type="button" class={small} onclick={() => (confirmLeave = true)}
+						><LogOut size={16} />{m.share.leave}</button
+					>
 				{/if}
 			</div>
 		{/if}

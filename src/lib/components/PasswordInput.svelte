@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { HTMLInputAttributes } from 'svelte/elements';
-	import { m } from '$lib/i18n/index.svelte';
+	import { m } from '#lib/i18n/index.svelte.js';
 	import { Eye, EyeOff } from '@lucide/svelte';
 
 	// Same attributes as a normal <input> (name, autocomplete, minlength, ...).

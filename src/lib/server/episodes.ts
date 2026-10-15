@@ -1,5 +1,5 @@
 import { and, eq } from 'drizzle-orm';
-import { hasEpisodes, type Category, type Status } from '$lib/status';
+import { hasEpisodes, type Category, type Status } from '#lib/status.js';
 import { getDb } from './db';
 import { trackings, watchedEpisodes } from './db/schema';
 import { findItem, saveItem } from './library';

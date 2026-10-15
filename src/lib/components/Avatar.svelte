@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { avatarBackground, avatarLetter, avatarUrl, type Person } from '$lib/avatar';
+	import { avatarBackground, avatarLetter, avatarUrl, type Person } from '#lib/avatar.js';
 
 	// The profile picture of a user: their own picture, or the first letter of their name on
 	// their colour. `class` sets the size (and the size of the letter), e.g. "size-9 text-sm".

@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { autosave } from '$lib/autosave';
-	import { m } from '$lib/i18n/index.svelte';
-	import { FormFeedback } from '$lib/forms.svelte';
-	import { ui } from '$lib/ui';
-	import FeedbackText from '$lib/components/FeedbackText.svelte';
-	import SubmitButton from '$lib/components/SubmitButton.svelte';
-	import ThemePreview from '$lib/components/ThemePreview.svelte';
-	import { THEME_KEYS, barColors, type Theme } from '$lib/themes';
+	import { autosave } from '#lib/autosave.js';
+	import { m } from '#lib/i18n/index.svelte.js';
+	import { FormFeedback } from '#lib/forms.svelte.js';
+	import { ui } from '#lib/ui.js';
+	import FeedbackText from '#lib/components/FeedbackText.svelte';
+	import SubmitButton from '#lib/components/SubmitButton.svelte';
+	import ThemePreview from '#lib/components/ThemePreview.svelte';
+	import { THEME_KEYS, barColors, type Theme } from '#lib/themes.js';
 	import { Palette } from '@lucide/svelte';
 
 	let { data } = $props();

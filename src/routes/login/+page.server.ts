@@ -1,8 +1,8 @@
-import { isHttps } from '$lib/server/origins';
+import { isHttps } from '#lib/server/origins.js';
 import { fail, redirect } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
-import { getDb } from '$lib/server/db';
-import { users } from '$lib/server/db/schema';
+import { getDb } from '#lib/server/db/index.js';
+import { users } from '#lib/server/db/schema.js';
 import {
 	clearLoginFailures,
 	clientAddress,
@@ -12,10 +12,10 @@ import {
 	setSessionCookie,
 	verifyDummy,
 	verifyPassword
-} from '$lib/server/auth';
-import { localeOf, rememberLocale, serverMessages } from '$lib/server/i18n';
-import { rememberTheme, savedTheme } from '$lib/server/theme';
-import { recordLogin } from '$lib/server/users';
+} from '#lib/server/auth.js';
+import { localeOf, rememberLocale, serverMessages } from '#lib/server/i18n.js';
+import { rememberTheme, savedTheme } from '#lib/server/theme.js';
+import { recordLogin } from '#lib/server/users.js';
 import type { Actions } from './$types';
 
 export const actions: Actions = {

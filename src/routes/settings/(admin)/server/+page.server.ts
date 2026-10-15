@@ -1,16 +1,16 @@
 import { fail } from '@sveltejs/kit';
 import pkg from '../../../../../package.json';
-import { connectionOf, requireAdmin } from '$lib/server/auth';
-import { serverOverview } from '$lib/server/health';
+import { connectionOf, requireAdmin } from '#lib/server/auth.js';
+import { serverOverview } from '#lib/server/health.js';
 import { randomBytes } from 'node:crypto';
-import { PROXY_KEY_HEADER, parseProxies } from '$lib/server/proxy';
+import { PROXY_KEY_HEADER, parseProxies } from '#lib/server/proxy.js';
 import { eq } from 'drizzle-orm';
-import { getDb } from '$lib/server/db';
-import { libraryItems } from '$lib/server/db/schema';
-import { serverMessages } from '$lib/server/i18n';
-import { getContentLanguages, getWatchRegions } from '$lib/server/providers/tmdb';
-import { refreshPending } from '$lib/server/releases';
-import { getSetting, setSettings } from '$lib/server/settings';
+import { getDb } from '#lib/server/db/index.js';
+import { libraryItems } from '#lib/server/db/schema.js';
+import { serverMessages } from '#lib/server/i18n.js';
+import { getContentLanguages, getWatchRegions } from '#lib/server/providers/tmdb.js';
+import { refreshPending } from '#lib/server/releases.js';
+import { getSetting, setSettings } from '#lib/server/settings.js';
 import type { Actions, PageServerLoad } from './$types';
 
 const LANGUAGE_PATTERN = /^[a-z]{2,3}-[A-Z]{2}$/; // e.g. "de-DE"

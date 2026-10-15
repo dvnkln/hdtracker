@@ -1,9 +1,9 @@
 import { fail } from '@sveltejs/kit';
-import { serverMessages } from '$lib/server/i18n';
-import { imageStats } from '$lib/server/images';
-import { detailsStats } from '$lib/server/itemDetails';
-import { getSetting, setSettings } from '$lib/server/settings';
-import { deleteAllBackups, deleteBackup, listBackups } from '$lib/server/tasks/backups';
+import { serverMessages } from '#lib/server/i18n.js';
+import { imageStats } from '#lib/server/images.js';
+import { detailsStats } from '#lib/server/itemDetails.js';
+import { getSetting, setSettings } from '#lib/server/settings.js';
+import { deleteAllBackups, deleteBackup, listBackups } from '#lib/server/tasks/backups.js';
 import {
 	FREQUENCIES,
 	TASKS,
@@ -17,8 +17,8 @@ import {
 	updateTask,
 	type Frequency,
 	type TaskKey
-} from '$lib/server/tasks/scheduler';
-import { requireAdmin } from '$lib/server/auth';
+} from '#lib/server/tasks/scheduler.js';
+import { requireAdmin } from '#lib/server/auth.js';
 import type { Actions, PageServerLoad } from './$types';
 
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/; // "03:00"

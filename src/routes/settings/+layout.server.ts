@@ -1,4 +1,4 @@
-import { isAdmin } from '$lib/server/auth';
+import { isAdmin } from '#lib/server/auth.js';
 import type { LayoutServerLoad } from './$types';
 
 // Whether the "Administration" group is shown in the settings navigation.

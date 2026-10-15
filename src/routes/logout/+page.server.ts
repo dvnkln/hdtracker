@@ -1,5 +1,5 @@
 import { redirect } from '@sveltejs/kit';
-import { SESSION_COOKIE, clearSessionCookie, deleteSession } from '$lib/server/auth';
+import { SESSION_COOKIE, clearSessionCookie, deleteSession } from '#lib/server/auth.js';
 import type { Actions, PageServerLoad } from './$types';
 
 // Opening /logout directly just goes back home; logging out requires a POST (form button).

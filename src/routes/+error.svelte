@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { m } from '$lib/i18n/index.svelte';
-	import { BUTTON_PRIMARY } from '$lib/components/SubmitButton.svelte';
+	import { m } from '#lib/i18n/index.svelte.js';
+	import { BUTTON_PRIMARY } from '#lib/components/SubmitButton.svelte';
 	import { CircleAlert, SearchX } from '@lucide/svelte';
 
 	let missing = $derived(page.status === 404);

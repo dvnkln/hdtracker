@@ -1,5 +1,5 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
-import type { Messages } from '$lib/i18n/de';
+import type { Messages } from '#lib/i18n/de.js';
 import type { ReleaseKind } from '../db/schema';
 import { serverMessages } from '../i18n';
 

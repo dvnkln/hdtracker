@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { Snippet } from 'svelte';
-	import type { FormFeedback } from '$lib/forms.svelte';
-	import { formatDateTime, formatDuration, formatFileSize, m } from '$lib/i18n/index.svelte';
-	import { ui } from '$lib/ui';
-	import FeedbackText from '$lib/components/FeedbackText.svelte';
-	import SubmitButton, { BUTTON_SECONDARY } from '$lib/components/SubmitButton.svelte';
-	import Switch from '$lib/components/Switch.svelte';
-	import { autosave } from '$lib/autosave';
+	import type { FormFeedback } from '#lib/forms.svelte.js';
+	import { formatDateTime, formatDuration, formatFileSize, m } from '#lib/i18n/index.svelte.js';
+	import { ui } from '#lib/ui.js';
+	import FeedbackText from '#lib/components/FeedbackText.svelte';
+	import SubmitButton, { BUTTON_SECONDARY } from '#lib/components/SubmitButton.svelte';
+	import Switch from '#lib/components/Switch.svelte';
+	import { autosave } from '#lib/autosave.js';
 	import {
 		ChevronDown,
 		CircleAlert,

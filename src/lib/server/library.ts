@@ -1,5 +1,5 @@
 import { and, count, eq, inArray, ne, notExists } from 'drizzle-orm';
-import type { Category, Status } from '$lib/status';
+import type { Category, Status } from '#lib/status.js';
 import { getDb } from './db';
 import { invitations, libraryItems, trackingMembers, trackings } from './db/schema';
 import { addNotice } from './noticeLog';

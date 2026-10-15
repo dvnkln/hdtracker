@@ -1,10 +1,9 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
-	import type { SubmitFunction } from '@sveltejs/kit';
+	import { enhance, type SubmitFunction } from '$app/forms';
 	import { UserPlus, X } from '@lucide/svelte';
-	import type { Person } from '$lib/avatar';
-	import { m } from '$lib/i18n/index.svelte';
-	import Avatar from '$lib/components/Avatar.svelte';
+	import type { Person } from '#lib/avatar.js';
+	import { m } from '#lib/i18n/index.svelte.js';
+	import Avatar from '#lib/components/Avatar.svelte';
 
 	// Whom to invite to the titles selected in the library. Each person is a form of its own:
 	// one tap invites them to all of the titles (action "invite" of the library page).
@@ -30,7 +29,7 @@
 	const submit: SubmitFunction = () => {
 		busy = true;
 		return async ({ result, update }) => {
-			await update({ reset: false });
+			await update({ reset: false, navigate: false });
 			busy = false;
 			if (result.type === 'success') {
 				ondone(result.data as { invited: number; already: number; to: number });
@@ -73,7 +72,9 @@
 						{#each ids as id (id)}<input type="hidden" name="id" value={id} />{/each}
 						<input type="hidden" name="to" value={person.id} />
 						<Avatar {person} class="size-9 text-sm" />
+
 						<span class="min-w-0 flex-1 truncate text-sm font-medium">{person.name}</span>
+
 						<button
 							class="ui-btn inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-zinc-700 px-3 py-1.5 text-sm font-medium transition-colors enabled:hover:bg-zinc-800 disabled:opacity-50"
 							disabled={busy}

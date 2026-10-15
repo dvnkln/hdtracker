@@ -1,4 +1,4 @@
-import { env } from '$env/dynamic/private';
+import { TMDB_API_TOKEN } from '$app/env/private';
 import { cached, remember } from '../cache';
 import { tmdbTrailer, type TmdbVideo } from './trailer';
 import { getStreamingLinks, preloadStreamingLinks, type StreamingLinks } from './wikidata';
@@ -45,11 +45,14 @@ type TmdbPage<T> = { results: T[] };
 
 // Calls the TMDB API with the Read Access Token as Bearer header.
 function tmdb<T>(path: string, params: Record<string, string>) {
-	if (!env.TMDB_API_TOKEN) throw missingKey('TMDB_API_TOKEN');
+	if (!TMDB_API_TOKEN) throw missingKey('TMDB_API_TOKEN');
 	const url = new URL(BASE + path);
 	for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
 	return fetchJson<T>('TMDB', url, {
-		headers: { Authorization: `Bearer ${env.TMDB_API_TOKEN}`, Accept: 'application/json' }
+		headers: {
+			Authorization: `Bearer ${TMDB_API_TOKEN}`,
+			Accept: 'application/json'
+		}
 	});
 }
 
@@ -178,6 +181,7 @@ export async function watchFor(
 	const r = data.results[region] ?? {};
 	const links = hasOffers(data, region) ? await getStreamingLinks(wikidataId) : {};
 	const fallback = r.link ?? 'https://www.justwatch.com';
+
 	const list = (providers?: TmdbProvider[]) =>
 		[...(providers ?? [])]
 			.sort((a, b) => a.display_priority - b.display_priority)

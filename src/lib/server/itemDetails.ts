@@ -1,5 +1,5 @@
 import { eq, inArray, notInArray, sql } from 'drizzle-orm';
-import { hasEpisodes, type Category } from '$lib/status';
+import { hasEpisodes, type Category } from '#lib/status.js';
 import { getDb } from './db';
 import { itemDetails, libraryItems } from './db/schema';
 import { getDetails } from './details';

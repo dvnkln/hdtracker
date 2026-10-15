@@ -6,7 +6,7 @@
 // This file knows the tables only – library.ts and sharing.ts use it, it uses neither.
 import { createHash } from 'node:crypto';
 import { eq, inArray } from 'drizzle-orm';
-import { imageSource } from '$lib/images';
+import { imageSource } from '#lib/images.js';
 import { LAYOUTS } from './collage';
 import { getDb } from './db';
 import { libraryItems, users } from './db/schema';

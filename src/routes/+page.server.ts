@@ -1,10 +1,10 @@
 import { fail } from '@sveltejs/kit';
-import { isDashboardSection, isOrder } from '$lib/dashboardOrder';
-import { getDashboard } from '$lib/server/dashboard';
-import { serverMessages } from '$lib/server/i18n';
-import { markRead } from '$lib/server/notices';
-import { companionsByItem } from '$lib/server/sharing';
-import { setUserSettings } from '$lib/server/settings';
+import { isDashboardSection, isOrder } from '#lib/dashboardOrder.js';
+import { getDashboard } from '#lib/server/dashboard.js';
+import { serverMessages } from '#lib/server/i18n.js';
+import { markRead } from '#lib/server/notices.js';
+import { companionsByItem } from '#lib/server/sharing.js';
+import { setUserSettings } from '#lib/server/settings.js';
 import type { Actions, PageServerLoad } from './$types';
 
 // Dashboard: recent and upcoming releases of planned and current titles.

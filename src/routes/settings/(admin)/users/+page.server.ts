@@ -1,7 +1,7 @@
 import { fail } from '@sveltejs/kit';
-import { requireAdmin } from '$lib/server/auth';
-import { serverMessages } from '$lib/server/i18n';
-import { getSetting, setSettings } from '$lib/server/settings';
+import { requireAdmin } from '#lib/server/auth.js';
+import { serverMessages } from '#lib/server/i18n.js';
+import { getSetting, setSettings } from '#lib/server/settings.js';
 import {
 	createUser,
 	deleteUser,
@@ -9,7 +9,7 @@ import {
 	resetPassword,
 	setDisabled,
 	setRole
-} from '$lib/server/users';
+} from '#lib/server/users.js';
 import type { Actions, PageServerLoad } from './$types';
 
 // Administration: the accounts of this installation. Only admins get here (see the layout of

@@ -1,8 +1,8 @@
 <script lang="ts">
-	import Brand from '$lib/components/Brand.svelte';
-	import NewPassword from '$lib/components/NewPassword.svelte';
-	import { m } from '$lib/i18n/index.svelte';
-	import { MIN_PASSWORD_LENGTH } from '$lib/limits';
+	import Brand from '#lib/components/Brand.svelte';
+	import NewPassword from '#lib/components/NewPassword.svelte';
+	import { m } from '#lib/i18n/index.svelte.js';
+	import { MIN_PASSWORD_LENGTH } from '#lib/limits.js';
 	import type { ActionData } from './$types';
 
 	let { form }: { form: ActionData } = $props();

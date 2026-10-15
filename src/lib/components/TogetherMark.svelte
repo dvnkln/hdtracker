@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { Users } from '@lucide/svelte';
-	import type { Person } from '$lib/avatar';
-	import { m } from '$lib/i18n/index.svelte';
-	import Avatar from '$lib/components/Avatar.svelte';
+	import type { Person } from '#lib/avatar.js';
+	import { m } from '#lib/i18n/index.svelte.js';
+	import Avatar from '#lib/components/Avatar.svelte';
 
 	// Marks a title that is tracked together: the profile pictures of the others, or – for
 	// whoever finds those too loud (personal setting `sharedMarker`) – just a small symbol.

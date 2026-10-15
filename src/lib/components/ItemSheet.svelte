@@ -1,5 +1,5 @@
 <script lang="ts" module>
-	import type { Status } from '$lib/status';
+	import type { Status } from '#lib/status.js';
 
 	export type SheetItem = {
 		source: string;
@@ -18,23 +18,22 @@
 </script>
 
 <script lang="ts">
-	import { enhance } from '$app/forms';
-	import type { SubmitFunction } from '@sveltejs/kit';
+	import { enhance, type SubmitFunction } from '$app/forms';
 	import { Bell, BellOff, Info, Trash2, UserPlus, X } from '@lucide/svelte';
-	import type { Sharing } from '$lib/sharing';
-	import Avatar from '$lib/components/Avatar.svelte';
-	import ShareSheet from '$lib/components/ShareSheet.svelte';
-	import { STATUS_ICONS } from '$lib/statusIcons';
+	import type { Sharing } from '#lib/sharing.js';
+	import Avatar from '#lib/components/Avatar.svelte';
+	import ShareSheet from '#lib/components/ShareSheet.svelte';
+	import { STATUS_ICONS } from '#lib/statusIcons.js';
 	import {
 		allowedStatuses,
 		hasEpisodes,
 		isReleased,
 		statusesFor,
 		type Category
-	} from '$lib/status';
-	import { m, statusLabel } from '$lib/i18n/index.svelte';
-	import { img } from '$lib/images';
-	import { titles } from '$lib/titles.svelte';
+	} from '#lib/status.js';
+	import { m, statusLabel } from '#lib/i18n/index.svelte.js';
+	import { img } from '#lib/images.js';
+	import { titles } from '#lib/titles.svelte.js';
 
 	type Props = {
 		category: Category;
@@ -75,7 +74,7 @@
 	const stay: SubmitFunction =
 		() =>
 		async ({ update }) => {
-			await update({ reset: false });
+			await update({ reset: false, navigate: false });
 		};
 
 	let dialog: HTMLDialogElement;
@@ -135,7 +134,7 @@
 	const submit: SubmitFunction = () => {
 		busy = true;
 		return async ({ result, update }) => {
-			await update();
+			await update({ navigate: false });
 			busy = false;
 			if (result.type === 'success') onclose();
 		};
@@ -307,11 +306,8 @@
 						<button
 							type="button"
 							class="flex w-full items-center justify-center gap-1.5 rounded-lg p-3 text-sm text-red-400 hover:bg-zinc-800"
-							onclick={() => (confirmRemove = true)}
+							onclick={() => (confirmRemove = true)}><Trash2 size={16} />{m.sheet.remove}</button
 						>
-							<Trash2 size={16} />
-							{m.sheet.remove}
-						</button>
 					{/if}
 				</form>
 			{/if}

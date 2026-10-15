@@ -10,8 +10,8 @@ import {
 	writeFile
 } from 'node:fs/promises';
 import { join } from 'node:path';
-import { imageSource, type ImageSource } from '$lib/images';
-import { env } from '$env/dynamic/private';
+import { imageSource, type ImageSource } from '#lib/images.js';
+import { SECRET } from '$app/env/private';
 import { IMAGES_DIR } from './config';
 
 // Images from TMDB, IGDB and AniList are fetched by the server and kept on disk, so browsers
@@ -59,7 +59,7 @@ export type Image = { body: Buffer; type: string };
 // without the login cookie. Such an address carries a signature made with SECRET: it opens
 // exactly this one image and nothing else (see hooks.server.ts).
 function signatureOf(address: string) {
-	return createHmac('sha256', env.SECRET ?? '')
+	return createHmac('sha256', SECRET ?? '')
 		.update(`image:${address}`)
 		.digest('base64url');
 }
@@ -75,8 +75,9 @@ export function signedImagePath(address: string | null) {
 // device asks for it. It stops working after a week, so old notifications cannot keep the
 // server busy forever.
 const COLLAGE_DAYS = 7;
+
 const collageSignature = (layout: string, expires: string, addresses: string[]) =>
-	createHmac('sha256', env.SECRET ?? '')
+	createHmac('sha256', SECRET ?? '')
 		.update(`collage:${layout}:${expires}:${addresses.join('\n')}`)
 		.digest('base64url');
 
@@ -94,7 +95,7 @@ export function readCollageAddress(url: URL, now = Date.now()) {
 	const layout = url.searchParams.get('l') ?? '';
 	const expires = url.searchParams.get('e') ?? '';
 	const addresses = url.searchParams.getAll('u');
-	if (!env.SECRET || addresses.length === 0 || addresses.length > 8) return null;
+	if (!SECRET || addresses.length === 0 || addresses.length > 8) return null;
 	const given = Buffer.from(url.searchParams.get('s') ?? '');
 	const expected = Buffer.from(collageSignature(layout, expires, addresses));
 	if (given.length !== expected.length || !timingSafeEqual(given, expected)) return null;
@@ -108,7 +109,7 @@ export function readCollageAddress(url: URL, now = Date.now()) {
 // Opens the profile picture of this one user for a week (the address also names the version
 // of the picture, so a new picture has a new address).
 const avatarSignature = (id: number, version: string, expires: string) =>
-	createHmac('sha256', env.SECRET ?? '')
+	createHmac('sha256', SECRET ?? '')
 		.update(`avatar:${id}:${version}:${expires}`)
 		.digest('base64url');
 
@@ -122,7 +123,7 @@ export function signedAvatarPath(id: number, version: number, now = Date.now()) 
 export function isSignedAvatar(url: URL, now = Date.now()) {
 	const id = /^\/avatar\/(\d+)$/.exec(url.pathname)?.[1];
 	const expires = url.searchParams.get('e') ?? '';
-	if (!id || !env.SECRET) return false;
+	if (!id || !SECRET) return false;
 	const given = Buffer.from(url.searchParams.get('s') ?? '');
 	const expected = Buffer.from(
 		avatarSignature(Number(id), url.searchParams.get('v') ?? '', expires)
@@ -134,7 +135,7 @@ export function isSignedAvatar(url: URL, now = Date.now()) {
 export function isSignedImage(url: URL) {
 	const address = url.searchParams.get('u');
 	const given = Buffer.from(url.searchParams.get('s') ?? '');
-	if (!address || !env.SECRET) return false;
+	if (!address || !SECRET) return false;
 	const expected = Buffer.from(signatureOf(address));
 	return given.length === expected.length && timingSafeEqual(given, expected);
 }

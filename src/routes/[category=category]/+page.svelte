@@ -1,25 +1,25 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import { browser } from '$app/environment';
-	import { afterNavigate, replaceState } from '$app/navigation';
+	import { browser } from '$app/env';
+	import { afterNavigate, goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import EmptyState from '$lib/components/EmptyState.svelte';
-	import LibraryFilter from '$lib/components/LibraryFilter.svelte';
-	import { known, offered, passes } from '$lib/libraryFilter';
+	import EmptyState from '#lib/components/EmptyState.svelte';
+	import LibraryFilter from '#lib/components/LibraryFilter.svelte';
+	import { known, offered, passes } from '#lib/libraryFilter.js';
 	import { FunnelX, Joystick, Origami, Popcorn, SearchX, Sofa } from '@lucide/svelte';
-	import { CATEGORIES } from '$lib/categories';
-	import { COLLAPSED_STATUSES, statusesFor, type Status } from '$lib/status';
-	import { m, statusLabel } from '$lib/i18n/index.svelte';
-	import { NOTHING, pickAll, pickOne, pickRange } from '$lib/selection';
-	import { sharingFor } from '$lib/sharing';
-	import { toast } from '$lib/toasts.svelte';
-	import { titles } from '$lib/titles.svelte';
-	import Notice from '$lib/components/Notice.svelte';
-	import PeopleSheet from '$lib/components/PeopleSheet.svelte';
-	import PosterCard from '$lib/components/PosterCard.svelte';
-	import { BUTTON_PRIMARY } from '$lib/components/SubmitButton.svelte';
-	import ItemSheet, { type SheetItem } from '$lib/components/ItemSheet.svelte';
-	import { STATUS_ICONS } from '$lib/statusIcons';
+	import { CATEGORIES } from '#lib/categories.js';
+	import { COLLAPSED_STATUSES, statusesFor, type Status } from '#lib/status.js';
+	import { m, statusLabel } from '#lib/i18n/index.svelte.js';
+	import { NOTHING, pickAll, pickOne, pickRange } from '#lib/selection.js';
+	import { sharingFor } from '#lib/sharing.js';
+	import { toast } from '#lib/toasts.svelte.js';
+	import { titles } from '#lib/titles.svelte.js';
+	import Notice from '#lib/components/Notice.svelte';
+	import PeopleSheet from '#lib/components/PeopleSheet.svelte';
+	import PosterCard from '#lib/components/PosterCard.svelte';
+	import { BUTTON_PRIMARY } from '#lib/components/SubmitButton.svelte';
+	import ItemSheet, { type SheetItem } from '#lib/components/ItemSheet.svelte';
+	import { STATUS_ICONS } from '#lib/statusIcons.js';
 	import { ChevronRight, UserPlus, X } from '@lucide/svelte';
 
 	let { data, form } = $props();
@@ -44,7 +44,12 @@
 	const inAddress = () => (browser ? new URL(location.href) : page.url).searchParams.getAll('f');
 	let wanted = $state<string[]>(untrack(inAddress));
 	// (This page stays when one goes from one area to another: read the address again then.)
-	afterNavigate(() => (wanted = inAddress()));
+	afterNavigate(({ shallow, type }) => {
+		if (shallow && type === 'goto') return;
+
+		return (wanted = inAddress());
+	});
+
 	let filters = $derived(known(wanted, offer));
 	let shown = $derived(filterable.filter((item) => passes(item, filters)));
 	let canFilter = $derived(offer.people.length + offer.services.length + offer.genres.length > 0);
@@ -53,7 +58,7 @@
 		const url = new URL(location.href);
 		url.searchParams.delete('f');
 		for (const key of keys) url.searchParams.append('f', key);
-		replaceState(url, page.state);
+		goto(url, { shallow: true, replace: true, state: page.state });
 	}
 
 	// Library grouped by status, in section order; empty sections are skipped.

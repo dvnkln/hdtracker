@@ -1,5 +1,5 @@
 import { and, count, eq, inArray, isNull, notInArray } from 'drizzle-orm';
-import { hasEpisodes, type Category } from '$lib/status';
+import { hasEpisodes, type Category } from '#lib/status.js';
 import { getDb } from './db';
 import { getImage } from './images';
 import { deleteDetailsOfHiddenAreas, endedShowIds, saveDetails } from './itemDetails';
@@ -8,7 +8,7 @@ import { getDetails } from './details';
 import { airedEpisodes, getShowDetails } from './episodes';
 import { serverMessages } from './i18n';
 import type { Title } from './library';
-import type { Status } from '$lib/status';
+import type { Status } from '#lib/status.js';
 import { MAPPING_VERSION, animeTitlesEnabled, ensureAnimeMapping } from './animeMapping';
 import { ANIME_PER_REQUEST, getAnimeReleases, preloadAnime } from './providers/anilist';
 import { GAMES_PER_REQUEST, getGameReleases, preloadGames } from './providers/igdb';

@@ -1,22 +1,21 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import Notice from '$lib/components/Notice.svelte';
-	import { deserialize, enhance } from '$app/forms';
-	import { invalidateAll } from '$app/navigation';
-	import type { SubmitFunction } from '@sveltejs/kit';
-	import { autosave } from '$lib/autosave';
-	import { formatDateTime, m } from '$lib/i18n/index.svelte';
-	import { FormFeedback, type Feedback } from '$lib/forms.svelte';
-	import { ui } from '$lib/ui';
-	import DeviceFilter from '$lib/components/DeviceFilter.svelte';
-	import EmptyState from '$lib/components/EmptyState.svelte';
-	import FeedbackText from '$lib/components/FeedbackText.svelte';
-	import PasswordInput from '$lib/components/PasswordInput.svelte';
-	import Switch from '$lib/components/Switch.svelte';
+	import Notice from '#lib/components/Notice.svelte';
+	import { deserialize, enhance, type SubmitFunction } from '$app/forms';
+	import { refreshAll } from '$app/navigation';
+	import { autosave } from '#lib/autosave.js';
+	import { formatDateTime, m } from '#lib/i18n/index.svelte.js';
+	import { FormFeedback, type Feedback } from '#lib/forms.svelte.js';
+	import { ui } from '#lib/ui.js';
+	import DeviceFilter from '#lib/components/DeviceFilter.svelte';
+	import EmptyState from '#lib/components/EmptyState.svelte';
+	import FeedbackText from '#lib/components/FeedbackText.svelte';
+	import PasswordInput from '#lib/components/PasswordInput.svelte';
+	import Switch from '#lib/components/Switch.svelte';
 	import SubmitButton, {
 		BUTTON_DANGER,
 		BUTTON_SECONDARY
-	} from '$lib/components/SubmitButton.svelte';
+	} from '#lib/components/SubmitButton.svelte';
 	import {
 		BellPlus,
 		BellRing,
@@ -100,6 +99,7 @@
 
 	async function check() {
 		if (!window.isSecureContext) return (support = 'insecure');
+
 		if (
 			!('serviceWorker' in navigator) ||
 			!('PushManager' in window) ||
@@ -141,7 +141,7 @@
 		) as {
 			error?: string;
 		} | null;
-		await invalidateAll();
+		await refreshAll();
 		return { ok: result.type === 'success', text: answer?.error ?? '' };
 	}
 
@@ -209,7 +209,7 @@
 			return async (output) => {
 				if (after) await after(output);
 				// The list shows the newest state either way (e.g. a device that turned out to be gone)
-				await invalidateAll();
+				await refreshAll();
 				if (output.result.type === 'success') await done(output.result.data ?? {});
 			};
 		};
@@ -544,9 +544,9 @@
 <!-- Adding: first which kind, then – for kinds that have settings – its fields -->
 <div class="mt-3">
 	{#if adding === null}
-		<button type="button" class={BUTTON_SECONDARY} onclick={() => (adding = 'choose')}>
-			<Plus size={16} />{m.notifications.addTarget}
-		</button>
+		<button type="button" class={BUTTON_SECONDARY} onclick={() => (adding = 'choose')}
+			><Plus size={16} />{m.notifications.addTarget}</button
+		>
 	{:else if adding === 'choose'}
 		<div class="flex flex-col gap-2 rounded-lg border border-zinc-800 p-3">
 			{#if !listed}
@@ -605,9 +605,9 @@
 			{/if}
 			<FeedbackText feedback={deviceFeedback} />
 			<div>
-				<button type="button" class={BUTTON_SECONDARY} onclick={() => (adding = null)}>
-					{m.common.cancel}
-				</button>
+				<button type="button" class={BUTTON_SECONDARY} onclick={() => (adding = null)}
+					>{m.common.cancel}</button
+				>
 			</div>
 		</div>
 	{:else}
@@ -630,9 +630,10 @@
 			{/if}
 			<div class={actions}>
 				<SubmitButton text={m.notifications.save} busy={forms.busy === 'new'} when="filled" />
-				<button type="button" class={BUTTON_SECONDARY} onclick={() => (adding = null)}>
-					{m.common.cancel}
-				</button>
+
+				<button type="button" class={BUTTON_SECONDARY} onclick={() => (adding = null)}
+					>{m.common.cancel}</button
+				>
 			</div>
 			<FeedbackText feedback={forms.messages.new} />
 		</form>

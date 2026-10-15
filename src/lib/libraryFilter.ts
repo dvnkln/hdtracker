@@ -4,7 +4,7 @@
 //
 // A filter is a short key, so it fits into the address of the page:
 //   'shared' · 'alone' · 'person:3' · 'service:Netflix' · 'genre:Comedy'
-import type { Person } from '$lib/avatar';
+import type { Person } from '#lib/avatar.js';
 
 // What a title is filtered by
 export type Filterable = {

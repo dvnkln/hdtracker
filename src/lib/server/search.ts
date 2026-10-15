@@ -1,4 +1,4 @@
-import type { Category } from '$lib/categories';
+import type { Category } from '#lib/categories.js';
 import { searchAnime } from './providers/anilist';
 import { searchGames } from './providers/igdb';
 import { searchMovies, searchTv } from './providers/tmdb';

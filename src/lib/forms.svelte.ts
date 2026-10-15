@@ -1,4 +1,4 @@
-import type { SubmitFunction } from '@sveltejs/kit';
+import type { SubmitFunction } from '$app/forms';
 
 export type Feedback = { ok: boolean; text: string };
 
@@ -25,7 +25,7 @@ export class FormFeedback {
 			this.busyAction = submitter?.getAttribute('formaction') ?? null;
 			this.messages[id] = undefined;
 			return async ({ result, update }) => {
-				await update({ reset });
+				await update({ reset, navigate: false });
 				this.busy = null;
 				this.busyAction = null;
 				// Tells the form's buttons that what it shows is now the saved state (SubmitButton `when`)

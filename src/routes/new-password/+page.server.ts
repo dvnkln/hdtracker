@@ -1,8 +1,8 @@
 import { fail, redirect } from '@sveltejs/kit';
-import { MIN_PASSWORD_LENGTH } from '$lib/limits';
-import { SESSION_COOKIE, deleteOtherSessions } from '$lib/server/auth';
-import { serverMessages } from '$lib/server/i18n';
-import { setOwnPassword } from '$lib/server/users';
+import { MIN_PASSWORD_LENGTH } from '#lib/limits.js';
+import { SESSION_COOKIE, deleteOtherSessions } from '#lib/server/auth.js';
+import { serverMessages } from '#lib/server/i18n.js';
+import { setOwnPassword } from '#lib/server/users.js';
 import type { Actions } from './$types';
 
 // The first page after logging in with a temporary password (a new account, or one an admin

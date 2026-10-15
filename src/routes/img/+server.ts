@@ -1,5 +1,5 @@
 import { error } from '@sveltejs/kit';
-import { getImage } from '$lib/server/images';
+import { getImage } from '#lib/server/images.js';
 import type { RequestHandler } from './$types';
 
 // Serves a poster or other image of TMDB, IGDB or AniList from our own server (only for

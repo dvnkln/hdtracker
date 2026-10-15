@@ -4,8 +4,8 @@
 //
 // All rules are here; the pages only call them. Who acts is always passed in.
 import { and, count, eq, inArray, ne, type SQL } from 'drizzle-orm';
-import type { Person } from '$lib/avatar';
-import type { Status } from '$lib/status';
+import type { Person } from '#lib/avatar.js';
+import type { Status } from '#lib/status.js';
 import { getDb } from './db';
 import {
 	invitations,

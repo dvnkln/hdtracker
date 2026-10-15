@@ -1,9 +1,9 @@
 import { vi } from 'vitest';
-import { getDb } from '$lib/server/db';
+import { getDb } from '#lib/server/db/index.js';
 import { and, eq } from 'drizzle-orm';
-import type { Category, Status } from '$lib/status';
-import { libraryItems, trackingMembers, trackings, users } from '$lib/server/db/schema';
-import { findItem, SOURCE_FOR } from '$lib/server/library';
+import type { Category, Status } from '#lib/status.js';
+import { libraryItems, trackingMembers, trackings, users } from '#lib/server/db/schema.js';
+import { findItem, SOURCE_FOR } from '#lib/server/library.js';
 
 type Reply = (url: string, body: string) => unknown;
 

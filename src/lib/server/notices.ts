@@ -4,8 +4,8 @@
 //
 // Unread until the user has seen it; read notices are removed after a week.
 import { and, eq, isNotNull, isNull, lt, ne, or, type SQL } from 'drizzle-orm';
-import type { Person } from '$lib/avatar';
-import type { Category } from '$lib/status';
+import type { Person } from '#lib/avatar.js';
+import type { Category } from '#lib/status.js';
 import { trackedEvents } from './dashboard';
 import { getDb } from './db';
 import { libraryItems, notices, users, type NoticeKind, type ReleaseKind } from './db/schema';

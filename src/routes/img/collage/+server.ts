@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
-import { cached } from '$lib/server/cache';
-import { composePosters, isLayout } from '$lib/server/collage';
-import { getImage, readCollageAddress } from '$lib/server/images';
+import { cached } from '#lib/server/cache.js';
+import { composePosters, isLayout } from '#lib/server/collage.js';
+import { getImage, readCollageAddress } from '#lib/server/images.js';
 import type { RequestHandler } from './$types';
 
 const KEEP_MS = 10 * 60 * 1000;

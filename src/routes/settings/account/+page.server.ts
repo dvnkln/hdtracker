@@ -1,6 +1,6 @@
 import { fail, type RequestEvent } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
-import { MIN_PASSWORD_LENGTH as MIN_PASSWORD, USERNAME_PATTERN } from '$lib/limits';
+import { MIN_PASSWORD_LENGTH as MIN_PASSWORD, USERNAME_PATTERN } from '#lib/limits.js';
 import {
 	SESSION_COOKIE,
 	clearLoginFailures,
@@ -9,10 +9,10 @@ import {
 	loginLockedFor,
 	recordLoginFailure,
 	verifyPassword
-} from '$lib/server/auth';
-import { getDb } from '$lib/server/db';
-import { users } from '$lib/server/db/schema';
-import { serverMessages } from '$lib/server/i18n';
+} from '#lib/server/auth.js';
+import { getDb } from '#lib/server/db/index.js';
+import { users } from '#lib/server/db/schema.js';
+import { serverMessages } from '#lib/server/i18n.js';
 import {
 	MAX_AVATAR_BYTES,
 	MAX_DISPLAY_NAME,
@@ -23,7 +23,7 @@ import {
 	setDisplayName,
 	setOwnPassword,
 	toPerson
-} from '$lib/server/users';
+} from '#lib/server/users.js';
 import type { Actions, PageServerLoad } from './$types';
 
 // Personal: who you are for the others (name, picture) and how you log in.

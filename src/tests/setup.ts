@@ -19,7 +19,7 @@ beforeEach(() => {
 });
 
 // Imported only now, so the modules see the settings above.
-const { getDb, runMigrations } = await import('$lib/server/db');
+const { getDb, runMigrations } = await import('#lib/server/db/index.js');
 runMigrations();
 
 afterAll(() => {

@@ -1,15 +1,18 @@
-/// <reference types="@sveltejs/kit" />
-/// <reference no-default-lib="true"/>
-/// <reference lib="esnext" />
-/// <reference lib="webworker" />
 // Makes the app installable ("add to home screen") and keeps the app's own files (scripts,
 // styles, fonts, icons) cached, so it starts faster. Pages and data always come from the
 // server – nothing personal is stored offline.
-import { build, files, version } from '$service-worker';
+// (Type-checked with its own tsconfig.json next to it: a service worker has other globals than
+// a page.)
+import { version } from '$app/env';
+import { assets, immutable } from '$app/manifest';
+import { self as sw } from '$app/service-worker';
 
-const sw = self as unknown as ServiceWorkerGlobalScope;
 const CACHE = `hdtracker-${version}`;
-const ASSETS = new Set([...build, ...files]);
+// The manifest names the files relative to the app's root; the fetch handler below compares
+// with the path of a request
+const ASSETS = new Set(
+	[...immutable, ...assets].map(({ path }) => new URL(path, sw.registration.scope).pathname)
+);
 
 sw.addEventListener('install', (event) => {
 	event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll([...ASSETS])));

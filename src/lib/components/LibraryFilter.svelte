@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { Check, Funnel, UserX, Users, X } from '@lucide/svelte';
-	import type { Person } from '$lib/avatar';
-	import { m } from '$lib/i18n/index.svelte';
-	import { img } from '$lib/images';
-	import { countWith, type Filterable } from '$lib/libraryFilter';
-	import Avatar from '$lib/components/Avatar.svelte';
+	import type { Person } from '#lib/avatar.js';
+	import { m } from '#lib/i18n/index.svelte.js';
+	import { img } from '#lib/images.js';
+	import { countWith, type Filterable } from '#lib/libraryFilter.js';
+	import Avatar from '#lib/components/Avatar.svelte';
 
 	// The filter of the library: a funnel in the line of the first heading (it takes no line of
 	// its own – put it into a `relative` box around the sections), what is switched on next to

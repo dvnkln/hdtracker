@@ -1,11 +1,10 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import { enhance } from '$app/forms';
-	import type { SubmitFunction } from '@sveltejs/kit';
-	import type { ShowDetails } from '$lib/server/providers/types';
+	import { enhance, type SubmitFunction } from '$app/forms';
+	import type { ShowDetails } from '#lib/server/providers/types.js';
 	import { CalendarClock, Check, CheckCheck, ChevronRight } from '@lucide/svelte';
-	import { formatDate, formatShortDate, m } from '$lib/i18n/index.svelte';
-	import { img } from '$lib/images';
+	import { formatDate, formatShortDate, m } from '#lib/i18n/index.svelte.js';
+	import { img } from '#lib/images.js';
 
 	// Progress, seasons and episodes of a series/anime. Form actions live on the detail page.
 	type Props = {
@@ -86,7 +85,7 @@
 		const k = key(Number(formData.get('season')), Number(formData.get('episode')));
 		pending = [...pending, k];
 		return async ({ update }) => {
-			await update({ reset: false });
+			await update({ reset: false, navigate: false });
 			pending = pending.filter((p) => p !== k);
 		};
 	};
@@ -96,7 +95,7 @@
 		if (formData.get('watched') === '0' && !confirm(m.episodes.resetConfirm)) {
 			cancel();
 		}
-		return async ({ update }) => update({ reset: false });
+		return async ({ update }) => update({ reset: false, navigate: false });
 	};
 </script>
 

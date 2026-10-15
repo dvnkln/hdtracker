@@ -1,5 +1,6 @@
-// ORIGIN in .env may list several addresses, comma-separated. start.js hands the first one to
-// adapter-node (which only supports one) and keeps the full list in HDTRACKER_ORIGINS.
+// ORIGIN in .env may list several addresses, comma-separated; start.js keeps the list in
+// HDTRACKER_ORIGINS. (adapter-node no longer reads ORIGIN: without it, the address of a request
+// is https://<Host header> – what counts for us is decided here.)
 const list = (process.env.HDTRACKER_ORIGINS ?? process.env.ORIGIN ?? '')
 	.split(',')
 	.map((o) => o.trim().replace(/\/+$/, ''))

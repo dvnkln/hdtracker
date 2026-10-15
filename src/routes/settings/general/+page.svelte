@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { autosave } from '$lib/autosave';
-	import { CATEGORIES, CATEGORY_KEYS, type Category } from '$lib/categories';
-	import { LOCALES, m } from '$lib/i18n/index.svelte';
-	import { FormFeedback } from '$lib/forms.svelte';
-	import { ui } from '$lib/ui';
-	import FeedbackText from '$lib/components/FeedbackText.svelte';
-	import Switch from '$lib/components/Switch.svelte';
-	import Notice from '$lib/components/Notice.svelte';
+	import { autosave } from '#lib/autosave.js';
+	import { CATEGORIES, CATEGORY_KEYS, type Category } from '#lib/categories.js';
+	import { LOCALES, m } from '#lib/i18n/index.svelte.js';
+	import { FormFeedback } from '#lib/forms.svelte.js';
+	import { ui } from '#lib/ui.js';
+	import FeedbackText from '#lib/components/FeedbackText.svelte';
+	import Switch from '#lib/components/Switch.svelte';
+	import Notice from '#lib/components/Notice.svelte';
 	import { LayoutGrid, Monitor, SlidersHorizontal } from '@lucide/svelte';
 
 	let { data } = $props();

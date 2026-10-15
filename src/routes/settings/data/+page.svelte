@@ -1,17 +1,17 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { invalidateAll } from '$app/navigation';
-	import { CATEGORIES, CATEGORY_KEYS, type Category } from '$lib/categories';
-	import { m } from '$lib/i18n/index.svelte';
-	import { ui } from '$lib/ui';
-	import { FormFeedback } from '$lib/forms.svelte';
-	import FeedbackText from '$lib/components/FeedbackText.svelte';
+	import { refreshAll } from '$app/navigation';
+	import { CATEGORIES, CATEGORY_KEYS, type Category } from '#lib/categories.js';
+	import { m } from '#lib/i18n/index.svelte.js';
+	import { ui } from '#lib/ui.js';
+	import { FormFeedback } from '#lib/forms.svelte.js';
+	import FeedbackText from '#lib/components/FeedbackText.svelte';
 	import SubmitButton, {
 		BUTTON_DANGER,
 		BUTTON_PRIMARY,
 		BUTTON_SECONDARY
-	} from '$lib/components/SubmitButton.svelte';
-	import Notice from '$lib/components/Notice.svelte';
+	} from '#lib/components/SubmitButton.svelte';
+	import Notice from '#lib/components/Notice.svelte';
 	import {
 		CircleCheck,
 		Download,
@@ -48,7 +48,7 @@
 	$effect(() => {
 		if (data.pending === 0) return;
 		sawLoading = true;
-		const timer = setInterval(() => invalidateAll(), 3000);
+		const timer = setInterval(() => refreshAll(), 3000);
 		return () => clearInterval(timer);
 	});
 </script>
@@ -68,7 +68,7 @@
 		use:enhance={() => {
 			busy = true;
 			return async ({ update }) => {
-				await update();
+				await update({ navigate: false });
 				busy = false;
 			};
 		}}

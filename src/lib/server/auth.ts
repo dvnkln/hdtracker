@@ -2,7 +2,7 @@ import { createHmac, randomBytes, scrypt, timingSafeEqual } from 'node:crypto';
 import { promisify } from 'node:util';
 import { error, type Cookies, type RequestEvent } from '@sveltejs/kit';
 import { and, count, eq, lt, ne } from 'drizzle-orm';
-import { env } from '$env/dynamic/private';
+import { SECRET } from '$app/env/private';
 import { getDb } from './db';
 import { sessions, users } from './db/schema';
 import {
@@ -41,7 +41,7 @@ export type SessionUser = {
 
 // Throws at startup if SECRET is missing or too short.
 export function getSecret() {
-	const secret = env.SECRET;
+	const secret = SECRET;
 	if (!secret || secret.length < 32) {
 		throw new Error('SECRET must be set in .env and be at least 32 characters long');
 	}

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import type { Person } from '$lib/avatar';
-	import { m } from '$lib/i18n/index.svelte';
-	import Avatar from '$lib/components/Avatar.svelte';
+	import type { Person } from '#lib/avatar.js';
+	import { m } from '#lib/i18n/index.svelte.js';
+	import Avatar from '#lib/components/Avatar.svelte';
 	import { LogOut, Settings } from '@lucide/svelte';
 
 	// The own profile picture at the right end of the header. A tap opens a small menu: who is

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Feedback } from '$lib/forms.svelte';
+	import type { Feedback } from '#lib/forms.svelte.js';
 
 	let { feedback }: { feedback: Feedback | undefined } = $props();
 </script>

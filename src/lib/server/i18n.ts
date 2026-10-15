@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import type { Cookies, RequestEvent } from '@sveltejs/kit';
-import { MESSAGES, isLocale, type Locale } from '$lib/i18n/index.svelte';
+import { MESSAGES, isLocale, type Locale } from '#lib/i18n/index.svelte.js';
 import { getDb } from './db';
 import { users } from './db/schema';
 import { isHttps } from './origins';

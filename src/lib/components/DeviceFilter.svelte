@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { tick } from 'svelte';
 	import { Check } from '@lucide/svelte';
-	import { m } from '$lib/i18n/index.svelte';
-	import { ui } from '$lib/ui';
+	import { m } from '#lib/i18n/index.svelte.js';
+	import { ui } from '#lib/ui.js';
 
 	// Pushover's optional device filter: a text field (one device name, or several with
 	// commas; empty = all devices) and, below it, the device names Pushover reported for the

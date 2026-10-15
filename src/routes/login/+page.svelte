@@ -1,7 +1,7 @@
 <script lang="ts">
-	import Brand from '$lib/components/Brand.svelte';
-	import PasswordInput from '$lib/components/PasswordInput.svelte';
-	import { m } from '$lib/i18n/index.svelte';
+	import Brand from '#lib/components/Brand.svelte';
+	import PasswordInput from '#lib/components/PasswordInput.svelte';
+	import { m } from '#lib/i18n/index.svelte.js';
 	import type { ActionData } from './$types';
 
 	let { form }: { form: ActionData } = $props();

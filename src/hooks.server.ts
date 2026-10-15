@@ -1,6 +1,7 @@
-import type { Handle, RequestEvent, ServerInit } from '@sveltejs/kit';
-import { isSignedAvatar, isSignedImage, readCollageAddress } from '$lib/server/images';
-import { runMigrations } from '$lib/server/db';
+import type { Handle, ServerInit } from '@sveltejs/kit/hooks';
+import type { RequestEvent } from '@sveltejs/kit';
+import { isSignedAvatar, isSignedImage, readCollageAddress } from '#lib/server/images.js';
+import { runMigrations } from '#lib/server/db/index.js';
 import {
 	SESSION_COOKIE,
 	clearSessionCookie,
@@ -8,12 +9,12 @@ import {
 	hasAnyUser,
 	setSessionCookie,
 	validateSession
-} from '$lib/server/auth';
-import { allowedOrigins, isAllowedOrigin, isHttps } from '$lib/server/origins';
-import { localeFor, withLocale } from '$lib/server/i18n';
-import { themeFor } from '$lib/server/theme';
-import { barColors } from '$lib/themes';
-import { startScheduler } from '$lib/server/tasks/scheduler';
+} from '#lib/server/auth.js';
+import { allowedOrigins, isAllowedOrigin, isHttps } from '#lib/server/origins.js';
+import { localeFor, withLocale } from '#lib/server/i18n.js';
+import { themeFor } from '#lib/server/theme.js';
+import { barColors } from '#lib/themes.js';
+import { startScheduler } from '#lib/server/tasks/scheduler.js';
 
 // Runs once when the server starts, before the first request is handled.
 export const init: ServerInit = () => {
@@ -103,6 +104,7 @@ function route(event: RequestEvent, resolve: Parameters<Handle>[0]['resolve']) {
 		(path === '/img' && isSignedImage(event.url)) ||
 		(path === '/img/collage' && readCollageAddress(event.url) !== null) ||
 		isSignedAvatar(event.url);
+
 	if (!event.locals.user && !open) return redirectTo('/login');
 	if (event.locals.user && path === '/login') return redirectTo('/');
 

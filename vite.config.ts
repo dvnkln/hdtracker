@@ -44,13 +44,8 @@ export default defineConfig({
 					'form-action': ['self'],
 					'frame-ancestors': ['none']
 				}
-			},
-			typescript: {
-				config: (config) => {
-					// Also type-check the migration config and the browser tests
-					config.include.push('../drizzle.config.ts', '../playwright.config.ts', '../e2e/**/*.ts');
-				}
 			}
+			// Also type-check the migration config and the browser tests
 		})
 	]
 });

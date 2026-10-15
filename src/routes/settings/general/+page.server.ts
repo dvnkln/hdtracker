@@ -1,11 +1,11 @@
 import { fail } from '@sveltejs/kit';
-import { isCategory } from '$lib/categories';
-import { isLocale } from '$lib/i18n/index.svelte';
-import { countByCategory } from '$lib/server/library';
-import { refreshPending } from '$lib/server/releases';
-import { rememberLocale, serverMessages } from '$lib/server/i18n';
-import { enabledCategories, getUserSetting, setUserSettings } from '$lib/server/settings';
-import { canShare } from '$lib/server/sharing';
+import { isCategory } from '#lib/categories.js';
+import { isLocale } from '#lib/i18n/index.svelte.js';
+import { countByCategory } from '#lib/server/library.js';
+import { refreshPending } from '#lib/server/releases.js';
+import { rememberLocale, serverMessages } from '#lib/server/i18n.js';
+import { enabledCategories, getUserSetting, setUserSettings } from '#lib/server/settings.js';
+import { canShare } from '#lib/server/sharing.js';
 import type { Actions, PageServerLoad } from './$types';
 
 // Personal preferences: how hdtracker looks and behaves.

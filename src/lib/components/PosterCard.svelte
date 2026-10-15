@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { m } from '$lib/i18n/index.svelte';
-	import { img } from '$lib/images';
-	import type { Person } from '$lib/avatar';
-	import TogetherMark from '$lib/components/TogetherMark.svelte';
+	import { m } from '#lib/i18n/index.svelte.js';
+	import { img } from '#lib/images.js';
+	import type { Person } from '#lib/avatar.js';
+	import TogetherMark from '#lib/components/TogetherMark.svelte';
 	import { Check, ImageOff } from '@lucide/svelte';
 
 	type Props = {

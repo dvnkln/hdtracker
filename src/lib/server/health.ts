@@ -1,5 +1,5 @@
 import type { RequestEvent } from '@sveltejs/kit';
-import { env } from '$env/dynamic/private';
+import { TMDB_API_TOKEN, IGDB_CLIENT_ID, IGDB_CLIENT_SECRET } from '$app/env/private';
 import { isNotNull } from 'drizzle-orm';
 import { blockedAddresses, connectionOf } from './auth';
 import { getDb } from './db';
@@ -52,8 +52,19 @@ export function evaluate(facts: Facts): Check[] {
 			level: facts.missingKeys.length ? 'action' : 'ok',
 			names: facts.missingKeys
 		},
-		{ key: 'tasks', level: facts.failedTasks ? 'action' : 'ok', count: facts.failedTasks },
-		{ key: 'library', level: facts.pendingItems ? 'hint' : 'ok', count: facts.pendingItems },
+
+		{
+			key: 'tasks',
+			level: facts.failedTasks ? 'action' : 'ok',
+			count: facts.failedTasks
+		},
+
+		{
+			key: 'library',
+			level: facts.pendingItems ? 'hint' : 'ok',
+			count: facts.pendingItems
+		},
+
 		{
 			key: 'missing',
 			level: facts.missingItems.length ? 'hint' : 'ok',
@@ -70,8 +81,8 @@ export function evaluate(facts: Facts): Check[] {
 
 export async function serverOverview(event: RequestEvent) {
 	const missingKeys = [
-		!env.TMDB_API_TOKEN && 'TMDB',
-		(!env.IGDB_CLIENT_ID || !env.IGDB_CLIENT_SECRET) && 'IGDB'
+		!TMDB_API_TOKEN && 'TMDB',
+		(!IGDB_CLIENT_ID || !IGDB_CLIENT_SECRET) && 'IGDB'
 	].filter((name) => typeof name === 'string');
 	const checks = evaluate({
 		https: isHttps(event.request, event.url),

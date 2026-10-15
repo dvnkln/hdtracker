@@ -1,7 +1,7 @@
 import { fail } from '@sveltejs/kit';
-import type { Person } from '$lib/avatar';
-import type { Category } from '$lib/categories';
-import { allowedStatuses, isReleased, isStatusFor, type Status } from '$lib/status';
+import type { Person } from '#lib/avatar.js';
+import type { Category } from '#lib/categories.js';
+import { allowedStatuses, isReleased, isStatusFor, type Status } from '#lib/status.js';
 import {
 	findItem,
 	libraryStatusFor,
@@ -10,14 +10,14 @@ import {
 	removeItem,
 	saveItem,
 	type LibraryItem
-} from '$lib/server/library';
-import { airedEpisodes, getShowDetails, hasEpisodes, setEpisodes } from '$lib/server/episodes';
-import { ProviderError, today, type SearchResult } from '$lib/server/providers/types';
-import { searchCategory } from '$lib/server/search';
-import { refreshPending } from '$lib/server/releases';
-import { serverMessages } from '$lib/server/i18n';
-import { filterFactsOf } from '$lib/server/itemDetails';
-import { companionsByItem, inviteMany, outgoing, shareablePeople } from '$lib/server/sharing';
+} from '#lib/server/library.js';
+import { airedEpisodes, getShowDetails, hasEpisodes, setEpisodes } from '#lib/server/episodes.js';
+import { ProviderError, today, type SearchResult } from '#lib/server/providers/types.js';
+import { searchCategory } from '#lib/server/search.js';
+import { refreshPending } from '#lib/server/releases.js';
+import { serverMessages } from '#lib/server/i18n.js';
+import { filterFactsOf } from '#lib/server/itemDetails.js';
+import { companionsByItem, inviteMany, outgoing, shareablePeople } from '#lib/server/sharing.js';
 import type { Actions, PageServerLoad } from './$types';
 
 function pendingByItem(userId: number) {

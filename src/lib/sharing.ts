@@ -1,4 +1,4 @@
-import type { Person } from '$lib/avatar';
+import type { Person } from '#lib/avatar.js';
 
 // Where tracking a title together stands for the user: who tracks along, and whom they could
 // invite (`invitation` is set while one is open). Null while there is nobody to share with.

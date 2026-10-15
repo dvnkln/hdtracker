@@ -2,16 +2,16 @@
 	import { onMount } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { page } from '$app/state';
-	import { CATEGORIES } from '$lib/categories';
-	import { sortByDate, type DashboardSection, type Order } from '$lib/dashboardOrder';
-	import { eventLabel } from '$lib/eventLabel';
-	import { m } from '$lib/i18n/index.svelte';
-	import { img } from '$lib/images';
-	import { reportSeen } from '$lib/seen';
-	import { titles } from '$lib/titles.svelte';
-	import TogetherMark from '$lib/components/TogetherMark.svelte';
-	import EmptyState from '$lib/components/EmptyState.svelte';
-	import type { DashboardEntry } from '$lib/server/dashboard';
+	import { CATEGORIES } from '#lib/categories.js';
+	import { sortByDate, type DashboardSection, type Order } from '#lib/dashboardOrder.js';
+	import { eventLabel } from '#lib/eventLabel.js';
+	import { m } from '#lib/i18n/index.svelte.js';
+	import { img } from '#lib/images.js';
+	import { reportSeen } from '#lib/seen.js';
+	import { titles } from '#lib/titles.svelte.js';
+	import TogetherMark from '#lib/components/TogetherMark.svelte';
+	import EmptyState from '#lib/components/EmptyState.svelte';
+	import type { DashboardEntry } from '#lib/server/dashboard.js';
 	import {
 		CalendarArrowDown,
 		CalendarArrowUp,

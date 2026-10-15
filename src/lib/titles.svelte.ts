@@ -1,4 +1,4 @@
-import type { Category } from '$lib/status';
+import type { Category } from '#lib/status.js';
 
 export type AnimeTitle = 'english' | 'romaji';
 

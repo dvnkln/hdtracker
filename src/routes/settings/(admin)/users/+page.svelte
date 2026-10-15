@@ -1,17 +1,17 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { autosave } from '$lib/autosave';
-	import { FormFeedback } from '$lib/forms.svelte';
-	import { formatDateTime, m } from '$lib/i18n/index.svelte';
-	import { USERNAME_PATTERN } from '$lib/limits';
-	import { ui } from '$lib/ui';
-	import Avatar from '$lib/components/Avatar.svelte';
-	import FeedbackText from '$lib/components/FeedbackText.svelte';
-	import Switch from '$lib/components/Switch.svelte';
+	import { autosave } from '#lib/autosave.js';
+	import { FormFeedback } from '#lib/forms.svelte.js';
+	import { formatDateTime, m } from '#lib/i18n/index.svelte.js';
+	import { USERNAME_PATTERN } from '#lib/limits.js';
+	import { ui } from '#lib/ui.js';
+	import Avatar from '#lib/components/Avatar.svelte';
+	import FeedbackText from '#lib/components/FeedbackText.svelte';
+	import Switch from '#lib/components/Switch.svelte';
 	import SubmitButton, {
 		BUTTON_DANGER,
 		BUTTON_SECONDARY
-	} from '$lib/components/SubmitButton.svelte';
+	} from '#lib/components/SubmitButton.svelte';
 	import {
 		Check,
 		ChevronDown,
@@ -224,7 +224,7 @@
 				action="?/create"
 				use:enhance={() =>
 					async ({ result, update }) => {
-						await update();
+						await update({ navigate: false });
 						if (result.type === 'success') adding = false;
 					}}
 				class="flex flex-col gap-4 rounded-lg border border-zinc-800 p-3"

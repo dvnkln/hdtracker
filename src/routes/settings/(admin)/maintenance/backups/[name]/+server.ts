@@ -1,8 +1,8 @@
 import { error } from '@sveltejs/kit';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { BACKUP_DIR, isBackupName } from '$lib/server/tasks/backups';
-import { requireAdmin } from '$lib/server/auth';
+import { BACKUP_DIR, isBackupName } from '#lib/server/tasks/backups.js';
+import { requireAdmin } from '#lib/server/auth.js';
 import type { RequestHandler } from './$types';
 
 // Download of a backup file (only for the logged-in user, see hooks.server.ts).

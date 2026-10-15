@@ -1,6 +1,6 @@
 import { and, eq } from 'drizzle-orm';
-import { CATEGORY_KEYS } from '$lib/categories';
-import { isStatusFor, type Category, type Status } from '$lib/status';
+import { CATEGORY_KEYS } from '#lib/categories.js';
+import { isStatusFor, type Category, type Status } from '#lib/status.js';
 import { getDb } from '../db';
 import { trackingMembers, trackings, watchedEpisodes } from '../db/schema';
 import { findItem, saveItem, SOURCE_FOR } from '../library';
