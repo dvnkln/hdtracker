@@ -2,6 +2,7 @@
 	import '@fontsource/outfit/600.css';
 	import '@fontsource/outfit/800.css';
 	import './layout.css';
+	import { forgetPictures } from '#lib/notificationPictures.js';
 	import favicon from '#lib/assets/favicon.svg';
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
 	import { page, updated } from '$app/state';
@@ -16,6 +17,11 @@
 	import { Bell } from '@lucide/svelte';
 
 	let { data, children } = $props();
+
+	// Nobody logged in (login page, first start): the profile photos kept for notifications go
+	$effect(() => {
+		if (!data.user) forgetPictures();
+	});
 
 	// Apply the display settings (language, anime titles): once right away (so the first
 	// render is already correct) and again whenever they change.

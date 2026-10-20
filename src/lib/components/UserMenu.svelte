@@ -3,6 +3,7 @@
 	import type { Person } from '#lib/avatar.js';
 	import { m } from '#lib/i18n/index.svelte.js';
 	import Avatar from '#lib/components/Avatar.svelte';
+	import { forgetPictures } from '#lib/notificationPictures.js';
 	import { LogOut, Settings } from '@lucide/svelte';
 
 	// The own profile picture at the right end of the header. A tap opens a small menu: who is
@@ -85,7 +86,7 @@
 			>
 				<Settings size={17} class="text-zinc-400" />{m.common.settings}
 			</a>
-			<form method="POST" action="/logout">
+			<form method="POST" action="/logout" onsubmit={forgetPictures}>
 				<button role="menuitem" class={entry}>
 					<LogOut size={17} class="text-zinc-400" />{m.common.logout}
 				</button>
