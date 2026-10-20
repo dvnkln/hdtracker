@@ -7,11 +7,17 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
-## Upcoming release
+## 0.10.5 – 2026-10-20
+
+Notifications look right away from home.
 
 ### 🐛 Fixed
 
 - Push notifications show their pictures away from home too: the app's own symbols and the profile photos you have seen come from your device, instead of a letter and a plain bell when your hdtracker cannot be reached
+
+### ⬆️ Updating
+
+Just pull the new image – nothing else to do. Open the installed app once afterwards so it picks up the new version.
 
 ## 0.10.4 – 2026-10-15
 
