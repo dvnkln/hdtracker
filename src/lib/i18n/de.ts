@@ -856,7 +856,12 @@ export const de = {
 		missingKey: (name: string) => `${name} fehlt in der .env – siehe .env.example.`,
 		unreachable: (source: string) => `${source} ist gerade nicht erreichbar.`,
 		badCredentials: (source: string) => `${source}: Zugangsdaten ungültig – bitte .env prüfen.`,
+		garbled: (source: string) => `${source} antwortet gerade unverständlich.`,
+		refused: (source: string) => `${source} lehnt Anfragen gerade ab.`,
+		tooMany: (source: string) =>
+			`${source} meldet zu viele Anfragen – bitte gleich noch einmal versuchen.`,
 		httpError: (source: string, status: number) => `${source} antwortet mit Fehler ${status}.`,
+		reason: (source: string, reason: string) => `${source} meldet: „${reason}“`,
 		igdbBadClient: 'IGDB: Client-ID oder Secret ungültig – bitte .env prüfen.',
 		animeNotFound: 'Anime nicht gefunden.',
 		gameNotFound: 'Spiel nicht gefunden.'

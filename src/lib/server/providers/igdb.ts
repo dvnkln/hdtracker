@@ -55,8 +55,8 @@ async function getToken() {
 	try {
 		data = await fetchJson('Twitch', url, { method: 'POST' });
 	} catch (err) {
-		// Twitch answers 400 for a wrong client ID/secret.
-		if (err instanceof ProviderError && err.status === 400) {
+		// Twitch answers 400 for a wrong client ID, 403 for a wrong secret.
+		if (err instanceof ProviderError && [400, 401, 403].includes(err.status ?? 0)) {
 			throw new ProviderError(serverMessages().errors.igdbBadClient);
 		}
 		throw err;

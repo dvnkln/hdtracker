@@ -7,6 +7,12 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
+## Upcoming release
+
+### 🐛 Fixed
+
+- When AniList or Wikidata refuse requests, the error no longer says to check your `.env` – they don't need a key. Error messages now include the reason the service gives (for example “The AniList API has been temporarily disabled”), and “too many requests” is said in words. A service that sends a page instead of data is reported as such instead of with a technical message.
+
 ## 0.10.5 – 2026-10-20
 
 Notifications look right away from home.

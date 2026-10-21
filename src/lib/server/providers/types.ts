@@ -90,14 +90,63 @@ export async function fetchJson<T>(source: string, url: string | URL, init: Requ
 		console.warn(`${source}: too many requests, waiting ${Math.round(delay / 1000)} s`);
 		await sleep(delay);
 	}
-	if (res.status === 401 || res.status === 403) {
-		throw new ProviderError(serverMessages().errors.badCredentials(source), res.status);
-	}
 	if (!res.ok) {
-		console.error(`${source} responded with HTTP ${res.status}`, await res.text());
-		throw new ProviderError(serverMessages().errors.httpError(source, res.status), res.status);
+		const body = await res.text().catch(() => '');
+		console.error(`${source} responded with HTTP ${res.status}`, body);
+		throw new ProviderError(failureMessage(source, res.status, reasonOf(body)), res.status);
 	}
-	return (await res.json()) as T;
+	// A service can answer "ok" with something that is not data (e.g. a maintenance page).
+	const body = await res.text();
+	try {
+		return JSON.parse(body) as T;
+	} catch {
+		console.error(`${source} answered with something that is not JSON`, body.slice(0, 500));
+		throw new ProviderError(serverMessages().errors.garbled(source), res.status);
+	}
+}
+
+// Services that need a key from .env. Only for these can a refusal mean a wrong key –
+// AniList and Wikidata work without one, so ".env" would send the user the wrong way.
+const KEYED = new Set(['TMDB', 'IGDB', 'Twitch']);
+
+// What the user reads when a service answers with an error: what happened, plus the
+// service's own reason if it sent one (e.g. "The AniList API has been temporarily disabled").
+export function failureMessage(source: string, status: number, reason: string | null) {
+	const m = serverMessages().errors;
+	const refused = status === 401 || status === 403;
+	const what =
+		refused && KEYED.has(source)
+			? m.badCredentials(source)
+			: refused
+				? m.refused(source)
+				: status === 429
+					? m.tooMany(source)
+					: m.httpError(source, status);
+	return reason ? `${what} ${m.reason(source, reason)}` : what;
+}
+
+const REASON_MAX = 200;
+
+// The reason in an error answer, in the shapes the services use: GraphQL `errors` (AniList),
+// `status_message` (TMDB), `message` (Twitch), a list with `title`/`cause` (IGDB).
+// Anything else (an HTML page, empty) gives no reason rather than a page of markup.
+export function reasonOf(body: string): string | null {
+	let data: unknown;
+	try {
+		data = JSON.parse(body);
+	} catch {
+		return null;
+	}
+	const first = (value: unknown) => (Array.isArray(value) ? value[0] : value);
+	const obj = first(data) as Record<string, unknown> | null;
+	if (!obj || typeof obj !== 'object') return null;
+	const graphql = first(obj.errors) as Record<string, unknown> | undefined;
+	const text = [graphql?.message, obj.status_message, obj.message, obj.cause, obj.title].find(
+		(v): v is string => typeof v === 'string' && v.trim() !== ''
+	);
+	if (!text) return null;
+	const clean = text.replace(/\s+/g, ' ').trim();
+	return clean.length > REASON_MAX ? `${clean.slice(0, REASON_MAX - 1)}…` : clean;
 }
 
 export function yearOf(date: string | null | undefined) {

@@ -822,7 +822,11 @@ export const en: Messages = {
 		missingKey: (name) => `${name} is missing in .env – see .env.example.`,
 		unreachable: (source) => `${source} is not reachable right now.`,
 		badCredentials: (source) => `${source}: invalid credentials – please check .env.`,
+		garbled: (source) => `${source} is answering with something unreadable right now.`,
+		refused: (source) => `${source} is refusing requests right now.`,
+		tooMany: (source) => `${source} reports too many requests – please try again in a moment.`,
 		httpError: (source, status) => `${source} responded with error ${status}.`,
+		reason: (source, reason) => `${source} says: “${reason}”`,
 		igdbBadClient: 'IGDB: invalid client ID or secret – please check .env.',
 		animeNotFound: 'Anime not found.',
 		gameNotFound: 'Game not found.'
