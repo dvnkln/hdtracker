@@ -7,11 +7,20 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
-## Upcoming release
+## 0.10.6 – 2026-10-21
+
+Clearer error messages when a data source has a problem.
 
 ### 🐛 Fixed
 
-- When AniList or Wikidata refuse requests, the error no longer says to check your `.env` – they don't need a key. Error messages now include the reason the service gives (for example “The AniList API has been temporarily disabled”), and “too many requests” is said in words. A service that sends a page instead of data is reported as such instead of with a technical message.
+- Error messages from TMDB, IGDB, AniList and Wikidata now say what happened, including the reason the service gives (for example “The AniList API has been temporarily disabled”)
+- “Check your .env” only appears for TMDB and IGDB, which need a key – AniList and Wikidata now say they are refusing requests
+- “Too many requests” is said in words, and a service that sends a page instead of data is reported as such instead of with a technical message
+- A wrong IGDB client secret shows the IGDB message instead of a Twitch error
+
+### ⬆️ Updating
+
+Just pull the new image – nothing else to do.
 
 ## 0.10.5 – 2026-10-20
 
