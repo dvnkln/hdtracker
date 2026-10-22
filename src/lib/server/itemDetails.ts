@@ -7,6 +7,7 @@ import { getShowDetails } from './episodes';
 import { findTitle } from './library';
 import { today, type Details, type ShowDetails } from './providers/types';
 import { refreshSoon } from './releases';
+import type { StoreKey } from '#lib/stores.js';
 import { shownCategories } from './settings';
 
 // Everything a detail page shows is kept in the database for the titles of the library, so
@@ -54,11 +55,17 @@ export function trailersOf(itemIds: number[]) {
 	);
 }
 
-// What the library can be filtered by, from the stored details of some titles: their genres
-// and the streaming services that have them in their flat rate (renting and buying do not
-// count – the question is "what of this runs at …"). Titles without stored details are left out.
+// What the library can be filtered by, from the stored details of some titles: their genres,
+// the streaming services that have them in their flat rate (renting and buying do not count –
+// the question is "what of this runs at …"), and for games the stores and platforms. Titles
+// without stored details are left out.
 export function filterFactsOf(itemIds: number[]) {
-	type Facts = { genres: string[]; services: { name: string; logoUrl: string }[] };
+	type Facts = {
+		genres: string[];
+		services: { name: string; logoUrl: string }[];
+		stores: StoreKey[];
+		platforms: string[];
+	};
 	if (itemIds.length === 0) return new Map<number, Facts>();
 	const rows = getDb()
 		.select({ itemId: itemDetails.itemId, info: itemDetails.info })
@@ -70,7 +77,9 @@ export function filterFactsOf(itemIds: number[]) {
 			row.itemId,
 			{
 				genres: row.info.genres ?? [],
-				services: (row.info.watch?.flatrate ?? []).map(({ name, logoUrl }) => ({ name, logoUrl }))
+				services: (row.info.watch?.flatrate ?? []).map(({ name, logoUrl }) => ({ name, logoUrl })),
+				stores: (row.info.stores ?? []).map((store) => store.key),
+				platforms: row.info.platforms ?? []
 			}
 		])
 	);

@@ -44,8 +44,8 @@ What changed in each version: [Changelog](CHANGELOG.md). What's planned: [Roadma
 - 📅 **Dashboard** – what was released recently and what is coming up: new episodes, new seasons, cinema and home releases, game releases.
 - 📺 **Episode tracking** – tick off single episodes, whole seasons or entire shows; see upcoming episodes and announced seasons with dates. Anime get episode titles and images too.
 - 🙈 **Spoiler protection** – images and descriptions of episodes you have not watched yet are blurred (can be switched off).
-- 🍿 **Where to watch** – streaming, rent and buy offers for your region (via JustWatch), with direct links where possible.
-- 🧲 **Filters** – narrow an area down by genre, by streaming service or by who you track a title with – or all three at once.
+- 🍿 **Where to watch** – streaming, rent and buy offers for your region (via JustWatch), with direct links where possible. For games: the stores that sell them, one tap away.
+- 🧲 **Filters** – narrow an area down by genre, by streaming service or by who you track a title with – or all at once. Games also by store and platform.
 - 🔎 **Quick search** – always at the top of the screen; on a computer, press <kbd>/</kbd> to start typing.
 - 📄 **Detail pages** – runtime, genres, rating, release dates and similar titles.
 - 📥 **Import and export** – take over your library from Yamtrack including statuses, watched episodes and anime progress, and download it again as a file Yamtrack can read.
@@ -97,7 +97,7 @@ Where to get the keys and what every setting means: **[Installation guide](https
 
 ## 🙏 Data sources
 
-Movie and series data from [TMDB](https://www.themoviedb.org). This product uses the TMDB API but is not endorsed or certified by TMDB. Streaming availability by [JustWatch](https://www.justwatch.com). Game data from [IGDB](https://www.igdb.com), anime data from [AniList](https://anilist.co); episode titles for anime are matched to TMDB with the community list [anibridge-mappings](https://github.com/anibridge/anibridge-mappings) (MIT).
+Movie and series data from [TMDB](https://www.themoviedb.org). This product uses the TMDB API but is not endorsed or certified by TMDB. Streaming availability by [JustWatch](https://www.justwatch.com). Game data from [IGDB](https://www.igdb.com) (store logos from [Simple Icons](https://simpleicons.org), CC0), anime data from [AniList](https://anilist.co); episode titles for anime are matched to TMDB with the community list [anibridge-mappings](https://github.com/anibridge/anibridge-mappings) (MIT).
 
 Icons by [Lucide](https://lucide.dev), wordmark set in [Outfit](https://github.com/Outfitio/Outfit-Fonts).
 

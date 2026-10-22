@@ -27,7 +27,8 @@
 	let cat = $derived(CATEGORIES[data.category]);
 	let label = $derived(m.categories[data.category]);
 
-	// The filter (who tracks along, streaming service, genre – rules in libraryFilter.ts). Which
+	// The filter (who tracks along, streaming service, store, platform, genre – rules in
+	// libraryFilter.ts). Which
 	// filters are on stands in the address (?f=…), so a reload and the way back keep them;
 	// nothing is stored. Changing them does not ask the server: everything is on the page.
 	let filterable = $derived(
@@ -35,6 +36,8 @@
 			...item,
 			people: data.together[item.id] ?? [],
 			services: data.facts[item.id]?.services ?? [],
+			stores: data.facts[item.id]?.stores ?? [],
+			platforms: data.facts[item.id]?.platforms ?? [],
 			genres: data.facts[item.id]?.genres ?? []
 		}))
 	);
@@ -52,7 +55,11 @@
 
 	let filters = $derived(known(wanted, offer));
 	let shown = $derived(filterable.filter((item) => passes(item, filters)));
-	let canFilter = $derived(offer.people.length + offer.services.length + offer.genres.length > 0);
+	let canFilter = $derived(
+		[offer.people, offer.services, offer.stores, offer.platforms, offer.genres].some(
+			(group) => group.length > 0
+		)
+	);
 	function setFilters(keys: string[]) {
 		wanted = keys;
 		const url = new URL(location.href);

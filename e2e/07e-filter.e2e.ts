@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { loginOk } from './helpers';
+import { addTitle, loginOk } from './helpers';
 
 test('the library can be filtered by genre and streaming service; the address remembers it', async ({
 	page
@@ -50,4 +50,76 @@ test('the library can be filtered by genre and streaming service; the address re
 	await page.locator('nav').getByRole('link', { name: 'Series' }).click();
 	await expect(page).toHaveURL('/series');
 	await expect(page.getByRole('button', { name: /^Remove the filter/ })).toHaveCount(0);
+});
+
+test('games: the stores on the detail page, and filters by store and platform', async ({
+	page
+}) => {
+	await loginOk(page);
+	await addTitle(page, 'games', 'Test Game Epsilon', 'Playing');
+	await addTitle(page, 'games', 'Test Game Zeta', 'Planned');
+
+	// The detail page links each store; PlayStation leads to the store of one's own country
+	await page.goto('/games/402');
+	await expect(page.getByRole('heading', { name: 'Available at' })).toBeVisible();
+	await expect(page.getByRole('link', { name: 'PlayStation Store' })).toHaveAttribute(
+		'href',
+		'https://store.playstation.com/concept/402'
+	);
+	await page.goto('/games/401');
+	await expect(page.getByRole('link', { name: 'Steam' })).toHaveAttribute(
+		'href',
+		'https://store.steampowered.com/app/401'
+	);
+	await expect(page.getByRole('link', { name: 'Nintendo eShop' })).toBeVisible();
+	await expect(page.getByText('Windows, Nintendo Switch')).toBeVisible();
+
+	// The search in the header stays at games while one is in that area – even when another
+	// area was the last one chosen, and after a look at a title and back
+	await page.evaluate(() => localStorage.setItem('hdtracker.searchCategory', 'movies'));
+	await page.goto('/games');
+	const search = page.getByPlaceholder('Search games…').filter({ visible: true });
+	await expect(search).toBeVisible();
+	for (let round = 0; round < 2; round++) {
+		await page.getByRole('button', { name: /Test Game Zeta/ }).click();
+		await page.locator('dialog[open]').getByRole('link', { name: 'Details' }).click();
+		await expect(page).toHaveURL('/games/402');
+		await expect(search).toBeVisible();
+		await page.goBack();
+		await expect(page).toHaveURL('/games');
+		await expect(search).toBeVisible();
+	}
+
+	// The filter offers stores and platforms once the details of both games are stored
+	await page.goto('/games');
+	const epsilon = page.getByRole('button', { name: /Test Game Epsilon/ });
+	const zeta = page.getByRole('button', { name: /Test Game Zeta/ });
+	const funnel = page.getByRole('button', { name: 'Filter', exact: true });
+	const window = page.locator('dialog[open]');
+	await expect(async () => {
+		await page.reload();
+		await funnel.click({ timeout: 1000 });
+		await expect(window.getByRole('checkbox', { name: 'Steam' })).toBeVisible({ timeout: 1000 });
+		await expect(window.getByRole('checkbox', { name: 'PlayStation Store' })).toBeVisible({
+			timeout: 1000
+		});
+	}).toPass();
+
+	// A store: only the game it sells stays
+	await window.getByRole('checkbox', { name: 'Steam' }).click();
+	await window.getByRole('button', { name: 'Show 1 title' }).click();
+	await expect(epsilon).toBeVisible();
+	await expect(zeta).toHaveCount(0);
+	await expect(page).toHaveURL(/f=store(%3A|:)steam/);
+
+	// Another store is "or"; a platform on top is "and"
+	await funnel.click();
+	await window.getByRole('checkbox', { name: 'PlayStation Store' }).click();
+	await expect(window.getByRole('button', { name: 'Show 2 titles' })).toBeVisible();
+	await window.getByRole('checkbox', { name: /^PlayStation 5/ }).click();
+	await window.getByRole('button', { name: 'Show 1 title' }).click();
+	await expect(zeta).toBeVisible();
+	await expect(epsilon).toHaveCount(0);
+	await page.getByRole('button', { name: 'Clear all filters' }).click();
+	await expect(epsilon).toBeVisible();
 });

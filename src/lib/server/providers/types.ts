@@ -1,5 +1,6 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import type { Messages } from '#lib/i18n/de.js';
+import type { Store } from '#lib/stores.js';
 import type { ReleaseKind } from '../db/schema';
 import { serverMessages } from '../i18n';
 
@@ -218,6 +219,10 @@ export type Details = {
 	facts: Fact[];
 	// Streaming offers in the configured region (TMDB / JustWatch). null = not available for this source.
 	watch: { link: string | null; flatrate: Provider[]; rent: Provider[]; buy: Provider[] } | null;
+	// Games: the stores that sell it, and the platforms it runs on. Missing in details stored
+	// before they existed.
+	stores?: Store[];
+	platforms?: string[];
 	links: { name: string; url: string }[]; // e.g. anime streaming sites (not region-checked)
 	similar: SearchResult[];
 };

@@ -5,13 +5,21 @@
 	import { img } from '#lib/images.js';
 	import { countWith, type Filterable } from '#lib/libraryFilter.js';
 	import Avatar from '#lib/components/Avatar.svelte';
+	import StoreLogo from '#lib/components/StoreLogo.svelte';
+	import { STORES, type StoreKey } from '#lib/stores.js';
 
 	// The filter of the library: a funnel in the line of the first heading (it takes no line of
 	// its own – put it into a `relative` box around the sections), what is switched on next to
 	// it, and the window to choose in. The rules are in libraryFilter.ts.
 	type Props = {
 		// What this area offers (see offered())
-		offer: { people: Person[]; services: { name: string; logoUrl: string }[]; genres: string[] };
+		offer: {
+			people: Person[];
+			services: { name: string; logoUrl: string }[];
+			stores: string[];
+			platforms: string[];
+			genres: string[];
+		};
 		// All titles of the area, for the numbers behind the entries
 		items: Filterable[];
 		// The filters that are on, and how many titles they leave
@@ -36,7 +44,9 @@
 					? m.library.filter.withName(
 							offer.people.find((person) => String(person.id) === value)?.name ?? ''
 						)
-					: value;
+					: key.startsWith('store:')
+						? (STORES[value as StoreKey]?.name ?? value)
+						: value;
 	};
 
 	const mark =
@@ -49,6 +59,21 @@
 	const word =
 		'ui-btn inline-flex items-center gap-1 rounded-full border px-3 py-1 text-sm transition-colors hover:bg-zinc-800';
 </script>
+
+<!-- A word to choose with its number (platforms, genres) -->
+{#snippet wordChip(key: string, text: string)}
+	<button
+		type="button"
+		role="checkbox"
+		aria-checked={on.has(key)}
+		class="{word} {on.has(key)
+			? 'ui-keep border-(--accent) text-(--accent)'
+			: 'border-zinc-700 text-zinc-300'} {count(key) === 0 ? 'opacity-30' : ''}"
+		onclick={() => toggle(key)}
+	>
+		{text} <span class="text-zinc-500">{count(key)}</span>
+	</button>
+{/snippet}
 
 {#snippet personRow(key: string, text: string, person?: Person)}
 	<button
@@ -192,22 +217,42 @@
 					{/each}
 				</div>
 			{/if}
+			{#if offer.stores.length > 0}
+				<h3 class={groupTitle}>{m.library.filter.stores}</h3>
+				<div class="flex flex-wrap gap-2">
+					{#each offer.stores as store (store)}
+						{@const key = `store:${store}`}
+						{#if store in STORES}
+							<button
+								type="button"
+								role="checkbox"
+								aria-checked={on.has(key)}
+								aria-label={nameOf(key)}
+								title="{nameOf(key)} · {count(key)}"
+								class="overflow-hidden rounded-lg ring-2 transition {on.has(key)
+									? 'ring-(--accent)'
+									: 'ring-transparent hover:ring-zinc-600'} {count(key) === 0 ? 'opacity-30' : ''}"
+								onclick={() => toggle(key)}
+							>
+								<StoreLogo store={store as StoreKey} class="size-9 sm:size-10" />
+							</button>
+						{/if}
+					{/each}
+				</div>
+			{/if}
+			{#if offer.platforms.length > 0}
+				<h3 class={groupTitle}>{m.library.filter.platforms}</h3>
+				<div class="flex flex-wrap gap-1.5">
+					{#each offer.platforms as platform (platform)}
+						{@render wordChip(`platform:${platform}`, platform)}
+					{/each}
+				</div>
+			{/if}
 			{#if offer.genres.length > 0}
 				<h3 class={groupTitle}>{m.library.filter.genres}</h3>
 				<div class="flex flex-wrap gap-1.5">
 					{#each offer.genres as genre (genre)}
-						{@const key = `genre:${genre}`}
-						<button
-							type="button"
-							role="checkbox"
-							aria-checked={on.has(key)}
-							class="{word} {on.has(key)
-								? 'ui-keep border-(--accent) text-(--accent)'
-								: 'border-zinc-700 text-zinc-300'} {count(key) === 0 ? 'opacity-30' : ''}"
-							onclick={() => toggle(key)}
-						>
-							{genre} <span class="text-zinc-500">{count(key)}</span>
-						</button>
+						{@render wordChip(`genre:${genre}`, genre)}
 					{/each}
 				</div>
 			{/if}

@@ -29,9 +29,10 @@
 		}
 	]);
 
-	// Not required by their licences (ISC, OFL), but fair to name
+	// Not required by their licences (ISC, OFL, CC0), but fair to name
 	let libraries = $derived([
 		{ name: 'Lucide', href: 'https://lucide.dev', text: m.about.libraryIcons },
+		{ name: 'Simple Icons', href: 'https://simpleicons.org', text: m.about.libraryStoreLogos },
 		{ name: 'Outfit', href: 'https://github.com/Outfitio/Outfit-Fonts', text: m.about.libraryFont }
 	]);
 

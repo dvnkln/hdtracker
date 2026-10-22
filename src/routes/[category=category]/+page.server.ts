@@ -48,8 +48,8 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 			q,
 			library,
 			together,
-			// Genres and streaming services of the titles, for the filter (from the stored details)
-			facts: Object.fromEntries(filterFactsOf(library.map((item) => item.id))),
+			// Genres, streaming services, stores, platforms of the titles, for the filter (stored details)
+			facts: filterFacts(library.map((item) => item.id)),
 			people: shareablePeople(me),
 			// The user's open invitations: title -> (invited user -> invitation)
 			pending: pendingByItem(me),
@@ -77,10 +77,7 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 		q,
 		library: [] as LibraryItem[],
 		together: {} as Record<number, Person[]>,
-		facts: {} as Record<
-			number,
-			{ genres: string[]; services: { name: string; logoUrl: string }[] }
-		>,
+		facts: {} as ReturnType<typeof filterFacts>,
 		people: [] as Person[],
 		pending: {} as Record<number, Record<number, number>>,
 		results,
@@ -150,3 +147,8 @@ export const actions: Actions = {
 		return { success: true };
 	}
 };
+
+// What the filter needs of each title, by its ID
+function filterFacts(ids: number[]) {
+	return Object.fromEntries(filterFactsOf(ids));
+}

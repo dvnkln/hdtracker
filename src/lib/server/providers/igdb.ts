@@ -1,6 +1,7 @@
 import { IGDB_CLIENT_ID, IGDB_CLIENT_SECRET } from '$app/env/private';
 import { cached, remember } from '../cache';
 import { igdbTrailer } from './trailer';
+import { STORE_KEYS, type Store, type StoreKey } from '#lib/stores.js';
 import { serverMessages } from '../i18n';
 import {
 	ProviderError,
@@ -214,6 +215,8 @@ type IgdbGameFull = IgdbGame & {
 	screenshots?: { image_id: string }[];
 	involved_companies?: { developer: boolean; company: { name: string } }[];
 	videos?: { id: number; video_id: string; name?: string }[];
+	websites?: { type?: number; url?: string }[];
+	external_games?: { external_game_source?: number; url?: string }[];
 	similar_games?: IgdbGame[];
 };
 
@@ -232,6 +235,10 @@ const FULL_FIELDS = [
 	'videos.name',
 	'involved_companies.developer',
 	'involved_companies.company.name',
+	'websites.type',
+	'websites.url',
+	'external_games.external_game_source',
+	'external_games.url',
 	...GAME_FIELDS.map((f) => `similar_games.${f}`)
 ];
 
@@ -281,7 +288,94 @@ export async function getGameReleases(id: string): Promise<ReleaseInfo> {
 	return { item: gameToResult(g), events };
 }
 
+// ---- Stores ----
+
+// IGDB names a game's stores in two lists: `websites` (by `website_types`) and `external_games`
+// (by `external_game_sources`). Most links are in the first; the second fills gaps. Amazon is
+// left out (dozens of entries per country, mostly without a link), as is Game Pass (IGDB only
+// knows the cloud catalogue, and whether it is current cannot be told).
+const WEBSITE_STORES: Partial<Record<number, StoreKey>> = {
+	13: 'steam',
+	16: 'epic',
+	17: 'gog',
+	22: 'xbox',
+	23: 'playstation',
+	24: 'nintendo',
+	15: 'itch',
+	10: 'appstore', // iPhone
+	11: 'appstore', // iPad
+	12: 'googleplay',
+	25: 'meta',
+	26: 'gamejolt'
+};
+const EXTERNAL_STORES: Partial<Record<number, StoreKey>> = {
+	1: 'steam',
+	26: 'epic',
+	5: 'gog',
+	11: 'xbox',
+	36: 'playstation',
+	30: 'itch',
+	13: 'appstore',
+	28: 'meta',
+	55: 'gamejolt'
+};
+
+// The hosts each store lives at: a link goes into the page only if it really leads there.
+const STORE_HOSTS: Record<StoreKey, string[]> = {
+	steam: ['store.steampowered.com'],
+	epic: ['epicgames.com', 'store.epicgames.com', 'www.epicgames.com'],
+	gog: ['gog.com', 'www.gog.com'],
+	xbox: ['www.xbox.com', 'www.microsoft.com'],
+	playstation: ['store.playstation.com'],
+	nintendo: ['www.nintendo.com'],
+	itch: ['itch.io'],
+	appstore: ['apps.apple.com', 'itunes.apple.com'],
+	googleplay: ['play.google.com'],
+	meta: ['www.meta.com', 'www.oculus.com'],
+	gamejolt: ['gamejolt.com']
+};
+
+function storeLink(key: StoreKey, raw: string | undefined) {
+	let url: URL;
+	try {
+		url = new URL(raw ?? '');
+	} catch {
+		return null;
+	}
+	const hosts = STORE_HOSTS[key];
+	const fits =
+		hosts.includes(url.hostname) || (key === 'itch' && url.hostname.endsWith('.itch.io'));
+	if (url.protocol !== 'https:' || !fits) return null;
+	// IGDB links the US store of PlayStation and Xbox. Without the country part both forward to
+	// the store of the visitor's country (tried out); Steam, Epic and GOG do so by themselves.
+	// Nintendo has no such address – its European store is a different site.
+	if (key === 'playstation' || (key === 'xbox' && url.hostname === 'www.xbox.com')) {
+		url.pathname = url.pathname.replace(/^\/[a-z]{2}-[a-z]{2}(?=\/)/i, '');
+	}
+	return url.toString();
+}
+
+// The stores of a game, one link each, in a fixed order.
+export function storesOf(g: Pick<IgdbGameFull, 'websites' | 'external_games'>): Store[] {
+	const found = new Map<StoreKey, string>();
+	const add = (key: StoreKey | undefined, raw: string | undefined) => {
+		if (!key || found.has(key)) return;
+		const url = storeLink(key, raw);
+		if (url) found.set(key, url);
+	};
+	for (const site of g.websites ?? []) add(WEBSITE_STORES[site.type ?? -1], site.url);
+	for (const ext of g.external_games ?? []) {
+		add(EXTERNAL_STORES[ext.external_game_source ?? -1], ext.url);
+	}
+	return STORE_KEYS.filter((key) => found.has(key)).map((key) => ({ key, url: found.get(key)! }));
+}
+
 // ---- Detail page ----
+
+// IGDB's name of a platform, shorter where it is long for no use. "PC (Microsoft Windows)" is
+// "Windows", not "PC": Mac and Linux run on PCs too.
+export const platformName = (name: string) =>
+	name === 'PC (Microsoft Windows)' ? 'Windows' : name;
 
 export async function getGameInfo(id: string): Promise<Details> {
 	const g = await loadGame(id);
@@ -297,9 +391,8 @@ export async function getGameInfo(id: string): Promise<Details> {
 	} else if (state.current) {
 		facts.push({ key: 'fullRelease', value: state.current, isDate: true });
 	}
-	if (g.platforms?.length) {
-		facts.push({ key: 'platforms', value: g.platforms.map((p) => p.name).join(', ') });
-	}
+	const platforms = (g.platforms ?? []).map((p) => platformName(p.name));
+	if (platforms.length) facts.push({ key: 'platforms', value: platforms.join(', ') });
 	if (developers.length) facts.push({ key: 'developer', value: developers.join(', ') });
 
 	return {
@@ -317,6 +410,8 @@ export async function getGameInfo(id: string): Promise<Details> {
 		format: null,
 		facts,
 		watch: null,
+		stores: storesOf(g),
+		platforms,
 		links: [],
 		similar: (g.similar_games ?? []).map(gameToResult)
 	};

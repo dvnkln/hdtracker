@@ -10,7 +10,14 @@ const title = (name: string, genres: string[], services = [netflix], people: Per
 	name,
 	genres,
 	services,
+	stores: [] as string[],
+	platforms: [] as string[],
 	people
+});
+const game = (name: string, stores: string[], platforms: string[], genres: string[] = []) => ({
+	...title(name, genres, []),
+	stores,
+	platforms
 });
 const library = [
 	title('Funny', ['Comedy'], [netflix], [hans]),
@@ -62,7 +69,13 @@ describe('filter of the library', () => {
 		expect(offer.people.map((p) => p.name)).toEqual(['Anna', 'Hans']);
 		expect(offer.services.map((s) => s.name)).toEqual(['Netflix', 'Prime Video']);
 		expect(offer.genres).toEqual(['Action', 'Comedy', 'Drama']);
-		expect(offered([title('Solo', [], [])])).toEqual({ people: [], services: [], genres: [] });
+		expect(offered([title('Solo', [], [])])).toEqual({
+			people: [],
+			services: [],
+			stores: [],
+			platforms: [],
+			genres: []
+		});
 	});
 
 	it('drops filters from an address that this area does not offer', () => {
@@ -74,5 +87,59 @@ describe('filter of the library', () => {
 		expect(known(['genre:Comedy', 'genre:Comedy'], offer)).toEqual(['genre:Comedy']);
 		// Nobody to share with: nothing about sharing can be filtered
 		expect(known(['shared', 'alone'], offered([title('Solo', ['Drama'])]))).toEqual([]);
+	});
+
+	it('games: by store and platform, one fit within each, both together', () => {
+		const games = [
+			game('Hike', ['steam', 'gog'], ['Windows', 'Nintendo Switch'], ['Adventure']),
+			game('Bot', ['playstation'], ['PlayStation 5']),
+			game('Dredge', ['steam', 'nintendo'], ['Windows', 'Nintendo Switch', 'PlayStation 5'])
+		];
+		const left = (keys: string[]) => games.filter((g) => passes(g, keys)).map((g) => g.name);
+		expect(left(['store:gog', 'store:playstation'])).toEqual(['Hike', 'Bot']);
+		expect(left(['store:nintendo', 'platform:Nintendo Switch'])).toEqual(['Dredge']);
+		expect(left(['platform:Nintendo Switch', 'genre:Adventure'])).toEqual(['Hike']);
+		expect(countWith(games, ['store:steam'], 'platform:Windows')).toBe(2);
+
+		const offer = offered(games);
+		// Most titles first
+		expect(offer.stores).toEqual(['steam', 'gog', 'playstation', 'nintendo']);
+		expect(offer.platforms).toEqual(['Windows', 'Nintendo Switch', 'PlayStation 5']);
+		expect(
+			known(['store:steam', 'store:epic', 'platform:Windows', 'platform:Wii U'], offer)
+		).toEqual(['store:steam', 'platform:Windows']);
+	});
+
+	it('store and platform go together: a store has to sell for the platform', () => {
+		const games = [
+			// On both consoles, in both console stores, and on Windows at Steam and GOG
+			game(
+				'Dredge',
+				['steam', 'gog', 'playstation', 'xbox'],
+				['Windows', 'PlayStation 5', 'Xbox One']
+			),
+			game('Bot', ['playstation'], ['PlayStation 5']),
+			game('Linux game', ['epic', 'gog'], ['Windows', 'Linux'])
+		];
+		const left = (keys: string[]) => games.filter((g) => passes(g, keys)).map((g) => g.name);
+		// The PlayStation Store does not sell for the Xbox
+		expect(left(['store:playstation', 'platform:Xbox One'])).toEqual([]);
+		expect(countWith(games, ['platform:Xbox One'], 'store:playstation')).toBe(0);
+		expect(countWith(games, ['platform:Xbox One'], 'store:xbox')).toBe(1);
+		// Several stores: one of them selling for one of the platforms is enough
+		expect(left(['store:steam', 'store:gog', 'platform:Windows'])).toEqual([
+			'Dredge',
+			'Linux game'
+		]);
+		expect(left(['store:playstation', 'store:steam', 'platform:PlayStation 5'])).toEqual([
+			'Dredge',
+			'Bot'
+		]);
+		// Epic has no Linux games, although this game is at Epic and runs on Linux
+		expect(left(['store:epic', 'platform:Linux'])).toEqual([]);
+		expect(left(['store:gog', 'platform:Linux'])).toEqual(['Linux game']);
+		// A store alone or a platform alone works as before
+		expect(left(['store:playstation'])).toEqual(['Dredge', 'Bot']);
+		expect(left(['platform:Windows'])).toEqual(['Dredge', 'Linux game']);
 	});
 });

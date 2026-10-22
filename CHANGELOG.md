@@ -7,6 +7,21 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
+## Upcoming release
+
+### ✨ New
+
+- Games show where to get them: logos of Steam, Epic, GOG, PlayStation, Xbox, Nintendo eShop, itch.io, App Store, Google Play, Meta Quest and Game Jolt on the game's page, each a direct link (PlayStation and Xbox open the store of your country)
+- Filter games in the library by store and by platform
+
+### 🔧 Improved
+
+- “PC (Microsoft Windows)” is now just “Windows”
+
+### 🐛 Fixed
+
+- The search in the header no longer switches back to the area you chose last (e.g. movies) after you looked at a title in another area
+
 ## 0.10.6 – 2026-10-21
 
 Clearer error messages when a data source has a problem.

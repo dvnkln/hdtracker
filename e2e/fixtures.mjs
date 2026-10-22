@@ -164,7 +164,7 @@ export const ANIME_MAPPING = {
 // ---- Pushover: the one application token the fake service accepts ----
 export const PUSHOVER_TOKEN = 'tokentokentokentokentokentoken';
 
-// ---- IGDB: one game that is out ----
+// ---- IGDB: two games that are out, with different stores and platforms ----
 export const GAMES = [
 	{
 		id: 401,
@@ -175,9 +175,28 @@ export const GAMES = [
 		release_dates: [{ date: unix(-200), status: { name: 'Full Release' } }],
 		url: 'https://www.igdb.com/games/test-game-epsilon',
 		genres: [{ name: 'Puzzle' }],
-		platforms: [{ name: 'PC' }],
+		platforms: [{ name: 'PC (Microsoft Windows)' }, { name: 'Nintendo Switch' }],
+		websites: [
+			{ type: 13, url: 'https://store.steampowered.com/app/401' },
+			{ type: 24, url: 'https://www.nintendo.com/us/store/products/test-game-epsilon-switch/' }
+		],
 		total_rating: 88,
 		total_rating_count: 10,
+		similar_games: []
+	},
+	{
+		id: 402,
+		name: 'Test Game Zeta',
+		first_release_date: unix(-100),
+		cover: { image_id: 'zeta' },
+		summary: 'Another made-up game.',
+		release_dates: [{ date: unix(-100), status: { name: 'Full Release' } }],
+		url: 'https://www.igdb.com/games/test-game-zeta',
+		genres: [{ name: 'Puzzle' }],
+		platforms: [{ name: 'PlayStation 5' }],
+		websites: [{ type: 23, url: 'https://store.playstation.com/en-us/concept/402' }],
+		total_rating: 70,
+		total_rating_count: 5,
 		similar_games: []
 	}
 ];

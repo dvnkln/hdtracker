@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { flushSync } from 'svelte';
+	import { flushSync, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { navigating, page } from '$app/state';
 	import { CATEGORIES, isCategory, type Category } from '#lib/categories.js';
@@ -16,7 +16,11 @@
 	// svelte-ignore state_referenced_locally
 	let category = $state<Category>(categories[0]);
 
-	$effect(() => {
+	// The last one used is read once, when the page loads – and only away from an area: there
+	// the area wins. (Read inside an effect, it came back with every new page data, e.g. after a
+	// look at a game, and put the search of the games page back to movies.)
+	onMount(() => {
+		if (isCategory(section)) return;
 		try {
 			const saved = localStorage.getItem(STORAGE_KEY);
 			if (saved && isCategory(saved) && categories.includes(saved)) category = saved;

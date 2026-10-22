@@ -18,6 +18,8 @@
 	import Episodes from '#lib/components/Episodes.svelte';
 	import Avatar from '#lib/components/Avatar.svelte';
 	import ShareSheet from '#lib/components/ShareSheet.svelte';
+	import StoreLogo from '#lib/components/StoreLogo.svelte';
+	import { STORES } from '#lib/stores.js';
 	import {
 		ArrowLeft,
 		Bell,
@@ -372,6 +374,30 @@
 						class="underline hover:text-zinc-300">JustWatch</a
 					>.
 				</p>
+			</section>
+		{/if}
+
+		<!-- Games: the stores that sell it (IGDB) -->
+		{#if info.stores}
+			<section class="mt-6">
+				<h2 class="text-lg font-semibold">{m.detail.stores}</h2>
+				{#if info.stores.length}
+					<div class="mt-2 flex flex-wrap gap-2">
+						{#each info.stores as store (store.key)}
+							<a
+								href={store.url}
+								target="_blank"
+								rel="noreferrer"
+								title={STORES[store.key].name}
+								class="rounded-lg ring-1 ring-zinc-800 transition hover:scale-110 hover:ring-zinc-400"
+							>
+								<StoreLogo store={store.key} />
+							</a>
+						{/each}
+					</div>
+				{:else}
+					<p class="mt-1 text-sm text-zinc-500">{m.detail.noStores}</p>
+				{/if}
 			</section>
 		{/if}
 

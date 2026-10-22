@@ -310,8 +310,8 @@ export async function prepareAnimeTitles() {
 }
 
 // Raised whenever the stored details get something new that should not wait for each title's
-// regular refresh (which may be a month away): 1 = trailer links.
-export const DETAILS_VERSION = '1';
+// regular refresh (which may be a month away): 1 = trailer links, 2 = stores and platforms of games.
+export const DETAILS_VERSION = '2';
 
 // Called at startup. After an update that changes what is stored about a title, the whole
 // library is loaded again once – in the background, with the usual pauses, like after
