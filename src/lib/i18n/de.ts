@@ -103,10 +103,19 @@ export const de = {
 		title: 'Streaming',
 		// The icon in the header
 		open: 'Wo läuft was',
+		order: { name: 'A–Z', count: 'Meiste Titel zuerst', change: 'Reihenfolge ändern' },
+		edit: 'Dienste ein- oder ausblenden',
+		done: 'Fertig',
+		hide: (name: string) => `${name} ausblenden`,
+		show: (name: string) => `${name} einblenden`,
+		hidden: (n: number) => `${n} ausgeblendet`,
+		hideFailed: 'Das ließ sich nicht speichern. Bitte noch einmal versuchen.',
 		allServices: 'Alle Dienste',
 		titles: (n: number) => (n === 1 ? '1 Titel' : `${n} Titel`),
-		// Out, but in no flat rate: only to rent or buy, or nowhere at all
-		nowhere: 'In keinem Abo',
+		// Titles only to rent or buy at a service (Amazon Video for Prime Video …)
+		purchase: (n: number) => `${n} leihen/kaufen`,
+		inSubscription: 'Im Abo',
+		toRentOrBuy: 'Leihen/Kaufen',
 		emptyTitle: 'Nichts zu schauen',
 		emptyHint: 'Was du planst oder schaust, steht hier nach Streaming-Dienst.'
 	},

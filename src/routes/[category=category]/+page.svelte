@@ -21,6 +21,7 @@
 	import ItemSheet, { type SheetItem } from '#lib/components/ItemSheet.svelte';
 	import { STATUS_ICONS } from '#lib/statusIcons.js';
 	import { ChevronRight, UserPlus, X } from '@lucide/svelte';
+	import { STICKY_SUMMARY, backToFolded, markStuck } from '#lib/stickySections.js';
 
 	let { data, form } = $props();
 
@@ -85,34 +86,17 @@
 	// Sections the user folded or unfolded (those not listed are as they come: watched and
 	// dropped folded). What is folded away is not selected by Ctrl+A or a Shift+click.
 	let folded = $state<Partial<Record<Status, boolean>>>({});
-	const isOpen = (status: Status) => !(folded[status] ?? COLLAPSED_STATUSES.includes(status));
+	// Only one section: nothing to switch between – no arrow, always open (also "watched", which
+	// otherwise starts folded)
+	let single = $derived(sections.length === 1);
+	const isOpen = (status: Status) =>
+		single || !(folded[status] ?? COLLAPSED_STATUSES.includes(status));
 	// The browser reports folding a moment after it happened (the "toggle" event comes later).
 	// Before selecting by what is visible, ask the sections themselves how they stand.
-	// Folding a section whose heading sticks at the top would leave one somewhere further down
-	// the page: then go back up to where the section starts.
 	function folding(status: Status, section: HTMLDetailsElement) {
+		if (single) return;
 		folded[status] = !section.open;
-		const header = document.querySelector('[data-chrome="header"]')?.getBoundingClientRect();
-		const top = section.getBoundingClientRect().top;
-		if (!section.open && header && top < header.bottom) {
-			window.scrollBy({ top: top - header.bottom, behavior: 'instant' });
-		}
-	}
-	// A heading that has titles scrolling by beneath it gets a soft edge (data-stuck): its section
-	// starts above it then. At rest – also the first heading at the top of the page – it stays
-	// hard, so the edge never shades the posters of a heading that is just standing there.
-	let frame = 0;
-	function markStuck() {
-		cancelAnimationFrame(frame);
-		frame = requestAnimationFrame(() => {
-			for (const section of document.querySelectorAll<HTMLDetailsElement>('details[data-status]')) {
-				const heading = section.querySelector('summary');
-				if (!heading) continue;
-				const stuck =
-					section.getBoundingClientRect().top < heading.getBoundingClientRect().top - 0.5;
-				heading.toggleAttribute('data-stuck', stuck);
-			}
-		});
+		backToFolded(section);
 	}
 	$effect(() => {
 		void sections;
@@ -174,8 +158,8 @@
 
 <svelte:head><title>{label} · hdtracker</title></svelte:head>
 <svelte:window
-	onscroll={markStuck}
-	onresize={markStuck}
+	onscroll={() => markStuck()}
+	onresize={() => markStuck()}
 	onkeydown={(e) => {
 		if (e.key === 'Escape' && selecting && !choosingWho) stopSelecting();
 		// Ctrl+A selects the posters – unless something is typed (there it selects the text)
@@ -202,7 +186,7 @@
 
 	{#if data.q}
 		<!-- Search results -->
-		<div class="mt-1 flex items-center justify-between text-sm">
+		<div class="mt-2 flex items-center justify-between text-sm">
 			<span class="text-zinc-400">
 				{#if !data.error && data.results.length}{m.library.results(
 						data.results.length,
@@ -276,22 +260,20 @@
 					class="group first-of-type:-mt-[17px]"
 					open={isOpen(section.status)}
 					data-status={section.status}
+					data-sticky
 					ontoggle={(e) => folding(section.status, e.currentTarget)}
 				>
-					<!-- The heading sticks below the header while its titles scroll by; once the last
-					     of them is gone, the next heading pushes it away (sticky only works within
-					     its own section – that is the whole trick). The space above a heading belongs to
-					     it (pt-6), not to the page: so the heading sticks right where it stands, instead
-					     of first sliding up by the page's padding. Below it, while titles scroll by, a short fade
-					     into them instead of a hard edge (data-stuck, see markStuck). It starts one pixel inside
-					     the heading: touching edges let a thin line of the posters show through on phones -->
+					<!-- Sticks below the header while its titles scroll by (see stickySections.ts) -->
 					<summary
-						class="group/summary sticky top-(--header-h) z-[2] -mx-4 flex cursor-pointer list-none items-center gap-2 bg-zinc-950 px-4 pt-6 pb-2 select-none after:pointer-events-none after:absolute after:inset-x-0 after:top-[calc(100%-1px)] after:h-[17px] after:bg-linear-to-b after:from-zinc-950 after:to-transparent after:opacity-0 after:transition-opacity after:duration-150 data-stuck:after:opacity-100 [&::-webkit-details-marker]:hidden"
+						class="{STICKY_SUMMARY} {single ? 'cursor-default' : 'cursor-pointer'}"
+						onclick={(e) => single && e.preventDefault()}
 					>
-						<ChevronRight
-							size={18}
-							class="text-zinc-500 transition group-open:rotate-90 group-hover/summary:text-zinc-200"
-						/>
+						{#if !single}
+							<ChevronRight
+								size={18}
+								class="text-zinc-500 transition group-open:rotate-90 group-hover/summary:text-zinc-200"
+							/>
+						{/if}
 						<Icon size={18} class="text-(--accent)" />
 						<h2 class="text-lg font-semibold">{statusLabel(data.category, section.status)}</h2>
 					</summary>

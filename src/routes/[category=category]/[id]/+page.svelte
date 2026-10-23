@@ -108,7 +108,9 @@
 	{/if}
 
 	<main
-		class="relative mx-auto max-w-screen-xl p-4 {img(info.backdropUrl) ? '-mt-44 sm:-mt-56' : ''}"
+		class="relative mx-auto max-w-screen-xl px-4 pb-4 {img(info.backdropUrl)
+			? '-mt-44 pt-4 sm:-mt-56'
+			: 'pt-6'}"
 	>
 		<a
 			href="/{data.category}"

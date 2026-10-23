@@ -214,19 +214,39 @@ test('tracking together: invite, accept, one state for both, leave with a copy',
 	await page.keyboard.press('Control+a');
 	await expect(all).toBeVisible();
 	await page.keyboard.press('Escape');
-	// A section that is folded away is left out, until it is opened again
+	// Only one section (the series): nothing to fold – no arrow, a tap leaves it open
 	await page.goto('/series');
-	const fold = page.locator('main summary').first();
+	const only = page.locator('main details');
+	await expect(only).toHaveCount(1);
+	await expect(only.locator('summary svg.lucide-chevron-right')).toHaveCount(0);
+	await only.locator('summary h2').click();
+	await expect(only).toHaveAttribute('open');
+	// A section that is folded away is left out, until it is opened again. Two sections in the
+	// movies for this: Alpha watched for a moment (watched starts folded), Beta stays planned
+	await page.goto('/movies');
+	const alpha = page.getByRole('button', { name: /Test Movie Alpha/ });
+	await alpha.click();
+	await sheet(page).getByRole('button', { name: 'Watched', exact: true }).click();
+	await expect(sheet(page)).toHaveCount(0);
+	const sections = page.locator('main details');
+	await expect(sections).toHaveCount(2);
+	const fold = sections.first().locator('summary h2');
+	const visiblePosters = page.locator('main [class*="group/poster"]:visible');
+	await expect(visiblePosters).toHaveCount(1);
 	await fold.click();
-	await expect(page.locator('main [class*="group/poster"]:visible')).toHaveCount(0);
+	await expect(visiblePosters).toHaveCount(0);
 	await page.keyboard.press('Control+a');
 	await expect(invite).toHaveCount(0);
 	await fold.click();
-	await expect(page.locator('main [class*="group/poster"]:visible')).toHaveCount(1);
+	await expect(visiblePosters).toHaveCount(1);
 	await page.keyboard.press('Control+a');
 	await expect(page.getByText('1 title selected').first()).toBeVisible();
 	await page.keyboard.press('Escape');
-	await page.goto('/movies');
+	// Alpha planned again
+	await sections.last().locator('summary h2').click();
+	await alpha.click();
+	await sheet(page).getByRole('button', { name: 'Planned', exact: true }).click();
+	await expect(sheet(page)).toHaveCount(0);
 	// ... and in the search field it still selects the text
 	await page.locator('header input[type=search]').first().focus();
 	await page.keyboard.press('Control+a');

@@ -85,6 +85,32 @@ export function filterFactsOf(itemIds: number[]) {
 	);
 }
 
+// The streaming offers of titles, for the streaming overview: in a flat rate, and to rent or buy
+// (one list, each store once). Titles without stored details are left out.
+export function streamingOffersOf(itemIds: number[]) {
+	type Offer = { name: string; logoUrl: string };
+	if (itemIds.length === 0) return new Map<number, { flatrate: Offer[]; purchase: Offer[] }>();
+	const rows = getDb()
+		.select({ itemId: itemDetails.itemId, info: itemDetails.info })
+		.from(itemDetails)
+		.where(inArray(itemDetails.itemId, itemIds))
+		.all();
+	const plain = ({ name, logoUrl }: Offer) => ({ name, logoUrl });
+	return new Map(
+		rows.map((row) => {
+			const watch = row.info.watch;
+			const purchase = new Map<string, Offer>();
+			for (const offer of [...(watch?.rent ?? []), ...(watch?.buy ?? [])]) {
+				if (!purchase.has(offer.name)) purchase.set(offer.name, plain(offer));
+			}
+			return [
+				row.itemId,
+				{ flatrate: (watch?.flatrate ?? []).map(plain), purchase: [...purchase.values()] }
+			];
+		})
+	);
+}
+
 // What a detail page needs. The one place that decides between "stored" and "live":
 // a title of somebody's library with stored details comes from the database, everything else
 // (search results, similar titles, a title that is still loading) is asked from the API.

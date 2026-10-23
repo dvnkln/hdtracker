@@ -194,14 +194,14 @@
 	</ul>
 {/snippet}
 
-<main class="mx-auto max-w-screen-sm p-4 lg:max-w-screen-xl">
+<main class="mx-auto max-w-screen-sm px-4 pt-6 pb-4 lg:max-w-screen-xl">
 	<!-- Main heading for screen readers (the two lists have visible headings of their own) -->
 	<h1 class="sr-only">{m.common.home}</h1>
 	{#if data.libraryEmpty}
 		<EmptyState icon={CalendarPlus} title={m.home.emptyTitle} text={m.home.emptyHint} />
 	{:else}
 		{#each sections as section (section.key)}
-			<section class="mt-8 first:mt-2">
+			<section class="mt-8 first-of-type:mt-0">
 				<h2 class="flex items-baseline gap-2">
 					<section.icon size={20} class="self-center text-zinc-400" />
 					<span class="text-lg font-semibold whitespace-nowrap">{section.title}</span>

@@ -10,9 +10,15 @@
    a margin of about 6.5 % of the screen width on each side (~3/4 of a poster).
    Text pages (dashboard, settings) stay narrower. */
 /* The height of the sticky header (measured by +layout.svelte); what sticks below it – the
-   headings of the library and its filter – sits at this distance from the top. */
+   headings of the library and its filter – sits at this distance from the top. Until it is
+   measured, a value that is never larger than the real one (header 61 px on phones, 67 px from
+   md on – minus the one pixel; some themes are a pixel or two taller): a larger one pushed the
+   first heading of the library down until the measurement, and it jumped up on every reload. */
 :root {
-	--header-h: 4.25rem;
+	--header-h: 60px;
+	@media (width >= 48rem) {
+		--header-h: 66px;
+	}
 }
 
 @utility app-width {

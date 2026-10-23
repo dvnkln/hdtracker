@@ -7,6 +7,23 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
+## Upcoming release
+
+### 🔧 Improved
+
+- **What runs where**: titles you can only rent or buy now show up with the streaming service they belong to – Amazon Video with Prime Video, the Apple TV Store with Apple TV – on a tab of their own right next to each area, beside what is in the subscription. Stores that only rent and sell (Sky Store, MagentaTV, Videoload …) have tiles of their own in the same list. The “No subscription” tile is gone.
+- **What runs where**: smaller tiles, all the same height, also with long service names; a play sign counts what is in the subscription, a bag what is to rent or buy.
+- **What runs where**: hide services you never use – the pencil next to the heading turns every tile into a switch. Hidden ones wait at the end of the page.
+- **What runs where**: the services are sorted A–Z; a button next to the heading switches to most titles first, and the choice is remembered.
+- **What runs where**: movies, series and anime can be folded away, and their headings stay at the top while you scroll – like in the library.
+- The library shows no fold arrow when there is only one section – that section is simply always open.
+- All pages start at the same distance below the header – the dashboard sat noticeably lower, others slightly higher.
+- Channels booked through Prime Video or Apple TV (like “ARD Plus Amazon Channel”) no longer appear as a service of their own when the service itself is not listed – on the detail page, in the library filter and on “What runs where”.
+
+### 🐛 Fixed
+
+- The first heading of the library no longer jumps a little when the page loads.
+
 ## 0.12.0 – 2026-10-23
 
 See at a glance what runs where.

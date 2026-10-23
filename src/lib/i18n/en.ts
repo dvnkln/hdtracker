@@ -99,10 +99,19 @@ export const en: Messages = {
 		title: 'Streaming',
 		// The icon in the header
 		open: 'What runs where',
+		order: { name: 'A–Z', count: 'Most titles first', change: 'change the order' },
+		edit: 'Show or hide services',
+		done: 'Done',
+		hide: (name: string) => `Hide ${name}`,
+		show: (name: string) => `Show ${name}`,
+		hidden: (n: number) => `${n} hidden`,
+		hideFailed: 'That could not be saved. Please try again.',
 		allServices: 'All services',
 		titles: (n: number) => (n === 1 ? '1 title' : `${n} titles`),
-		// Out, but in no flat rate: only to rent or buy, or nowhere at all
-		nowhere: 'No subscription',
+		// Titles only to rent or buy at a service (Amazon Video for Prime Video …)
+		purchase: (n: number) => `${n} to rent or buy`,
+		inSubscription: 'Subscription',
+		toRentOrBuy: 'Rent/Buy',
 		emptyTitle: 'Nothing to watch',
 		emptyHint: 'What you plan or watch shows up here by streaming service.'
 	},

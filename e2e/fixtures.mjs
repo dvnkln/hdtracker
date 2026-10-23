@@ -34,9 +34,27 @@ export const MOVIES = [
 		},
 		'watch/providers': {
 			results: {
+				// Written the way TMDB writes it: a plan of the same service (one logo), a channel
+				// whose service is not listed itself with a space at the end (left out), and stores to
+				// rent or buy – Amazon Video belongs to Prime Video, Videoload only sells
 				US: {
 					link: 'https://www.themoviedb.org/movie/101/watch',
-					flatrate: [{ provider_name: 'Netflix', logo_path: '/netflix.jpg', display_priority: 1 }]
+					flatrate: [
+						{ provider_name: 'Netflix', logo_path: '/netflix.jpg', display_priority: 1 },
+						{ provider_name: 'Netflix Kids', logo_path: '/netflixkids.jpg', display_priority: 2 },
+						{
+							provider_name: 'ARD Plus Amazon channel ',
+							logo_path: '/ard.jpg',
+							display_priority: 3
+						}
+					],
+					rent: [
+						{ provider_name: 'Amazon Video', logo_path: '/amazonvideo.jpg', display_priority: 1 },
+						{ provider_name: 'Videoload', logo_path: '/videoload.jpg', display_priority: 2 }
+					],
+					buy: [
+						{ provider_name: 'Amazon Video', logo_path: '/amazonvideo.jpg', display_priority: 1 }
+					]
 				}
 			}
 		},
@@ -66,7 +84,16 @@ export const MOVIES = [
 				{ iso_3166_1: 'US', release_dates: [{ type: 3, release_date: `${day(30)}T00:00:00.000Z` }] }
 			]
 		},
-		'watch/providers': noOffers,
+		// In the flat rate of Prime Video (with Alpha to rent there: two tabs on its page)
+		'watch/providers': {
+			results: {
+				US: {
+					flatrate: [
+						{ provider_name: 'Amazon Prime Video', logo_path: '/prime.jpg', display_priority: 1 }
+					]
+				}
+			}
+		},
 		external_ids: { wikidata_id: null },
 		recommendations: { results: [] }
 	}

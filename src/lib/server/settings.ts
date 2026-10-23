@@ -46,6 +46,10 @@ const USER_DEFAULTS = {
 	// Order of the dashboard lists: 'asc' | 'desc'
 	dashboardRecent: 'desc', // newest first
 	dashboardUpcoming: 'asc', // next first
+	// Order of the tiles on the streaming page: 'name' (A–Z) | 'count' (most titles first)
+	streamingOrder: 'name',
+	// Services the user hid on the streaming page (JSON list of their keys, see streaming.ts)
+	streamingHidden: '[]',
 	// Notifications about new releases (read in one place, prefsFor() in notifications.ts).
 	// 'off' | 'single' (one message per title) | 'digest' (one message a day)
 	notifyMode: 'off',

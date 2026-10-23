@@ -18,7 +18,7 @@
      navigation), the sidebar right next to it. Phones: /settings shows the list of areas; each
      area has a back link. -->
 <h1 class="sr-only">{m.settings.title}</h1>
-<div class="app-width px-4 pt-4 pb-4 md:pt-6">
+<div class="app-width px-4 pt-6 pb-4">
 	<div
 		class="mx-auto max-w-screen-lg md:flex md:gap-8 xl:grid xl:max-w-none xl:grid-cols-[minmax(13rem,1fr)_minmax(0,48rem)_minmax(13rem,1fr)] xl:gap-8"
 	>
