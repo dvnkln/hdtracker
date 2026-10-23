@@ -7,12 +7,18 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
-## Upcoming release
+## 0.11.1 – 2026-10-23
+
+Tidier streaming logos.
 
 ### 🔧 Improved
 
 - Each streaming service is listed once: plans (with ads, kids) and channels via Prime Video or Apple TV no longer show up as extra logos – on the detail page and in the library filter.
 - Streaming logos of anime lead straight to the anime on the service when AniList knows the link (e.g. Crunchyroll), instead of a search there.
+
+### ⬆️ Updating
+
+Just pull the new image – nothing else to do. After the update, hdtracker loads your library once in the background so the logos are tidied up right away; this takes a few minutes for a large library.
 
 ## 0.11.0 – 2026-10-22
 
