@@ -7,11 +7,17 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
-## Upcoming release
+## 0.12.0 – 2026-10-23
+
+See at a glance what runs where.
 
 ### ✨ New
 
 - **What runs where**: a new page behind the screen icon in the header lists everything you watch or plan to watch by streaming service. Tap a service to see its titles and change their status right there; titles in no subscription have a tile of their own.
+
+### ⬆️ Updating
+
+Just pull the new image – nothing else to do.
 
 ## 0.11.1 – 2026-10-23
 
