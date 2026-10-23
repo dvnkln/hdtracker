@@ -44,8 +44,8 @@ What changed in each version: [Changelog](CHANGELOG.md). What's planned: [Roadma
 - 📅 **Dashboard** – what was released recently and what is coming up: new episodes, new seasons, cinema and home releases, game releases.
 - 📺 **Episode tracking** – tick off single episodes, whole seasons or entire shows; see upcoming episodes and announced seasons with dates. Anime get episode titles and images too.
 - 🙈 **Spoiler protection** – images and descriptions of episodes you have not watched yet are blurred (can be switched off).
-- 🍿 **Where to watch** – streaming, rent and buy offers for your region (via JustWatch), with direct links where possible. For games: the stores that sell them, one tap away.
-- 📡 **What runs where** – everything you watch or plan to watch, sorted by streaming service: tap Netflix and see what of it is there right now – and where you could rent or buy the rest.
+- 🍿 **Where to watch** – streaming, rent and buy offers for your region (via JustWatch), with direct links where possible – one logo per service, no matter how many plans and channels it is listed under. For games: the stores that sell them, one tap away.
+- 📡 **What runs where** – everything you watch or plan to watch, sorted by streaming service: tap Netflix and see what of it is there right now – and where you could rent or buy the rest. Hide the services you never use.
 - 🧲 **Filters** – narrow an area down by genre, by streaming service or by who you track a title with – or all at once. Games also by store and platform.
 - 🔎 **Quick search** – always at the top of the screen; on a computer, press <kbd>/</kbd> to start typing.
 - 📄 **Detail pages** – runtime, genres, rating, release dates and similar titles.
@@ -63,9 +63,9 @@ What changed in each version: [Changelog](CHANGELOG.md). What's planned: [Roadma
 | :----------------------------------------------------------------------: | :----------------------------------------------------------------------: | :----------------------------------------------------------------: |
 | <img src="docs/screenshots/dashboard.jpg" alt="Dashboard" width="260" /> | <img src="docs/screenshots/anime.jpg" alt="Anime library" width="260" /> | <img src="docs/screenshots/search.jpg" alt="Search" width="260" /> |
 
-|                         Details & where to watch                         |                     Episodes (spoiler protection)                      |                                 Maintenance                                  |
-| :----------------------------------------------------------------------: | :--------------------------------------------------------------------: | :--------------------------------------------------------------------------: |
-| <img src="docs/screenshots/details.jpg" alt="Detail page" width="260" /> | <img src="docs/screenshots/episodes.jpg" alt="Episodes" width="260" /> | <img src="docs/screenshots/maintenance.jpg" alt="Maintenance" width="260" /> |
+|                         Details & where to watch                         |                     Episodes (spoiler protection)                      |                                What runs where                                 |
+| :----------------------------------------------------------------------: | :--------------------------------------------------------------------: | :----------------------------------------------------------------------------: |
+| <img src="docs/screenshots/details.jpg" alt="Detail page" width="260" /> | <img src="docs/screenshots/episodes.jpg" alt="Episodes" width="260" /> | <img src="docs/screenshots/streaming.jpg" alt="What runs where" width="260" /> |
 
 ### 🎨 Themes
 
