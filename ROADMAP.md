@@ -10,7 +10,7 @@ What is already done: [Changelog](CHANGELOG.md).
 - [x] **Notifications** – get a push message on your phone or computer when a new season or episode airs or a planned title is released (Settings → Notifications; no extra app needed).
 - [ ] **Notifications when dates change** – a push message and a note in the inbox when a release you are waiting for is postponed or moved forward.
 - [x] **Notifications via Pushover** – the same messages through [Pushover](https://pushover.net), for devices that cannot receive push messages from the app. Also through a webhook (ntfy, Gotify, …).
-- [ ] **Streaming overview** – everything you plan to watch, grouped by streaming service: tap “Netflix” and see what is available there.
+- [x] **Streaming overview** – everything you plan to watch, grouped by streaming service: tap “Netflix” and see what is available there.
 - [x] **Episode titles for anime** – show episode titles and descriptions for anime where a matching TMDB entry is known.
 - [x] **Multiple users** – an admin manages accounts; every user has their own library and personal settings.
 - [x] **Track together** – invite another user to a title: you share its status and watched episodes from then on, and both keep them up to date.

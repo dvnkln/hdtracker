@@ -46,6 +46,9 @@ export function allowedStatuses(category: Category, released: boolean): Status[]
 	return released ? statusesFor(category) : ['planned'];
 }
 
+// Areas with streaming services (games are sold in stores instead) – the streaming overview.
+export const STREAMING_AREAS: Category[] = ['movies', 'series', 'anime'];
+
 // Categories with seasons/episodes (they get an episodes page).
 export function hasEpisodes(category: Category): category is 'series' | 'anime' {
 	return category === 'series' || category === 'anime';

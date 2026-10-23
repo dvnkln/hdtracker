@@ -45,6 +45,7 @@ What changed in each version: [Changelog](CHANGELOG.md). What's planned: [Roadma
 - 📺 **Episode tracking** – tick off single episodes, whole seasons or entire shows; see upcoming episodes and announced seasons with dates. Anime get episode titles and images too.
 - 🙈 **Spoiler protection** – images and descriptions of episodes you have not watched yet are blurred (can be switched off).
 - 🍿 **Where to watch** – streaming, rent and buy offers for your region (via JustWatch), with direct links where possible. For games: the stores that sell them, one tap away.
+- 📡 **What runs where** – everything you watch or plan to watch, sorted by streaming service: tap Netflix and see what of it is there right now – and what is in no subscription at all.
 - 🧲 **Filters** – narrow an area down by genre, by streaming service or by who you track a title with – or all at once. Games also by store and platform.
 - 🔎 **Quick search** – always at the top of the screen; on a computer, press <kbd>/</kbd> to start typing.
 - 📄 **Detail pages** – runtime, genres, rating, release dates and similar titles.

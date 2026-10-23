@@ -329,6 +329,16 @@ export const incoming = (userId: number) => openInvitations(eq(invitations.toUse
 // Invitations the user sent that are not answered yet.
 export const outgoing = (userId: number) => openInvitations(eq(invitations.fromUserId, userId));
 
+// The user's open invitations by title: title -> (invited user -> invitation). For the bottom
+// sheet of a poster page (who is invited already).
+export function pendingByItem(userId: number) {
+	const pending: Record<number, Record<number, number>> = {};
+	for (const invitation of outgoing(userId)) {
+		(pending[invitation.item.id] ??= {})[invitation.to.id] = invitation.id;
+	}
+	return pending;
+}
+
 // How many invitations wait for the user's answer (the number in the header).
 export function countIncoming(userId: number) {
 	return (

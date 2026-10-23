@@ -99,6 +99,17 @@ export const de = {
 		clearRead: 'Gelesene Neuigkeiten löschen',
 		pushSettings: 'Auch als Push-Meldung'
 	},
+	streaming: {
+		title: 'Streaming',
+		// The icon in the header
+		open: 'Wo läuft was',
+		allServices: 'Alle Dienste',
+		titles: (n: number) => (n === 1 ? '1 Titel' : `${n} Titel`),
+		// Out, but in no flat rate: only to rent or buy, or nowhere at all
+		nowhere: 'In keinem Abo',
+		emptyTitle: 'Nichts zu schauen',
+		emptyHint: 'Was du planst oder schaust, steht hier nach Streaming-Dienst.'
+	},
 	share: {
 		// Invitations, as the inbox lists them
 		incoming: 'Einladungen für dich',

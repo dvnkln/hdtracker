@@ -95,6 +95,17 @@ export const en: Messages = {
 		clearRead: 'Delete read news',
 		pushSettings: 'Also as a push message'
 	},
+	streaming: {
+		title: 'Streaming',
+		// The icon in the header
+		open: 'What runs where',
+		allServices: 'All services',
+		titles: (n: number) => (n === 1 ? '1 title' : `${n} titles`),
+		// Out, but in no flat rate: only to rent or buy, or nowhere at all
+		nowhere: 'No subscription',
+		emptyTitle: 'Nothing to watch',
+		emptyHint: 'What you plan or watch shows up here by streaming service.'
+	},
 	share: {
 		// Invitations, as the inbox lists them
 		incoming: 'Invitations for you',

@@ -17,16 +17,13 @@ import { searchCategory } from '#lib/server/search.js';
 import { refreshPending } from '#lib/server/releases.js';
 import { serverMessages } from '#lib/server/i18n.js';
 import { filterFactsOf } from '#lib/server/itemDetails.js';
-import { companionsByItem, inviteMany, outgoing, shareablePeople } from '#lib/server/sharing.js';
+import {
+	companionsByItem,
+	inviteMany,
+	pendingByItem,
+	shareablePeople
+} from '#lib/server/sharing.js';
 import type { Actions, PageServerLoad } from './$types';
-
-function pendingByItem(userId: number) {
-	const pending: Record<number, Record<number, number>> = {};
-	for (const invitation of outgoing(userId)) {
-		(pending[invitation.item.id] ??= {})[invitation.to.id] = invitation.id;
-	}
-	return pending;
-}
 
 export const load: PageServerLoad = async ({ params, url, locals }) => {
 	const me = locals.user!.id;

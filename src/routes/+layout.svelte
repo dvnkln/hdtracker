@@ -14,7 +14,8 @@
 	import UserMenu from '#lib/components/UserMenu.svelte';
 	import { m, setLocale } from '#lib/i18n/index.svelte.js';
 	import { setAnimeTitle } from '#lib/titles.svelte.js';
-	import { Bell } from '@lucide/svelte';
+	import { STREAMING_AREAS } from '#lib/status.js';
+	import { Bell, MonitorPlay } from '@lucide/svelte';
 
 	let { data, children } = $props();
 
@@ -95,6 +96,21 @@
 			<HeaderSearch categories={data.categories} />
 			<!-- -mr-1: the picture itself (not its hover area) lines up with the content edge -->
 			<div class="-mr-1 flex items-center gap-1 md:justify-self-end">
+				<!-- What one wants to watch, by streaming service – only with an area that streams -->
+				{#if data.categories.some((key) => STREAMING_AREAS.includes(key))}
+					<a
+						href="/streaming"
+						aria-label={m.streaming.open}
+						title={m.streaming.open}
+						aria-current={section === 'streaming' ? 'page' : undefined}
+						class="rounded-lg p-2 transition-colors hover:bg-zinc-800 hover:text-zinc-100 {section ===
+						'streaming'
+							? 'text-zinc-100'
+							: 'text-zinc-400'}"
+					>
+						<MonitorPlay size={18} />
+					</a>
+				{/if}
 				<!-- The inbox; the number is what is unread plus invitations waiting for an answer -->
 				<a
 					href="/inbox"
