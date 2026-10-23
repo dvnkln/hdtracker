@@ -2,6 +2,7 @@ import { cached, remember } from '../cache';
 import { anilistTrailer } from './trailer';
 import { contentMessages, serverMessages } from '../i18n';
 import { animeTextsFor, warmUpAnimeTexts } from './animeEpisodes';
+import { withDirectLinks } from './streamingServices';
 import {
 	ProviderError,
 	fetchJson,
@@ -349,7 +350,11 @@ export async function getAnimeInfo(id: string): Promise<Details> {
 	const start = fullDate(m.startDate);
 	// Offers for the configured region (TMDB/JustWatch) replace the links of AniList, which
 	// are not checked for any region; without a match or without offers the links stay.
-	const watch = texts?.watch ?? null;
+	// A logo of a service AniList has a link for goes straight to the anime there.
+	const streaming = m.externalLinks
+		.filter((l) => l.type === 'STREAMING')
+		.map((l) => ({ name: l.site, url: l.url }));
+	const watch = texts?.watch ? withDirectLinks(texts.watch, streaming) : null;
 	const studio = m.studios.nodes.map((s) => s.name).join(', ');
 	const facts: Fact[] = [];
 	if (start) facts.push({ key: 'firstAired', value: start, isDate: true });
@@ -370,11 +375,7 @@ export async function getAnimeInfo(id: string): Promise<Details> {
 		format: m.format,
 		facts,
 		watch,
-		links: watch
-			? []
-			: m.externalLinks
-					.filter((l) => l.type === 'STREAMING')
-					.map((l) => ({ name: l.site, url: l.url })),
+		links: watch ? [] : streaming,
 		similar: m.recommendations.nodes
 			.map((n) => n.mediaRecommendation)
 			.filter((r): r is NonNullable<typeof r> => !!r && r.type === 'ANIME')

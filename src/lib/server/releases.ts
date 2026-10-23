@@ -311,8 +311,8 @@ export async function prepareAnimeTitles() {
 
 // Raised whenever the stored details get something new that should not wait for each title's
 // regular refresh (which may be a month away): 1 = trailer links, 2 = stores and platforms of games,
-// 3 = one logo per streaming service.
-export const DETAILS_VERSION = '3';
+// 3 = one logo per streaming service, 4 = AniList's direct links on the logos of anime.
+export const DETAILS_VERSION = '4';
 
 // Called at startup. After an update that changes what is stored about a title, the whole
 // library is loaded again once – in the background, with the usual pauses, like after

@@ -49,3 +49,27 @@ export function mergeServices<T extends { name: string }>(list: T[]): T[] {
 			}
 	);
 }
+
+// Whether two names mean the same service (plans and channels included).
+export function sameService(a: string, b: string) {
+	return parse(a).key === parse(b).key;
+}
+
+// Anime: the offers come from JustWatch (checked for the region), but AniList often knows the
+// direct link to this very anime on the same service – then the logo takes that link instead
+// of a search on the service.
+export function withDirectLinks<
+	W extends Record<'flatrate' | 'rent' | 'buy', { name: string; url: string }[]>
+>(watch: W, links: { name: string; url: string }[]): W {
+	const usable = links.filter((link) => /^https?:\/\//i.test(link.url));
+	const direct = <P extends { name: string; url: string }>(provider: P): P => {
+		const link = usable.find((one) => sameService(one.name, provider.name));
+		return link ? { ...provider, url: link.url } : provider;
+	};
+	return {
+		...watch,
+		flatrate: watch.flatrate.map(direct),
+		rent: watch.rent.map(direct),
+		buy: watch.buy.map(direct)
+	};
+}

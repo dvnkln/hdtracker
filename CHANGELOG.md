@@ -12,6 +12,7 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 ### 🔧 Improved
 
 - Each streaming service is listed once: plans (with ads, kids) and channels via Prime Video or Apple TV no longer show up as extra logos – on the detail page and in the library filter.
+- Streaming logos of anime lead straight to the anime on the service when AniList knows the link (e.g. Crunchyroll), instead of a search there.
 
 ## 0.11.0 – 2026-10-22
 
