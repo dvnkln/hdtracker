@@ -81,14 +81,25 @@ describe('streamingOverview', () => {
 		});
 	});
 
-	it('takes a store that sells only for a service where it also streams in a flat rate', () => {
+	it('takes a store for a service where it also streams in a flat rate', () => {
+		// Sooner, as TMDB lists it: in the flat rate and to rent under the same name
 		const a = addItem({ externalId: '1' });
 		const b = addItem({ externalId: '2' });
-		offers(a.id, ['YouTube']);
-		offers(b.id, [], ['YouTube', 'maxdome Store']);
+		offers(a.id, ['Sooner']);
+		offers(b.id, [], ['Sooner', 'maxdome Store']);
 		expect(tiles(streamingOverview(testUser()))).toEqual([
 			['maxdome Store', 0, 1],
-			['YouTube', 1, 1]
+			['Sooner', 1, 1]
+		]);
+	});
+
+	it('puts MagentaTV, the JustWatch TV Store and YouTube with their services', () => {
+		const a = addItem({ externalId: '1' });
+		offers(a.id, [], ['MagentaTV', 'JustWatch TV Store', 'YouTube']);
+		expect(tiles(streamingOverview(testUser()))).toEqual([
+			['JustWatch TV Plus', 0, 1],
+			['Magenta TV+', 0, 1],
+			['YouTube Premium', 0, 1]
 		]);
 	});
 

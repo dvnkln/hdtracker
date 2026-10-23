@@ -11,7 +11,7 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 
 ### 🔧 Improved
 
-- **What runs where**: titles you can only rent or buy now show up with the streaming service they belong to – Amazon Video with Prime Video, the Apple TV Store with Apple TV – on a tab of their own right next to each area, beside what is in the subscription. Stores that only rent and sell (Sky Store, MagentaTV, Videoload …) have tiles of their own in the same list. The “No subscription” tile is gone.
+- **What runs where**: titles you can only rent or buy now show up with the streaming service they belong to – Amazon Video with Prime Video, the Apple TV Store with Apple TV, MagentaTV with Magenta TV+, YouTube with YouTube Premium – on a tab of their own right next to each area, beside what is in the subscription. Stores that only rent and sell (Sky Store, MagentaTV, Videoload …) have tiles of their own in the same list. The “No subscription” tile is gone.
 - **What runs where**: smaller tiles, all the same height, also with long service names; a play sign counts what is in the subscription, a bag what is to rent or buy.
 - **What runs where**: hide services you never use – the pencil next to the heading turns every tile into a switch. Hidden ones wait at the end of the page.
 - **What runs where**: the services are sorted A–Z; a button next to the heading switches to most titles first, and the choice is remembered.

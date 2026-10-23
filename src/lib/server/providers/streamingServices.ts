@@ -76,11 +76,18 @@ export function sameService(a: string, b: string) {
 }
 
 // Stores to rent or buy at that belong to a streaming service under another name: one rents
-// and buys in the app of that service. (Sky Store and MagentaTV are left out: their rentals
-// are not in the WOW or Magenta TV+ app.)
+// and buys in the app of that service. Checked store by store on 2026-10-23 (Germany): Amazon
+// Video in Prime Video, the Apple TV Store in Apple TV, MagentaTV in the MagentaTV app with
+// Magenta TV+, the JustWatch TV Store in JustWatch TV, YouTube in the YouTube app with Premium.
+// Not: Sky Store (for Sky customers, an app of its own – not WOW), maxdome (the subscription
+// ended 2020), Videoload, freenet meinVOD, Rakuten TV (Viki is another app) and the shops
+// without any subscription (Akibapass, Videobuster, Verleihshop, Kino on Demand).
 const STORE_SERVICES: Record<string, { key: string; name: string }> = {
 	amazonvideo: { key: 'amazonprimevideo', name: 'Amazon Prime Video' },
-	appletvstore: { key: 'appletv', name: 'Apple TV' }
+	appletvstore: { key: 'appletv', name: 'Apple TV' },
+	magentatv: { key: 'magentatv+', name: 'Magenta TV+' },
+	justwatchtvstore: { key: 'justwatchtv+', name: 'JustWatch TV Plus' },
+	youtube: { key: 'youtubepremium', name: 'YouTube Premium' }
 };
 
 // The streaming service a store to rent or buy at belongs to: key and name, and whether that

@@ -124,8 +124,20 @@ describe('storeService', () => {
 			known: true
 		});
 		expect(storeService('Apple TV Store')).toMatchObject({ key: serviceKey('Apple TV') });
+		expect(storeService('MagentaTV').key).toBe(serviceKey('Magenta TV+'));
+		expect(storeService('JustWatch TV Store').key).toBe(serviceKey('JustWatch TV Plus'));
+		expect(storeService('YouTube').key).toBe(serviceKey('YouTube Premium'));
 		// A store of its own: a service only where it also streams
 		expect(storeService('Apple TV')).toEqual({ key: 'appletv', name: 'Apple TV', known: false });
+		for (const shop of [
+			'Sky Store',
+			'maxdome Store',
+			'Videoload',
+			'Freenet meinVOD',
+			'Rakuten TV'
+		]) {
+			expect(storeService(shop).known).toBe(false);
+		}
 		expect(storeService('Videoload')).toEqual({
 			key: 'videoload',
 			name: 'Videoload',
