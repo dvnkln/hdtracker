@@ -2,6 +2,7 @@ import { TMDB_API_TOKEN } from '$app/env/private';
 import { cached, remember } from '../cache';
 import { tmdbTrailer, type TmdbVideo } from './trailer';
 import { getStreamingLinks, preloadStreamingLinks, type StreamingLinks } from './wikidata';
+import { mergeServices } from './streamingServices';
 import { contentMessages } from '../i18n';
 import {
 	ProviderError,
@@ -182,14 +183,13 @@ export async function watchFor(
 	const links = hasOffers(data, region) ? await getStreamingLinks(wikidataId) : {};
 	const fallback = r.link ?? 'https://www.justwatch.com';
 
+	// Plans and channels of one service become one logo; the link goes to the service itself.
 	const list = (providers?: TmdbProvider[]) =>
-		[...(providers ?? [])]
-			.sort((a, b) => a.display_priority - b.display_priority)
-			.map((p) => ({
-				name: p.provider_name,
-				logoUrl: LOGO + p.logo_path,
-				url: providerUrl(p.provider_name, title, links, fallback)
-			}));
+		mergeServices(
+			[...(providers ?? [])]
+				.sort((a, b) => a.display_priority - b.display_priority)
+				.map((p) => ({ name: p.provider_name, logoUrl: LOGO + p.logo_path }))
+		).map((p) => ({ ...p, url: providerUrl(p.name, title, links, fallback) }));
 	return { link: r.link ?? null, flatrate: list(r.flatrate), rent: list(r.rent), buy: list(r.buy) };
 }
 

@@ -7,6 +7,12 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
+## Upcoming release
+
+### 🔧 Improved
+
+- Each streaming service is listed once: plans (with ads, kids) and channels via Prime Video or Apple TV no longer show up as extra logos – on the detail page and in the library filter.
+
 ## 0.11.0 – 2026-10-22
 
 Find out where to get a game – and filter your games by store and platform.
