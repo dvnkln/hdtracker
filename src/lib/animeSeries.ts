@@ -33,7 +33,8 @@ export const LINKS = ['PREQUEL', 'SEQUEL', 'PARENT', 'SIDE_STORY', 'SUMMARY', 'A
 const NOT_BETWEEN_SERIES = ['PARENT', 'SIDE_STORY', 'ALTERNATIVE'];
 // Series formats (counted as seasons when they are in the line of prequels and sequels)
 const SERIES = new Set(['TV', 'TV_SHORT', 'ONA']);
-const isSeriesFormat = (hit: Hit | undefined) => SERIES.has(hit?.anime?.format ?? '');
+// A season of a series (not a film, an OVA …)
+export const isSeriesFormat = (hit: Hit | undefined) => SERIES.has(hit?.anime?.format ?? '');
 const isTvSeries = (format: string | null | undefined) => format === 'TV' || format === 'TV_SHORT';
 
 type Hit = { externalId: string; year: number | null; anime?: AnimeFacts };

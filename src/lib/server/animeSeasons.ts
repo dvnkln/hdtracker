@@ -1,14 +1,15 @@
-import { currentPart, groupAnime } from '#lib/animeSeries.js';
+import { currentPart, groupAnime, isSeriesFormat } from '#lib/animeSeries.js';
 import type { Status } from '#lib/status.js';
 import { getDb } from './db';
-import { users } from './db/schema';
+import { libraryItems, users } from './db/schema';
+import { and, count, eq, isNull } from 'drizzle-orm';
 import { animeFactsOf } from './itemDetails';
 import type { SearchResult } from './providers/types';
 import { airedEpisodes, getShowDetails, setEpisodes } from './episodes';
 import { findItem, listLibrary, saveItem } from './library';
 import { seriesSeasons } from './providers/anilist';
 import { runInBackground } from './providers/types';
-import { pendingStatus, refreshPending } from './releases';
+import { refreshPending } from './releases';
 import { getSetting, setSettings } from './settings';
 
 // Tracking a season of an anime tracks the series, as with a series of TMDB (decided with the
@@ -85,22 +86,34 @@ export const SERIES_FILL = '1';
 
 export async function fillSeries() {
 	let added = 0;
-	for (const { id: userId } of getDb().select({ id: users.id }).from(users).all()) {
+	// Locked accounts are left out: nobody uses them
+	const active = getDb()
+		.select({ id: users.id })
+		.from(users)
+		.where(eq(users.disabled, false))
+		.all();
+	for (const { id: userId } of active) {
 		const items = listLibrary(userId, 'anime');
 		const facts = animeFactsOf(items.map((item) => item.id));
+		const mine = new Set(items.map((item) => item.externalId));
 		const hits = items
 			.filter((item) => facts.has(item.id))
 			.map((item) => ({ ...item, anime: facts.get(item.id) }));
 		for (const entry of groupAnime(hits)) {
-			const seasons = entry.kind === 'series' ? entry.seasons : [entry.hit];
-			const isSeason = (h: (typeof hits)[number]) =>
-				['TV', 'TV_SHORT', 'ONA'].includes(h.anime?.format ?? '');
-			const own = seasons.filter(isSeason);
-			if (own.length === 0) continue;
+			const seasons = (entry.kind === 'series' ? entry.seasons : [entry.hit]).filter(
+				isSeriesFormat
+			);
+			if (seasons.length === 0) continue;
+			// Nothing missing as far as the stored links tell (no prequel or sequel outside the
+			// library): no need to ask AniList
+			const gap = seasons.some((h) =>
+				h.anime!.links.some((l) => (l.type === 'PREQUEL' || l.type === 'SEQUEL') && !mine.has(l.id))
+			);
+			if (!gap) continue;
 			const now =
 				entry.kind === 'series'
-					? currentPart({ ...entry, seasons: own, movies: [], extras: [] })!
-					: own[0];
+					? currentPart({ ...entry, seasons, movies: [], extras: [] })!
+					: seasons[0];
 			try {
 				const { done } = await trackSeries(userId, now.externalId, now.status);
 				added += (await done).added.length;
@@ -112,18 +125,40 @@ export async function fillSeries() {
 	return added;
 }
 
-// Called at startup: runs fillSeries once, as soon as no details are waiting to be loaded.
+// Called at startup: runs fillSeries once – as soon as no anime waits for its details, or after
+// an hour at the latest (an anime that keeps failing must not hold it up for good). "Done" is
+// noted at the end, so a restart in the middle runs it again (what is there already is skipped).
+const MAX_WAIT_MS = 60 * 60_000;
+let filling = false;
+
 export function prepareSeriesFill() {
 	if (getSetting('seriesFill') === SERIES_FILL) return;
+	const started = Date.now();
 	const check = () => {
-		if (pendingStatus().pending > 0) return;
+		if (filling) return;
+		if (animeWaiting() > 0 && Date.now() - started < MAX_WAIT_MS) return;
 		clearInterval(timer);
-		setSettings({ seriesFill: SERIES_FILL });
+		filling = true;
 		void runInBackground(fillSeries)
-			.then((added) => added > 0 && console.log(`Added ${added} missing anime seasons`))
-			.catch((err) => console.error('Adding the missing anime seasons failed', err));
+			.then((added) => {
+				setSettings({ seriesFill: SERIES_FILL });
+				if (added > 0) console.log(`Added ${added} missing anime seasons`);
+			})
+			.catch((err) => console.error('Adding the missing anime seasons failed', err))
+			.finally(() => (filling = false));
 	};
 	const timer = setInterval(check, 60_000);
 	timer.unref();
 	check();
+}
+
+// Anime of any library whose details are still to be loaded
+function animeWaiting() {
+	return (
+		getDb()
+			.select({ n: count() })
+			.from(libraryItems)
+			.where(and(eq(libraryItems.category, 'anime'), isNull(libraryItems.metadataUpdatedAt)))
+			.get()?.n ?? 0
+	);
 }

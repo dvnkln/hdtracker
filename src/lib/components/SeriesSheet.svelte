@@ -54,6 +54,8 @@
 	import { titles } from '#lib/titles.svelte.js';
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import Avatar from '#lib/components/Avatar.svelte';
+	import Notice from '#lib/components/Notice.svelte';
+	import { currentPart, facePart } from '#lib/animeSeries.js';
 	import type { Person } from '#lib/avatar.js';
 	import { untrack } from 'svelte';
 	import { Bell, BellOff, Check, ChevronRight, Plus, UserPlus, X } from '@lucide/svelte';
@@ -105,11 +107,14 @@
 	let seasonList = $derived(series?.seasons ?? []);
 	let anyTracked = $derived(seasonList.some((hit) => hit.status));
 	let watchedSeasons = $derived(seasonList.filter((hit) => hit.status === 'completed'));
-	let next = $derived(
-		anyTracked
-			? (seasonList.find((hit) => hit.status !== 'completed' && hit.status !== 'dropped') ?? null)
-			: null
-	);
+	// The season the user is on – the same one the stack is sorted by (currentPart): what they
+	// watch or paused, else the next one planned; none once all are watched or dropped
+	let next = $derived.by(() => {
+		if (!series || !anyTracked) return null;
+		const now = currentPart({ ...series, movies: [], extras: [] });
+		if (!now?.status || now.status === 'completed' || now.status === 'dropped') return null;
+		return now.status === 'planned' ? facePart(seasonList, 'planned') : now;
+	});
 	let showWatched = $state(false);
 	// Folded again for every other series (not when the open one gets new data)
 	let seriesKey = $derived(series?.cover.externalId);
@@ -257,9 +262,9 @@
 <!-- Some seasons shared with somebody, others not: inviting completes it -->
 {#snippet partlyNote()}
 	{#if seasons && seasons.partly.length > 0}
-		<p class="mt-1 text-xs text-zinc-500">
+		<Notice class="mt-2">
 			{m.animeSeries.partlyShared(seasons.partly.map((person) => person.name).join(', '))}
-		</p>
+		</Notice>
 	{/if}
 {/snippet}
 
@@ -301,7 +306,7 @@
 						type="button"
 						onclick={() => (showWatched = !showWatched)}
 						aria-expanded={showWatched}
-						class="flex w-full items-center gap-2 rounded-lg px-1 py-2 text-left text-sm text-zinc-400 transition-colors hover:bg-zinc-800"
+						class="ui-btn flex w-full items-center gap-2 rounded-lg px-1 py-2 text-left text-sm text-zinc-400 transition-colors hover:bg-zinc-800"
 					>
 						<ChevronRight size={16} class="transition-transform {showWatched ? 'rotate-90' : ''}" />
 						<Check size={15} class="text-(--accent)" />
@@ -321,19 +326,11 @@
 	{/if}
 {/snippet}
 
-{#snippet block(label: string, list: AnimeHit[], numbered = false, withControls = false)}
+{#snippet block(label: string, list: AnimeHit[])}
 	{#if list.length}
-		{#if withControls && seasons}
-			<div class="mt-4 mb-1 flex items-center justify-between gap-2">
-				<h3 class="text-xs font-medium tracking-wide text-zinc-500 uppercase">{label}</h3>
-				{@render controls()}
-			</div>
-			{@render partlyNote()}
-		{:else}
-			<h3 class="mt-4 mb-1 text-xs font-medium tracking-wide text-zinc-500 uppercase">{label}</h3>
-		{/if}
+		<h3 class="mt-4 mb-1 text-xs font-medium tracking-wide text-zinc-500 uppercase">{label}</h3>
 		<ul>
-			{#each list as hit, i (hit.externalId)}{@render part(hit, numbered ? i + 1 : null)}{/each}
+			{#each list as hit (hit.externalId)}{@render part(hit, null)}{/each}
 		</ul>
 	{/if}
 {/snippet}

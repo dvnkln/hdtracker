@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { addItem, mockFetch, testUser } from '../../tests/helpers';
+import { getDb } from './db';
+import { users } from './db/schema';
 import { fillSeries, trackSeries } from './animeSeasons';
 import { saveDetails } from './itemDetails';
 import type { Details } from './providers/types';
@@ -197,6 +199,47 @@ describe('tracking a season tracks the series', () => {
 			} as unknown as Details,
 			null
 		);
+		expect(await finish(fillSeries())).toBe(0);
+		expect(calls).toHaveLength(0);
+	});
+
+	it('asks nothing for a series whose stored links show nothing missing, nor for locked accounts', async () => {
+		const calls = anilist();
+		const facts = (links: [string, string][]) =>
+			({
+				anime: {
+					format: 'TV',
+					episodes: 12,
+					season: null,
+					start: '2016-04-01',
+					links: links.map(([type, id]) => ({ type, id, format: 'TV' }))
+				}
+			}) as unknown as Details;
+		// Complete: seasons 1 and 2, linked only to each other
+		saveDetails(
+			addItem({ category: 'anime', externalId: '1', status: 'completed' }).id,
+			facts([['SEQUEL', '2']]),
+			null
+		);
+		saveDetails(
+			addItem({ category: 'anime', externalId: '2', status: 'active' }).id,
+			facts([['PREQUEL', '1']]),
+			null
+		);
+		// A locked account with a gap
+		const locked = getDb()
+			.insert(users)
+			.values({ username: 'locked', passwordHash: 'x', disabled: true })
+			.returning()
+			.get().id;
+		// (a title of its own: stored details belong to the title, not to an account)
+		const theirs = addItem({
+			category: 'anime',
+			externalId: '3',
+			status: 'active',
+			userId: locked
+		});
+		saveDetails(theirs.id, facts([['PREQUEL', '9']]), null);
 		expect(await finish(fillSeries())).toBe(0);
 		expect(calls).toHaveLength(0);
 	});

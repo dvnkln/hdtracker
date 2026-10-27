@@ -51,6 +51,12 @@ async function invitationId(request: Request) {
 	return Number.isInteger(id) && id > 0 ? id : null;
 }
 
+function answered(results: ({ ok: true } | { ok: false; error: SharingError })[]) {
+	if (results.some((result) => result.ok)) return { done: true };
+	const failed = results.find((result) => !result.ok);
+	return refused(failed && !failed.ok ? failed.error : 'unknown');
+}
+
 // The invitations of one card (one, or the seasons of a series)
 async function invitationIds(request: Request) {
 	const ids = (await request.formData()).getAll('id').map(Number);
@@ -71,18 +77,17 @@ export const actions: Actions = {
 		clearRead(locals.user!.id);
 		return { done: true };
 	},
-	// Answering a card: all its invitations, one message to the person who invited
+	// Answering a card: all its invitations, one message to the person who invited. An error only
+	// if none of them could be answered – one taken back meanwhile does not undo the others.
 	accept: async ({ request, locals }) => {
 		const ids = await invitationIds(request);
 		if (ids === null) return fail(400, { error: serverMessages().common.invalidData });
-		const failed = acceptAll(locals.user!.id, ids).find((result) => !result.ok);
-		return failed && !failed.ok ? refused(failed.error) : { done: true };
+		return answered(acceptAll(locals.user!.id, ids));
 	},
 	decline: async ({ request, locals }) => {
 		const ids = await invitationIds(request);
 		if (ids === null) return fail(400, { error: serverMessages().common.invalidData });
-		const failed = declineAll(locals.user!.id, ids).find((result) => !result.ok);
-		return failed && !failed.ok ? refused(failed.error) : { done: true };
+		return answered(declineAll(locals.user!.id, ids));
 	},
 	withdraw: async ({ request, locals }) => {
 		const id = await invitationId(request);
