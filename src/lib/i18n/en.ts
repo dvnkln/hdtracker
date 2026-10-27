@@ -274,6 +274,9 @@ export const en: Messages = {
 		unmuteSeasons: 'Unmute all seasons',
 		someMuted: 'Some seasons are muted – tap to mute all',
 		inviteSeasons: 'Invite to all seasons',
+		seasonsWatched: 'seasons watched',
+		watchedFold: (what: string) => `${what} watched`,
+		upNext: 'Up next',
 		partlyShared: (names: string) =>
 			`Only some seasons shared with ${names} – inviting adds the rest`,
 		formats: {

@@ -55,7 +55,8 @@
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import Avatar from '#lib/components/Avatar.svelte';
 	import type { Person } from '#lib/avatar.js';
-	import { Bell, BellOff, Plus, UserPlus, X } from '@lucide/svelte';
+	import { untrack } from 'svelte';
+	import { Bell, BellOff, Check, ChevronRight, Plus, UserPlus, X } from '@lucide/svelte';
 
 	// The parts of an anime series (one poster in the search): seasons in order, films, extras,
 	// each with its status. Tapping a part opens the status window on top of this one.
@@ -98,6 +99,36 @@
 
 	let parts = $derived(series ? [...series.seasons, ...series.movies, ...series.extras] : []);
 	let tracked = $derived(parts.filter((hit) => hit.status).length);
+
+	// The seasons as a series shows them (decided with the user): progress on top like the
+	// progress of a series of TMDB, the watched ones folded into one line, the next one highlighted
+	let seasonList = $derived(series?.seasons ?? []);
+	let anyTracked = $derived(seasonList.some((hit) => hit.status));
+	let watchedSeasons = $derived(seasonList.filter((hit) => hit.status === 'completed'));
+	let next = $derived(
+		anyTracked
+			? (seasonList.find((hit) => hit.status !== 'completed' && hit.status !== 'dropped') ?? null)
+			: null
+	);
+	let showWatched = $state(false);
+	// Folded again for every other series (not when the open one gets new data)
+	let seriesKey = $derived(series?.cover.externalId);
+	$effect(() => {
+		void seriesKey;
+		untrack(() => (showWatched = false));
+	});
+	// "S1–S2 watched" – or "2 seasons watched" when they are not in a row or not numbered
+	let foldLabel = $derived.by(() => {
+		const at = watchedSeasons.map((hit) => seasonList.indexOf(hit) + 1);
+		const inRow = at.every((n, i) => i === 0 || n === at[i - 1] + 1);
+		const what =
+			series?.numbered && inRow
+				? at.length === 1
+					? `S${at[0]}`
+					: `S${at[0]}–S${at[at.length - 1]}`
+				: m.animeSeries.seasons(at.length);
+		return m.animeSeries.watchedFold(what);
+	});
 	let years = $derived(
 		series?.from
 			? series.from === series.to
@@ -107,12 +138,15 @@
 	);
 </script>
 
-{#snippet part(hit: AnimeHit, n: number | null)}
+{#snippet part(hit: AnimeHit, n: number | null, look: 'plain' | 'faded' | 'next' = 'plain')}
 	<li>
 		<button
 			type="button"
 			onclick={() => onpick(hit)}
-			class="flex w-full items-center gap-3 rounded-lg px-1 py-1.5 text-left transition-colors hover:bg-zinc-800"
+			class="flex w-full items-center gap-3 rounded-lg px-1 py-1.5 text-left transition-colors hover:bg-zinc-800 {look ===
+			'next'
+				? 'bg-(--accent)/10 ring-1 ring-(--accent)/40'
+				: ''} {look === 'faded' ? 'opacity-50' : ''}"
 		>
 			<div
 				class="aspect-[2/3] w-10 shrink-0 overflow-hidden rounded bg-zinc-800 ring-1 ring-zinc-700"
@@ -132,7 +166,12 @@
 					{#if n}<span class="text-zinc-500">{n}.</span>{/if}
 					{titles('anime', hit).main}
 				</p>
-				<p class="truncate text-xs text-zinc-500">{animeInfo(hit, true)}</p>
+				<p class="truncate text-xs {look === 'next' ? 'text-(--accent)' : 'text-zinc-500'}">
+					<!-- "Up next" only for what is still to start (what is being watched is up already) -->
+					{look === 'next' && (!hit.status || hit.status === 'planned')
+						? `${m.animeSeries.upNext} · ${animeInfo(hit, true)}`
+						: animeInfo(hit, true)}
+				</p>
 			</div>
 			{#if hit.status}
 				{@const Icon = STATUS_ICONS[hit.status]}
@@ -224,6 +263,64 @@
 	{/if}
 {/snippet}
 
+<!-- The seasons: progress, the watched ones folded, the next one highlighted -->
+{#snippet seasonsBlock()}
+	{#if seasonList.length}
+		{#if !onlySeasons && seasons}
+			<div class="mt-4 mb-1 flex items-center justify-between gap-2">
+				<h3 class="text-xs font-medium tracking-wide text-zinc-500 uppercase">
+					{m.animeSeries.seasonsTitle}
+				</h3>
+				{@render controls()}
+			</div>
+			{@render partlyNote()}
+		{:else}
+			<h3 class="mt-4 mb-1 text-xs font-medium tracking-wide text-zinc-500 uppercase">
+				{m.animeSeries.seasonsTitle}
+			</h3>
+		{/if}
+		{#if anyTracked && seasonList.length >= 2}
+			<!-- As the progress of a series: numbers, then the bar -->
+			<div class="mt-1 mb-2">
+				<p class="text-sm">
+					<span class="font-semibold">{watchedSeasons.length} / {seasonList.length}</span>
+					<span class="text-zinc-400">{m.animeSeries.seasonsWatched}</span>
+				</p>
+				<div class="mt-1.5 h-2 overflow-hidden rounded-full bg-zinc-800">
+					<div
+						class="h-full rounded-full bg-(--accent) transition-all"
+						style:width="{(watchedSeasons.length / seasonList.length) * 100}%"
+					></div>
+				</div>
+			</div>
+		{/if}
+		<ul class="flex flex-col gap-0.5">
+			{#if anyTracked && watchedSeasons.length > 0}
+				<li>
+					<button
+						type="button"
+						onclick={() => (showWatched = !showWatched)}
+						aria-expanded={showWatched}
+						class="flex w-full items-center gap-2 rounded-lg px-1 py-2 text-left text-sm text-zinc-400 transition-colors hover:bg-zinc-800"
+					>
+						<ChevronRight size={16} class="transition-transform {showWatched ? 'rotate-90' : ''}" />
+						<Check size={15} class="text-(--accent)" />
+						{foldLabel}
+					</button>
+				</li>
+			{/if}
+			{#each seasonList as hit, i (hit.externalId)}
+				{@const n = series?.numbered ? i + 1 : null}
+				{#if anyTracked && hit.status === 'completed'}
+					{#if showWatched}{@render part(hit, n, 'faded')}{/if}
+				{:else}
+					{@render part(hit, n, hit === next ? 'next' : 'plain')}
+				{/if}
+			{/each}
+		</ul>
+	{/if}
+{/snippet}
+
 {#snippet block(label: string, list: AnimeHit[], numbered = false, withControls = false)}
 	{#if list.length}
 		{#if withControls && seasons}
@@ -285,7 +382,7 @@
 					<X size={20} />
 				</button>
 			</div>
-			{@render block(m.animeSeries.seasonsTitle, series.seasons, series.numbered, !onlySeasons)}
+			{@render seasonsBlock()}
 			{@render block(m.animeSeries.moviesTitle, series.movies)}
 			{@render block(m.animeSeries.extrasTitle, series.extras)}
 		</div>

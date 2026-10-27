@@ -282,6 +282,10 @@ export const de = {
 		unmuteSeasons: 'Alle Staffeln wieder melden',
 		someMuted: 'Einige Staffeln sind stumm – antippen schaltet alle stumm',
 		inviteSeasons: 'Zu allen Staffeln einladen',
+		// Progress over the seasons, watched ones folded, the next one highlighted
+		seasonsWatched: 'Staffeln gesehen',
+		watchedFold: (what: string) => `${what} gesehen`,
+		upNext: 'Als Nächstes',
 		partlyShared: (names: string) =>
 			`Mit ${names} nur bei einigen Staffeln gemeinsam – Einladen ergänzt den Rest`,
 		formats: {

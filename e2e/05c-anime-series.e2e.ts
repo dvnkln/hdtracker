@@ -35,8 +35,12 @@ test('anime search: a series is one poster with its parts', async ({ page }) => 
 	await status.getByRole('button', { name: 'Watching', exact: true }).click();
 	await expect(page.locator('dialog[open]')).toHaveCount(1);
 	await expect(rows.nth(1)).toContainText('Watching');
-	// Season 2 brings the series along: season 1 as watched (the movie does not come along)
-	await expect(rows.nth(0)).toContainText('Watched');
+	// Season 2 brings the series along: season 1 as watched (the movie does not come along) –
+	// folded into one line, with the progress over the seasons on top, season 2 up next
+	await expect(rows.nth(0)).toContainText('S1 watched');
+	await expect(parts).toContainText('1 / 2 seasons watched');
+	// (highlighted as the one the user is on – "up next" is only said of a planned one)
+	await expect(rows.nth(1)).not.toContainText('Up next');
 	await expect(rows.nth(2)).not.toContainText('Watched');
 	await expect(parts).toContainText('2 parts in your library');
 
@@ -69,11 +73,14 @@ test('anime search: a series is one poster with its parts', async ({ page }) => 
 	await section('Watched').locator('summary').click();
 	const movie = section('Watched').getByRole('button', { name: /Test Saga: The Movie/ });
 	await expect(movie).toContainText('Movie');
-	// The stack lists its seasons
+	// The stack lists its seasons (the watched one folded, it opens)
 	await stack.click();
 	await expect(rows).toHaveCount(2);
-	await expect(rows.nth(0)).toContainText('Watched');
+	await expect(rows.nth(0)).toContainText('S1 watched');
 	await expect(rows.nth(1)).toContainText('Watching');
+	await rows.nth(0).getByRole('button').click();
+	await expect(rows).toHaveCount(3);
+	await expect(rows.nth(1)).toContainText('Watched');
 
 	// Only seasons in it: the bell for all seasons at the top – muting mutes both
 	await parts.getByRole('button', { name: 'Mute all seasons' }).click();
@@ -83,23 +90,25 @@ test('anime search: a series is one poster with its parts', async ({ page }) => 
 
 	// Season 2 watched as well: everything of the series is watched now, so the stack moves to
 	// "Watched" (with the movie) – and its window stays open
-	await rows.nth(1).getByRole('button').click();
+	await rows.nth(2).getByRole('button').click();
 	await sheet(page).last().getByRole('button', { name: 'Watched', exact: true }).click();
 	await expect(page.locator('dialog[open]')).toHaveCount(1);
-	await expect(rows).toHaveCount(3);
-	await expect(rows.nth(2)).toContainText('Test Saga: The Movie');
+	await expect(parts).toContainText('2 / 2 seasons watched');
+	await expect(rows.last()).toContainText('Test Saga: The Movie');
 	// With the movie in it, the bell stands at "Seasons" (it is for the seasons only)
 	const seasonsRow = parts
 		.locator('div')
 		.filter({ has: page.getByRole('heading', { name: 'Seasons' }) });
 	await expect(seasonsRow.getByRole('button', { name: 'Mute all seasons' })).toBeVisible();
 
-	// Taking two away leaves one alone: no stack any more, the window closes
+	// Taking the seasons away (unfolded first) leaves the movie alone: no stack, the window closes
+	const fold = parts.getByRole('button', { name: /watched$/ });
 	for (let i = 0; i < 2; i++) {
-		await rows.first().getByRole('button').click();
+		if ((await fold.getAttribute('aria-expanded')) !== 'true') await fold.click();
+		await rows.nth(1).getByRole('button').click();
 		await sheet(page).last().getByRole('button', { name: 'Remove from library' }).click();
 		await sheet(page).last().getByRole('button', { name: 'Really remove from library?' }).click();
-		await expect(rows).toHaveCount(i === 0 ? 2 : 0);
+		if (i === 0) await expect(rows).toHaveCount(2);
 	}
 	await expect(page.locator('dialog[open]')).toHaveCount(0);
 

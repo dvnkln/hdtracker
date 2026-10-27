@@ -16,6 +16,7 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 
 ### 🔧 Improved
 
+- 📊 The window of an anime series shows your progress over its seasons like a TV series does, folds the seasons you have watched into one line and highlights the next one.
 - 🧩 Anime series you already track get their missing seasons once after the update (later ones as planned, earlier ones like the season you are on). Where you share only some seasons of a series with somebody, its window says so – inviting adds the rest. Profile pictures on a stack now only show who shares all of its seasons.
 - 🔔 One bell and one invitation for all seasons of an anime series: in the window of a series in your library, muting or inviting covers all its seasons at once (movies and OVAs keep their own). An invitation to the seasons of a series is one card in your inbox, and a new season keeps the bell of the ones before.
 - 📺 Tracking an anime season now tracks the series, like a TV series: when you add a season, the later seasons come along as planned and the earlier ones as watched – or as planned, if you plan to start the series (movies and OVAs stay up to you). Seasons already in your library are left as they are.
