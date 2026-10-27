@@ -4,6 +4,7 @@
 	import { navigating, page } from '$app/state';
 	import { CATEGORIES, isCategory, type Category } from '#lib/categories.js';
 	import { m } from '#lib/i18n/index.svelte.js';
+	import { guarded } from '#lib/guardNavigation.svelte.js';
 	import { ChevronDown, LoaderCircle, Search, X } from '@lucide/svelte';
 
 	// Areas switched on in the settings
@@ -51,7 +52,10 @@
 		query = page.url.searchParams.get('q') ?? '';
 	});
 
-	let searching = $derived(!!navigating.to?.url.searchParams.get('q'));
+	// (a search is loaded first, see guardNavigation.svelte.ts – then the page changes)
+	let searching = $derived(
+		!!(navigating.to?.url.searchParams.get('q') || guarded.url?.searchParams.get('q'))
+	);
 	let accent = $derived(CATEGORIES[category].accent);
 	let CurrentIcon = $derived(CATEGORIES[category].icon);
 
@@ -85,11 +89,12 @@
 		goto(q ? `/${category}?q=${encodeURIComponent(q)}` : `/${category}`);
 	}
 
-	// Emptying the field (e.g. with its x button) on a results page goes back to the library.
-	function onInput() {
-		if (query === '' && page.url.searchParams.get('q')) {
-			goto(`/${category}`, { reset: false });
-		}
+	// The x in the field only empties it, so a new search can be typed right away: the results
+	// stay until it is sent, and the panel on a phone stays open with the keyboard (it closes
+	// with every page change, so emptying used to end the whole search).
+	function clear(input: HTMLInputElement) {
+		query = '';
+		input.focus();
 	}
 
 	// Moves the panel to the end of <body>: inside the header (which has a blur effect) a
@@ -181,7 +186,6 @@
 		<input
 			bind:this={desktopInput}
 			bind:value={query}
-			oninput={onInput}
 			type="search"
 			{placeholder}
 			aria-label={placeholder}
@@ -189,6 +193,18 @@
 			enterkeyhint="search"
 			class="min-w-0 flex-1 border-0 bg-transparent py-2 focus:border-0"
 		/>
+		{#if query}
+			<button
+				type="button"
+				onclick={() => clear(desktopInput)}
+				onmousedown={(e) => e.preventDefault()}
+				class="mr-1 rounded-md p-1 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-100"
+				aria-label={m.common.clearSearch}
+				title={m.common.clearSearch}
+			>
+				<X size={16} />
+			</button>
+		{/if}
 		<kbd
 			class="mr-1 hidden rounded border border-zinc-700 px-1.5 text-xs text-zinc-500 lg:block"
 			aria-hidden="true">/</kbd
@@ -245,7 +261,6 @@
 				<input
 					bind:this={mobileInput}
 					bind:value={query}
-					oninput={onInput}
 					type="search"
 					{placeholder}
 					aria-label={placeholder}
@@ -253,6 +268,17 @@
 					enterkeyhint="search"
 					class="min-w-0 flex-1 border-0 bg-transparent focus:border-0"
 				/>
+				{#if query}
+					<button
+						type="button"
+						onclick={() => clear(mobileInput)}
+						onmousedown={(e) => e.preventDefault()}
+						class="mr-1 rounded-md p-1.5 text-zinc-500 transition-colors hover:text-zinc-100"
+						aria-label={m.common.clearSearch}
+					>
+						<X size={18} />
+					</button>
+				{/if}
 			</div>
 			<button
 				type="button"
@@ -287,3 +313,11 @@
 		</div>
 	</div>
 </div>
+
+<style>
+	/* The browser's own x looks different everywhere (and is missing on some phones); ours
+	   replaces it. */
+	input[type='search']::-webkit-search-cancel-button {
+		appearance: none;
+	}
+</style>

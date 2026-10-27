@@ -1,5 +1,6 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import type { Messages } from '#lib/i18n/de.js';
+import type { AnimeFacts } from '#lib/animeSeries.js';
 import type { Store } from '#lib/stores.js';
 import type { ReleaseKind } from '../db/schema';
 import { serverMessages } from '../i18n';
@@ -20,13 +21,17 @@ export type SearchResult = {
 	malId: number | null;
 	posterUrl: string | null;
 	overview: string | null;
+	// Anime search: what the hit is and what it belongs with (to show a series as one)
+	anime?: AnimeFacts;
 };
 
 // Errors with a message that can be shown to the user as-is (in German).
 export class ProviderError extends Error {
 	constructor(
 		message: string,
-		public status?: number
+		public status?: number,
+		// "Too many requests": when the service takes requests again (ms since 1970)
+		public retryAt?: number
 	) {
 		super(message);
 	}
@@ -63,33 +68,101 @@ async function throttle(source: string) {
 	if (wait > 0) await sleep(wait);
 }
 
-// Background requests that hit "too many requests" (HTTP 429) wait and try again:
-// as long as the service asks (Retry-After), otherwise 10 s, 20 s, 40 s.
-const RETRIES = 3;
+// ---- "Too many requests" ----
 
-function retryDelay(res: Response, attempt: number) {
-	const seconds = Number(res.headers.get('retry-after'));
-	return Number.isFinite(seconds) && seconds > 0
-		? Math.min(seconds, 120) * 1000
-		: 10_000 * 2 ** attempt;
+// A service that answered "too many requests" (HTTP 429) is left alone until it takes requests
+// again: AniList times out for a minute, and every request in that minute only gets another 429
+// (its docs, read 27.10.2026). Nothing goes out in the meantime – a search says how long it
+// takes, background work waits. Time from Retry-After (seconds) or X-RateLimit-Reset (Unix
+// time); without either a minute for AniList, a few seconds for the others (IGDB, TMDB limit
+// per second and are free again at once).
+const blockedUntil: Record<string, number> = {};
+const DEFAULT_BLOCK_MS: Record<string, number> = { AniList: 60_000 };
+const SHORT_BLOCK_MS = 3_000;
+const MAX_BLOCK_MS = 120_000;
+
+function blockFor(source: string, res: Response) {
+	const now = Date.now();
+	const after = Number(res.headers.get('retry-after'));
+	const reset = Number(res.headers.get('x-ratelimit-reset')) * 1000;
+	const until =
+		Number.isFinite(after) && after > 0
+			? now + after * 1000
+			: Number.isFinite(reset) && reset > now
+				? reset
+				: now + (DEFAULT_BLOCK_MS[source] ?? SHORT_BLOCK_MS);
+	blockedUntil[source] = Math.min(until, now + MAX_BLOCK_MS);
 }
+
+function tooMany(source: string) {
+	const until = blockedUntil[source];
+	const seconds = Math.max(1, Math.ceil((until - Date.now()) / 1000));
+	return new ProviderError(serverMessages().errors.tooManyWait(source, seconds), 429, until);
+}
+
+// Room for the user: services that say how many requests are left this minute (AniList:
+// X-RateLimit-Remaining) keep the last few for searches and pages. Background work that would
+// take them waits for the next minute instead.
+const RESERVE = 8;
+const WINDOW_MS = 60_000;
+const lowSince: Record<string, number> = {};
+
+function noteRemaining(source: string, res: Response) {
+	const left = res.headers.get('x-ratelimit-remaining');
+	if (left === null) return;
+	const now = Date.now();
+	if (Number(left) > RESERVE) delete lowSince[source];
+	// Still low a minute later: the next minute starts now
+	else if (!(now - (lowSince[source] ?? -Infinity) < WINDOW_MS)) lowSince[source] = now;
+}
+
+// When background work may send its next request to this service (0 = now).
+function backgroundWait(source: string) {
+	const blocked = (blockedUntil[source] ?? 0) - Date.now();
+	const low = lowSince[source] !== undefined ? lowSince[source] + WINDOW_MS - Date.now() : 0;
+	return Math.max(blocked, low, 0);
+}
+
+// Only for tests
+export function forgetRateLimits() {
+	for (const source of Object.keys(blockedUntil)) delete blockedUntil[source];
+	for (const source of Object.keys(lowSince)) delete lowSince[source];
+	for (const source of Object.keys(lastRequest)) delete lastRequest[source];
+}
+
+// Background requests that hit "too many requests" wait the time and try again (3 times).
+const RETRIES = 3;
 
 // fetch with timeout; network problems become a readable ProviderError.
 export async function fetchJson<T>(source: string, url: string | URL, init: RequestInit = {}) {
 	const inBackground = background.getStore() === true;
 	let res!: Response;
 	for (let attempt = 0; ; attempt++) {
-		if (inBackground) await throttle(source);
+		if (inBackground) {
+			const wait = backgroundWait(source);
+			if (wait > 0) {
+				console.warn(
+					`${source}: leaving requests for the user, waiting ${Math.round(wait / 1000)} s`
+				);
+				await sleep(wait);
+			}
+			await throttle(source);
+		} else if ((blockedUntil[source] ?? 0) > Date.now()) {
+			throw tooMany(source);
+		}
 		try {
 			res = await fetch(url, { ...init, signal: AbortSignal.timeout(TIMEOUT_MS) });
 		} catch (err) {
 			console.error(`${source} request failed`, err);
 			throw new ProviderError(serverMessages().errors.unreachable(source));
 		}
-		if (res.status !== 429 || !inBackground || attempt >= RETRIES) break;
-		const delay = retryDelay(res, attempt);
-		console.warn(`${source}: too many requests, waiting ${Math.round(delay / 1000)} s`);
-		await sleep(delay);
+		noteRemaining(source, res);
+		if (res.status !== 429) break;
+		blockFor(source, res);
+		console.warn(
+			`${source}: too many requests until ${new Date(blockedUntil[source]).toISOString()}`
+		);
+		if (!inBackground || attempt >= RETRIES) throw tooMany(source);
 	}
 	if (!res.ok) {
 		const body = await res.text().catch(() => '');
@@ -223,6 +296,9 @@ export type Details = {
 	// before they existed.
 	stores?: Store[];
 	platforms?: string[];
+	// Anime: what it is and which other anime it belongs with (to show a series as one in the
+	// library). Missing in details stored before it existed.
+	anime?: AnimeFacts;
 	links: { name: string; url: string }[]; // e.g. anime streaming sites (not region-checked)
 	similar: SearchResult[];
 };

@@ -1,4 +1,5 @@
-import { cached, remember } from '../cache';
+import { groupAnime, LINKS, type AnimeFacts } from '#lib/animeSeries.js';
+import { cached, recall, remember } from '../cache';
 import { anilistTrailer } from './trailer';
 import { contentMessages, serverMessages } from '../i18n';
 import { animeTextsFor, warmUpAnimeTexts } from './animeEpisodes';
@@ -26,6 +27,10 @@ query ($search: String) {
       status
       coverImage { large }
       description(asHtml: false)
+      format
+      episodes
+      season
+      relations { edges { relationType node { id type format } } }
     }
   }
 }`;
@@ -41,23 +46,73 @@ type AniListMedia = {
 	description: string | null;
 };
 
+// An anime also says what it is and which other entries it belongs with (src/lib/animeSeries.ts):
+// a search hit the links to its neighbours, an anime of the library also their links (one step
+// further, so that parts join across two missing ones).
+type RelationNode = { id: number; type: string; format: string | null; relations?: Relations };
+type Relations = { edges: { relationType: string; node: RelationNode }[] };
+type SearchMedia = AniListMedia & {
+	format: string | null;
+	episodes: number | null;
+	season: AnimeFacts['season'];
+	relations: Relations | null;
+};
+
+const joining = (r: Relations | null | undefined) =>
+	(r?.edges ?? []).filter((e) => e.node.type === 'ANIME' && LINKS.includes(e.relationType));
+
+function factsOf(m: SearchMedia): AnimeFacts {
+	const { year, month, day } = m.startDate;
+	const pad = (n: number | null, max: number) => String(n ?? max).padStart(2, '0');
+	return {
+		format: m.format ?? null,
+		episodes: m.episodes ?? null,
+		season: m.season ?? null,
+		start: `${year ?? 9999}-${pad(month, 12)}-${pad(day, 31)}`,
+		links: joining(m.relations).map((e) => ({
+			type: e.relationType,
+			id: String(e.node.id),
+			format: e.node.format ?? null
+		})),
+		...(m.relations?.edges.some((e) => e.node.relations) && {
+			around: joining(m.relations).flatMap((e) =>
+				joining(e.node.relations).map((f) => ({
+					from: String(e.node.id),
+					type: f.relationType,
+					id: String(f.node.id),
+					format: f.node.format ?? null
+				}))
+			)
+		})
+	};
+}
+
 // AniList descriptions contain some HTML (<br>, <i>) even in plain mode.
 function stripHtml(text: string | null) {
 	return text ? text.replace(/<[^>]*>/g, '').trim() : null;
 }
 
 export async function searchAnime(query: string): Promise<SearchResult[]> {
-	const data = await fetchJson<{ data: { Page: { media: AniListMedia[] } } }>(
+	return (await askHits(SEARCH_QUERY, { search: query })).map(toHit);
+}
+
+// Anime as search hits, asked with one of the queries that return them (search, chain); they are
+// remembered for a while (see recentFacts, seriesSeasons).
+async function askHits(query: string, variables: Record<string, unknown>) {
+	const data = await fetchJson<{ data: { Page: { media: SearchMedia[] } } }>(
 		'AniList',
 		'https://graphql.anilist.co',
 		{
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-			body: JSON.stringify({ query: SEARCH_QUERY, variables: { search: query } })
+			body: JSON.stringify({ query, variables })
 		}
 	);
-	return data.data.Page.media.map(toSearchResult);
+	rememberHits(data.data.Page.media);
+	return data.data.Page.media;
 }
+
+const toHit = (m: SearchMedia): SearchResult => ({ ...toSearchResult(m), anime: factsOf(m) });
 
 // YYYY-MM-DD if the exact day is known.
 function fullDate({ year, month, day }: AniListDate) {
@@ -90,6 +145,101 @@ function toSearchResult(m: AniListMedia): SearchResult {
 	};
 }
 
+// ---- The seasons of a series ----
+
+// The anime hits of the last half hour (in the app's cache, cleared by its maintenance task):
+// the seasons of a series one just searched for are among them, so tracking it asks AniList
+// only for what is missing (often nothing).
+const RECENT_MS = 30 * 60_000;
+const hitKey = (id: number) => `anilist:hit:${id}`;
+
+function rememberHits(list: SearchMedia[]) {
+	for (const m of list) remember(hitKey(m.id), RECENT_MS, m);
+}
+
+// What the recent hits say about some anime (what it is, what it belongs with) – for the library
+// until their own details are loaded, so a series just added stands as one stack at once.
+export async function recentFacts(ids: string[]) {
+	const found = await Promise.all(ids.map((id) => recall<SearchMedia>(hitKey(Number(id)))));
+	return new Map(
+		ids.flatMap((id, i) => {
+			const m = found[i];
+			return m ? [[id, factsOf(m)] as const] : [];
+		})
+	);
+}
+
+// Prequels and sequels, followed two steps per request (the links of the linked entries too).
+const CHAIN_QUERY = `
+query ($ids: [Int]) {
+  Page(perPage: 50) {
+    media(id_in: $ids, type: ANIME) {
+      id
+      idMal
+      title { romaji english }
+      startDate { year month day }
+      status
+      coverImage { large }
+      description(asHtml: false)
+      format
+      episodes
+      season
+      relations { edges { relationType node { id type format
+        relations { edges { relationType node { id type format } } } } } }
+    }
+  }
+}`;
+const ONE_AFTER_ANOTHER = ['PREQUEL', 'SEQUEL'];
+// A long series takes a few requests; this many at most (and never more than 60 entries)
+const CHAIN_ROUNDS = 6;
+const CHAIN_MAX = 60;
+
+// The seasons of the series an anime belongs to, in order, the anime itself included – the
+// same seasons the search and the library show (src/lib/animeSeries.ts). Empty if the anime is
+// not a season (a film, an OVA) or has no others. `offline`: only from recent hits – null if
+// that is not enough (then the caller asks AniList in the background).
+export async function seriesSeasons(
+	id: string,
+	{ offline = false } = {}
+): Promise<SearchResult[] | null> {
+	const found = new Map<number, SearchMedia>();
+	let wanted = [Number(id)];
+	let requests = 0;
+	while (wanted.length > 0) {
+		// What a recent search found needs no request
+		const recalled = await Promise.all(wanted.map((n) => recall<SearchMedia>(hitKey(n))));
+		const known = recalled.filter((m): m is SearchMedia => !!m);
+		const missing = wanted.filter((_, i) => !recalled[i]);
+		if (missing.length > 0 && offline) return null;
+		if (missing.length > 0 && requests >= CHAIN_ROUNDS) break;
+		const asked = missing.length > 0 ? await askHits(CHAIN_QUERY, { ids: missing }) : [];
+		if (missing.length > 0) requests++;
+		const next = new Set<number>();
+		const follow = (r: Relations | null | undefined) =>
+			(r?.edges ?? []).filter(
+				(e) => e.node.type === 'ANIME' && ONE_AFTER_ANOTHER.includes(e.relationType)
+			);
+		for (const m of [...known, ...asked]) {
+			found.set(m.id, m);
+			for (const e of follow(m.relations)) {
+				next.add(e.node.id);
+				for (const f of follow(e.node.relations)) next.add(f.node.id);
+			}
+		}
+		wanted = [...next].filter((n) => !found.has(n)).slice(0, CHAIN_MAX - found.size);
+	}
+	const series = groupAnime([...found.values()].map(toHit)).find(
+		(e) => e.kind === 'series' && e.seasons.some((h) => h.externalId === id)
+	);
+	return series?.kind === 'series' ? series.seasons : [];
+}
+
+// Some anime as search hits (e.g. a new season that became known), in one request.
+export async function animeHits(ids: string[]): Promise<SearchResult[]> {
+	if (ids.length === 0) return [];
+	return (await askHits(CHAIN_QUERY, { ids: ids.map(Number) })).map(toHit);
+}
+
 // ---- One anime with everything the app needs ----
 
 // Episodes, air dates and the detail page come from a single request – for one anime or for
@@ -111,9 +261,12 @@ query ($ids: [Int], $since: Int, $now: Int, $page: Int) {
       averageScore
       format
       episodes
+      season
       duration
       siteUrl
       trailer { id site }
+      relations { edges { relationType node { id type format
+        relations { edges { relationType node { id type format } } } } } }
       nextAiringEpisode { episode airingAt }
       airingSchedule(notYetAired: true, perPage: 25) { nodes { episode airingAt } }
       studios(isMain: true) { nodes { name } }
@@ -164,6 +317,8 @@ type AniListAnime = AniListMedia & {
 	averageScore: number | null; // 0–100
 	format: string | null;
 	episodes: number | null;
+	season: AnimeFacts['season'];
+	relations: Relations | null;
 	duration: number | null; // minutes per episode
 	siteUrl: string;
 	trailer?: { id: string | null; site: string | null } | null;
@@ -366,6 +521,7 @@ export async function getAnimeInfo(id: string): Promise<Details> {
 		sourceLabel: 'AniList',
 		backdropUrl: m.bannerImage,
 		trailerUrl: anilistTrailer(m.trailer ?? null),
+		anime: factsOf(m),
 		genres: m.genres,
 		rating: m.averageScore ? m.averageScore / 10 : null,
 		runtime: null,

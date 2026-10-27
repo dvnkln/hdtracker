@@ -22,9 +22,23 @@ const json = (data, status = 200) =>
 	new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
 const has = (text, query) => text.toLowerCase().includes(query.toLowerCase());
 
+const SHAKY = {
+	id: 998,
+	title: 'Shaky Movie',
+	original_title: 'Shaky Movie',
+	release_date: '2020-01-01',
+	poster_path: null,
+	overview: 'Its details cannot be loaded.'
+};
+
 function tmdb(url) {
 	const path = url.pathname.replace('/3', '');
 	const query = url.searchParams.get('query') ?? '';
+	// A source that fails (07h-source-errors): a search that cannot be done, and a movie that can
+	// be found but whose details cannot be loaded
+	if (query === 'Overloaded') return json({ status_message: 'Service unavailable' }, 503);
+	if (path === '/movie/998') return json({ status_message: 'Service unavailable' }, 503);
+	if (path === '/search/movie' && query === 'Shaky') return json({ results: [SHAKY] });
 	if (path === '/search/movie') return json({ results: MOVIES.filter((m) => has(m.title, query)) });
 	if (path === '/search/tv') return json({ results: SERIES.filter((s) => has(s.name, query)) });
 	if (path === '/watch/providers/regions')

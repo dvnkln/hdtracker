@@ -126,7 +126,8 @@ export const notificationsSent = sqliteTable(
 		itemId: integer('item_id')
 			.notNull()
 			.references(() => libraryItems.id, { onDelete: 'cascade' }),
-		kind: text('kind').$type<ReleaseKind>().notNull(),
+		// A release, or `announced` for a new season (announcements.ts)
+		kind: text('kind').$type<ReleaseKind | 'announced'>().notNull(),
 		// 0 where a date has no season or episode (movies, games)
 		season: integer('season').notNull(),
 		episode: integer('episode').notNull(),
@@ -250,7 +251,8 @@ export const invitations = sqliteTable(
 // or what somebody did with a title tracked together (`actorId` accepted or declined an
 // invitation, or left). Unread until `readAt` is set; read ones are removed after a while.
 // Open invitations are not stored here – they are in `invitations` until answered.
-export type NoticeKind = 'release' | 'accepted' | 'declined' | 'left';
+// `announced`: a new season became known (announcements.ts)
+export type NoticeKind = 'release' | 'accepted' | 'declined' | 'left' | 'announced';
 export const notices = sqliteTable(
 	'notices',
 	{

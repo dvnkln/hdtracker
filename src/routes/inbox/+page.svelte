@@ -48,6 +48,12 @@
 			const what = eventLabel({ category: line.item.category, ...line.release }, m);
 			return line.release.date ? `${what} · ${formatDate(line.release.date)}` : what;
 		}
+		if (line.announced) {
+			const what = m.inbox.announced(line.announced.season);
+			return line.announced.date
+				? `${what} · ${m.inbox.startsOn(formatDate(line.announced.date))}`
+				: what;
+		}
 		const name = line.actor?.name ?? '';
 		return line.kind === 'accepted'
 			? m.inbox.accepted(name)

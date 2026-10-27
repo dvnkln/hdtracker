@@ -3,7 +3,9 @@ import { describe, expect, it, vi } from 'vitest';
 import { addItem, mockFetch } from '../../tests/helpers';
 import { getDb } from './db';
 import { itemDetails, libraryItems, releases } from './db/schema';
-import { isDue, refreshBatch } from './releases';
+import { isDue, refreshBatch, refreshItem } from './releases';
+import { saveDetails } from './itemDetails';
+import { forgetRateLimits, type Details } from './providers/types';
 
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
@@ -199,5 +201,57 @@ describe('refreshBatch for TMDB', () => {
 			.where(eq(itemDetails.itemId, items[1].id))
 			.get();
 		expect(stored?.info.watch?.flatrate[0].url).toBe('https://www.netflix.com/title/80902');
+	});
+});
+
+describe('a new anime season', () => {
+	it('is tried again the next night when AniList fails while adding it', async () => {
+		forgetRateLimits(); // the test before blocked AniList on purpose
+		const item = addItem({
+			category: 'anime',
+			source: 'anilist',
+			externalId: '41',
+			status: 'active'
+		});
+		const links = (ids: number[]) =>
+			ids.map((id) => ({ type: 'SEQUEL', id: String(id), format: 'TV' as string | null }));
+		saveDetails(
+			item.id,
+			{
+				anime: { format: 'TV', episodes: 12, season: null, start: '2020-01-05', links: links([42]) }
+			} as unknown as Details,
+			null
+		);
+		mockFetch({
+			'graphql.anilist.co': (_url: string, body: string) =>
+				JSON.parse(body).query.includes('past:')
+					? {
+							data: {
+								Page: {
+									media: [
+										{
+											...anime(41),
+											season: null,
+											relations: {
+												edges: [42, 43].map((id) => ({
+													relationType: 'SEQUEL',
+													node: { id, type: 'ANIME', format: 'TV' }
+												}))
+											}
+										}
+									]
+								},
+								past: { pageInfo: { hasNextPage: false }, airingSchedules: [] }
+							}
+						}
+					: // Asking for the new season fails
+						{ data: null, errors: [{ message: 'down' }] }
+		});
+		await refreshItem(item);
+		const stored = getDb().select().from(itemDetails).where(eq(itemDetails.itemId, item.id)).get()!;
+		// The new link is not stored yet: next time 43 is still new
+		expect(stored.info.anime?.links.map((l) => l.id)).toEqual(['42']);
+		// Everything else of the refresh was saved
+		expect(stored.info.genres).toEqual(['Action']);
 	});
 });

@@ -262,8 +262,45 @@ export const ANIME = [
 			{ site: 'Bilibili TV', url: 'https://www.bilibili.tv/delta', type: 'STREAMING' }
 		],
 		recommendations: { nodes: [] }
-	}
+	},
+	// A finished series of three entries, linked as AniList links them: the search shows it as
+	// one poster. Listed by relevance like AniList (season 2 first), not by date.
+	saga(312, 'Test Saga Season 2', 'TV', [2021, 4, 9], 'SPRING', [
+		['PREQUEL', 311],
+		['SIDE_STORY', 313]
+	]),
+	saga(311, 'Test Saga', 'TV', [2019, 10, 4], 'FALL', [['SEQUEL', 312]]),
+	saga(313, 'Test Saga: The Movie', 'MOVIE', [2022, 7, 1], 'SUMMER', [['PARENT', 312]])
 ];
+
+function saga(id, english, format, [year, month, d], season, links) {
+	return {
+		id,
+		idMal: 9000 + id,
+		type: 'ANIME',
+		title: { romaji: english.replace('Test Saga', 'Tesuto Saga'), english },
+		startDate: { year, month, day: d },
+		status: 'FINISHED',
+		coverImage: { large: `https://s4.anilist.co/file/saga${id}.jpg` },
+		bannerImage: null,
+		description: 'A made-up series.',
+		genres: ['Drama'],
+		averageScore: 70,
+		format,
+		episodes: format === 'MOVIE' ? 1 : 12,
+		duration: 24,
+		season,
+		siteUrl: `https://anilist.co/anime/${id}`,
+		nextAiringEpisode: null,
+		airingSchedule: { nodes: [] },
+		studios: { nodes: [{ name: 'Test Studio' }] },
+		externalLinks: [],
+		recommendations: { nodes: [] },
+		relations: {
+			edges: links.map(([relationType, to]) => ({ relationType, node: { id: to, type: 'ANIME' } }))
+		}
+	};
+}
 // Episodes aired in the last weeks (the "past" part of the anime request)
 export const ANIME_PAST = [
 	{ mediaId: 301, episode: 1, airingAt: unix(-11) },

@@ -12,6 +12,8 @@ What is already done: [Changelog](CHANGELOG.md).
 - [x] **Notifications via Pushover** – the same messages through [Pushover](https://pushover.net), for devices that cannot receive push messages from the app. Also through a webhook (ntfy, Gotify, …).
 - [x] **Streaming overview** – everything you plan to watch, grouped by streaming service: tap “Netflix” and see what is available there.
 - [x] **Episode titles for anime** – show episode titles and descriptions for anime where a matching TMDB entry is known.
+- [x] **Anime as series** – seasons, movies and OVAs of one anime shown together as one poster in search and library; tracking a season brings the other seasons along.
+- [x] **New seasons announced** – a note in the inbox and a push message when a series or anime you track gets a new season; a new anime season is added to your library by itself.
 - [x] **Multiple users** – an admin manages accounts; every user has their own library and personal settings.
 - [x] **Track together** – invite another user to a title: you share its status and watched episodes from then on, and both keep them up to date.
 - [x] **Where to get a game** – the stores a game is available in (Steam, Epic, GOG, console stores), with a direct link.

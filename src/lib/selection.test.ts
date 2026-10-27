@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { NOTHING, pickAll, pickOne, pickRange } from './selection';
+import { NOTHING, pickAll, pickGroup, pickOne, pickRange } from './selection';
 
 // Ten posters in a row
 const order = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -44,5 +44,18 @@ describe('selecting posters', () => {
 
 	it('everything one can see', () => {
 		expect(pickAll([3, 1, 2]).chosen).toEqual([3, 1, 2]);
+	});
+});
+
+describe('a stack of posters', () => {
+	it('is chosen as a whole, and given up as a whole', () => {
+		const one = pickGroup(NOTHING, [4, 5, 6]);
+		expect(one.chosen).toEqual([4, 5, 6]);
+		expect(one.anchor).toBe(4);
+		expect(pickGroup(one, [4, 5, 6]).chosen).toEqual([]);
+	});
+
+	it('fills up what is missing of it', () => {
+		expect(pickGroup(pickOne(NOTHING, 5), [4, 5, 6]).chosen).toEqual([5, 4, 6]);
 	});
 });

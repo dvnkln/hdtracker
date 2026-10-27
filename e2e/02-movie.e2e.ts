@@ -38,3 +38,29 @@ test('movie: search, add, change status, remove', async ({ page }) => {
 	await sheet(page).getByRole('button', { name: 'Really remove from library?' }).click();
 	await expect(page.getByText('No movies yet')).toBeVisible();
 });
+
+test('search on a phone: the x only empties the field', async ({ page }) => {
+	await loginOk(page);
+	await page.setViewportSize({ width: 412, height: 800 });
+	await page.goto('/movies');
+	await page.getByRole('button', { name: 'Search' }).click();
+	const panel = page.locator('[data-search-panel]');
+	const field = panel.getByRole('searchbox');
+	await field.fill('Test Movie Alpha');
+	await field.press('Enter');
+	await expect(page).toHaveURL(/q=Test/);
+	await expect(page.getByRole('button', { name: 'Test Movie Alpha' })).toBeVisible();
+
+	// Open the panel again and empty the field: it stays open, focused, results behind it stay
+	await page.getByRole('button', { name: 'Search' }).click();
+	await panel.getByRole('button', { name: 'Clear' }).click();
+	await expect(field).toHaveValue('');
+	await expect(field).toBeFocused();
+	await expect(page).toHaveURL(/q=Test/);
+	await expect(panel).not.toHaveAttribute('inert');
+
+	// A new search right away
+	await field.fill('Future Film');
+	await field.press('Enter');
+	await expect(page).toHaveURL(/q=Future/);
+});

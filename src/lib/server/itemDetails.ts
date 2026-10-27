@@ -1,3 +1,4 @@
+import type { AnimeFacts } from '#lib/animeSeries.js';
 import { eq, inArray, notInArray, sql } from 'drizzle-orm';
 import { hasEpisodes, type Category } from '#lib/status.js';
 import { getDb } from './db';
@@ -24,6 +25,15 @@ export function saveDetails(itemId: number, info: Details, show: ShowDetails | n
 		.values({ itemId, ...values })
 		.onConflictDoUpdate({ target: itemDetails.itemId, set: values })
 		.run();
+}
+
+// What is stored about a title right now, as it was saved (before a refresh replaces it).
+export function storedDetails(itemId: number) {
+	return getDb()
+		.select({ info: itemDetails.info, show: itemDetails.show })
+		.from(itemDetails)
+		.where(eq(itemDetails.itemId, itemId))
+		.get();
 }
 
 // Episodes are marked as aired when the details are loaded. A stored copy can be from
@@ -108,6 +118,26 @@ export function streamingOffersOf(itemIds: number[]) {
 				{ flatrate: (watch?.flatrate ?? []).map(plain), purchase: [...purchase.values()] }
 			];
 		})
+	);
+}
+
+// Anime: what each one is and what it belongs with, for showing series as one in the library
+// (src/lib/animeSeries.ts). Titles without stored details (yet) have none.
+export function animeFactsOf(itemIds: number[]) {
+	if (itemIds.length === 0) return new Map<number, AnimeFacts>();
+	// Only that part of the stored details (the rest – texts, offers, similar titles – is large)
+	const rows = getDb()
+		.select({
+			itemId: itemDetails.itemId,
+			anime: sql<string | null>`json_extract(${itemDetails.info}, '$.anime')`
+		})
+		.from(itemDetails)
+		.where(inArray(itemDetails.itemId, itemIds))
+		.all();
+	return new Map(
+		rows.flatMap((row) =>
+			row.anime ? [[row.itemId, JSON.parse(row.anime) as AnimeFacts] as const] : []
+		)
 	);
 }
 

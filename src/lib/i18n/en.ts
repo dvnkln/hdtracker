@@ -8,6 +8,7 @@ export const en: Messages = {
 		close: 'Close',
 		cancel: 'Cancel',
 		search: 'Search',
+		clearSearch: 'Clear',
 		logout: 'Log out',
 		settings: 'Settings',
 		accountMenu: 'Account menu',
@@ -88,6 +89,9 @@ export const en: Messages = {
 		accepted: (name: string) => `${name} accepted your invitation`,
 		declined: (name: string) => `${name} declined your invitation`,
 		left: (name: string) => `${name} no longer tracks this with you`,
+		announced: (season: number | null) =>
+			season ? `Season ${season} announced` : 'New season announced',
+		startsOn: (date: string) => `from ${date}`,
 		emptyTitle: 'Nothing new',
 		emptyHint: 'Releases and invitations show up here.',
 		more: (n: number) => `${n} more`,
@@ -254,9 +258,43 @@ export const en: Messages = {
 		animeStart: 'Premiere'
 	},
 
+	// Anime search: entries that belong together shown as one series (src/lib/animeSeries.ts)
+	animeSeries: {
+		seasons: (n) => (n === 1 ? '1 season' : `${n} seasons`),
+		movies: (n) => (n === 1 ? '1 movie' : `${n} movies`),
+		extras: (n) => (n === 1 ? '1 extra' : `${n} extras`),
+		episodes: (n) => (n === 1 ? '1 episode' : `${n} episodes`),
+		inLibrary: (n) => (n === 1 ? '1 part in your library' : `${n} parts in your library`),
+		seasonShort: (n) => `S${n}`,
+		seasonsTitle: 'Seasons',
+		moviesTitle: 'Movies',
+		extrasTitle: 'OVAs, specials & spin-offs',
+		add: 'Add',
+		formats: {
+			TV: 'TV',
+			TV_SHORT: 'TV short',
+			MOVIE: 'Movie',
+			OVA: 'OVA',
+			ONA: 'ONA',
+			SPECIAL: 'Special',
+			MUSIC: 'Music'
+		},
+		airSeasons: { WINTER: 'Winter', SPRING: 'Spring', SUMMER: 'Summer', FALL: 'Fall' },
+		kinds: {
+			SEASON: ['season', 'seasons'],
+			MOVIE: ['movie', 'movies'],
+			OVA: ['OVA', 'OVAs'],
+			ONA: ['ONA', 'ONAs'],
+			SPECIAL: ['special', 'specials'],
+			TV: ['series', 'series'],
+			TV_SHORT: ['short series', 'short series'],
+			MUSIC: ['music video', 'music videos'],
+			OTHER: ['extra', 'extras']
+		}
+	},
 	library: {
 		searchPlaceholder: (category) => `Search ${category.toLowerCase()}…`,
-		results: (count, query) => `${count} results for “${query}”`,
+		results: (count, query) => `${count} ${count === 1 ? 'result' : 'results'} for “${query}”`,
 		toLibrary: 'Back to library',
 		noResults: 'No results',
 		noResultsHint: 'Try another spelling.',
@@ -850,6 +888,8 @@ export const en: Messages = {
 		garbled: (source) => `${source} is answering with something unreadable right now.`,
 		refused: (source) => `${source} is refusing requests right now.`,
 		tooMany: (source) => `${source} reports too many requests – please try again in a moment.`,
+		tooManyWait: (source, seconds) =>
+			`${source} is slowing down requests right now – try again in about ${seconds} s.`,
 		httpError: (source, status) => `${source} responded with error ${status}.`,
 		reason: (source, reason) => `${source} says: “${reason}”`,
 		igdbBadClient: 'IGDB: invalid client ID or secret – please check .env.',

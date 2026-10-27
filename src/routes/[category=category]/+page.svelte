@@ -10,7 +10,7 @@
 	import { CATEGORIES } from '#lib/categories.js';
 	import { COLLAPSED_STATUSES, statusesFor, type Status } from '#lib/status.js';
 	import { m, statusLabel } from '#lib/i18n/index.svelte.js';
-	import { NOTHING, pickAll, pickOne, pickRange } from '#lib/selection.js';
+	import { NOTHING, pickAll, pickGroup, pickOne, pickRange } from '#lib/selection.js';
 	import { sharingFor } from '#lib/sharing.js';
 	import { toast } from '#lib/toasts.svelte.js';
 	import { titles } from '#lib/titles.svelte.js';
@@ -19,9 +19,24 @@
 	import PosterCard from '#lib/components/PosterCard.svelte';
 	import { BUTTON_PRIMARY } from '#lib/components/SubmitButton.svelte';
 	import ItemSheet, { type SheetItem } from '#lib/components/ItemSheet.svelte';
+	import SeriesSheet, {
+		animeInfo,
+		seriesLine,
+		type Series
+	} from '#lib/components/SeriesSheet.svelte';
+	import {
+		currentPart,
+		facePart,
+		groupAnime,
+		libraryEntries,
+		type AnimeEntry,
+		type AnimeFacts
+	} from '#lib/animeSeries.js';
 	import { STATUS_ICONS } from '#lib/statusIcons.js';
 	import { ChevronRight, UserPlus, X } from '@lucide/svelte';
 	import { STICKY_SUMMARY, backToFolded, markStuck } from '#lib/stickySections.js';
+
+	import type { Person } from '#lib/avatar.js';
 
 	let { data, form } = $props();
 
@@ -69,15 +84,114 @@
 		goto(url, { shallow: true, replace: true, state: page.state });
 	}
 
+	// What one poster of the library stands for: a title, or a stack of anime that belong to one
+	// series (`ids`: all titles in it – for selecting)
+	type LibraryTitle = (typeof data.library)[number] & { anime?: AnimeFacts };
+	type Poster =
+		| { kind: 'single'; key: string; ids: number[]; item: LibraryTitle; tag: string | null }
+		| {
+				kind: 'stack';
+				key: string;
+				ids: number[];
+				series: Extract<AnimeEntry<LibraryTitle>, { kind: 'series' }>;
+				face: LibraryTitle;
+				name: string;
+				status: Status;
+				people: Person[];
+		  };
+	const onePoster = (item: LibraryTitle, tag: string | null = null): Poster => ({
+		kind: 'single',
+		key: `t${item.id}`,
+		ids: [item.id],
+		item,
+		tag
+	});
+	const formatLabel = (item: LibraryTitle) => {
+		const format = item.anime?.format;
+		return format ? (m.animeSeries.formats[format] ?? format) : null;
+	};
+	const posterName = (p: Poster) =>
+		p.kind === 'single' ? titles(data.category, p.item).main : p.name;
+	// Who tracks along on a stack: everybody of any of its titles, once
+	function peopleOf(ids: number[]) {
+		const all = new Map<number, Person>();
+		for (const id of ids) for (const person of data.together[id] ?? []) all.set(person.id, person);
+		return [...all.values()];
+	}
+	// Anime: series as stacks (the rules are in libraryEntries, src/lib/animeSeries.ts)
+	let animeLibrary = $derived(
+		data.category === 'anime'
+			? libraryEntries(shown.map((item) => ({ ...item, anime: data.anime[item.id] })))
+			: []
+	);
+	function postersOf(status: Status, items: LibraryTitle[]): Poster[] {
+		if (data.category !== 'anime') return items.map((item) => onePoster(item));
+		return animeLibrary
+			.filter((entry) => entry.status === status)
+			.map((entry): Poster => {
+				if (entry.kind === 'single')
+					return onePoster(entry.hit, entry.tagged ? formatLabel(entry.hit) : null);
+				const parts = [...entry.series.seasons, ...entry.series.movies, ...entry.series.extras];
+				const ids = parts.map((part) => part.id);
+				return {
+					kind: 'stack',
+					key: `s${status}-${entry.named.id}`,
+					ids,
+					series: entry.series,
+					face: entry.face,
+					name: titles('anime', entry.named).main,
+					status,
+					people: peopleOf(ids)
+				};
+			})
+			.sort((a, b) => posterName(a).localeCompare(posterName(b), 'de', { sensitivity: 'base' }));
+	}
+
 	// Library grouped by status, in section order; empty sections are skipped.
 	let sections = $derived(
 		statusesFor(data.category)
-			.map((status) => ({ status, items: shown.filter((i) => i.status === status) }))
-			.filter((s) => s.items.length > 0)
+			.map((status) => {
+				const items = shown.filter((i) => i.status === status);
+				return { status, items, posters: postersOf(status, items) };
+			})
+			.filter((s) => s.posters.length > 0)
 	);
 
 	// Item shown in the bottom sheet (null = closed)
 	let selected = $state<SheetItem | null>(null);
+
+	// Anime search: entries of one series become one poster (src/lib/animeSeries.ts). The open
+	// series is found again in the current results, so its list shows a status as soon as it is set.
+	let animeEntries = $derived(data.category === 'anime' ? groupAnime(data.results) : []);
+	let seriesKey = $state<string | null>(null);
+	let openSeries = $derived(
+		(animeEntries.find((e) => e.kind === 'series' && e.cover.externalId === seriesKey) as
+			Series | undefined) ?? null
+	);
+	// The same for a stack of the library: found again by the part tapped last – a new status can
+	// move that part's stack to another section, and the window stays open. If that part was
+	// removed: the stack in the same section that holds what the window showed.
+	let stackOf = $state<{ part: number; status: Status; ids: number[] } | null>(null);
+	let openStack = $derived.by(() => {
+		if (!stackOf) return null;
+		const { part, status, ids } = stackOf;
+		const stacks = sections
+			.flatMap((s) => s.posters)
+			.filter((p): p is Extract<Poster, { kind: 'stack' }> => p.kind === 'stack');
+		return (
+			stacks.find((p) => p.ids.includes(part)) ??
+			stacks.find((p) => p.status === status && p.ids.some((id) => ids.includes(id))) ??
+			null
+		);
+	});
+	// The part a series poster shows (poster, year, status): the one the user is on – what they
+	// watch, the next one planned, the latest one watched; none if no part is tracked
+	function seriesFace(series: Series) {
+		const now = currentPart(series);
+		return now?.status
+			? facePart([...series.seasons, ...series.movies, ...series.extras], now.status)
+			: null;
+	}
 
 	// Selecting several titles to invite somebody to all of them at once. Only offered while
 	// there is somebody to invite.
@@ -110,7 +224,7 @@
 	}
 	// The posters one can see, in reading order
 	let visibleIds = $derived(
-		sections.filter((s) => isOpen(s.status)).flatMap((s) => s.items.map((item) => item.id))
+		sections.filter((s) => isOpen(s.status)).flatMap((s) => s.posters.flatMap((p) => p.ids))
 	);
 
 	// Holding a poster (phone), a right click or Ctrl+click (computer) starts selecting with that
@@ -124,9 +238,13 @@
 		selecting = next.chosen.length > 0;
 		if (!selecting) stopSelecting();
 	}
-	const pick = (id: number, range = false) => {
+	// A stack counts as one: all its titles at once
+	const pick = (ids: number[], range = false) => {
 		if (range) readFolded();
-		select(range ? pickRange(selection, visibleIds, id) : pickOne(selection, id));
+		if (!range)
+			return select(ids.length === 1 ? pickOne(selection, ids[0]) : pickGroup(selection, ids));
+		const next = pickRange(selection, visibleIds, ids[0]);
+		select({ ...next, chosen: [...new Set([...next.chosen, ...ids])] });
 	};
 	let canSelect = $derived(data.people.length > 0);
 
@@ -189,7 +307,7 @@
 		<div class="mt-2 flex items-center justify-between text-sm">
 			<span class="text-zinc-400">
 				{#if !data.error && data.results.length}{m.library.results(
-						data.results.length,
+						data.category === 'anime' ? animeEntries.length : data.results.length,
 						data.q
 					)}{/if}
 			</span>
@@ -204,18 +322,46 @@
 			<EmptyState icon={SearchX} title={m.library.noResults} text={m.library.noResultsHint} />
 		{:else}
 			<ul class="mt-2 {gridClass}">
-				{#each data.results as item (item.externalId)}
-					<li>
-						<PosterCard
-							title={titles(data.category, item).main}
-							year={item.year}
-							earlyAccess={item.earlyAccess}
-							posterUrl={item.posterUrl}
-							badge={item.status ? statusLabel(data.category, item.status) : null}
-							onclick={() => (selected = item)}
-						/>
-					</li>
-				{/each}
+				{#if data.category === 'anime'}
+					{#each animeEntries as entry (entry.kind === 'single' ? entry.hit.externalId : `series-${entry.cover.externalId}`)}
+						<li>
+							{#if entry.kind === 'single'}
+								<PosterCard
+									title={titles('anime', entry.hit).main}
+									year={entry.hit.year}
+									info={entry.hit.anime ? [animeInfo(entry.hit)] : undefined}
+									posterUrl={entry.hit.posterUrl}
+									badge={entry.hit.status ? statusLabel('anime', entry.hit.status) : null}
+									onclick={() => (selected = entry.hit)}
+								/>
+							{:else}
+								{@const face = seriesFace(entry)}
+								<PosterCard
+									title={titles('anime', entry.cover).main}
+									year={entry.from}
+									info={[seriesLine(entry, face)]}
+									stack
+									posterUrl={(face ?? entry.cover).posterUrl}
+									badge={face?.status ? statusLabel('anime', face.status) : null}
+									onclick={() => (seriesKey = entry.cover.externalId)}
+								/>
+							{/if}
+						</li>
+					{/each}
+				{:else}
+					{#each data.results as item (item.externalId)}
+						<li>
+							<PosterCard
+								title={titles(data.category, item).main}
+								year={item.year}
+								earlyAccess={item.earlyAccess}
+								posterUrl={item.posterUrl}
+								badge={item.status ? statusLabel(data.category, item.status) : null}
+								onclick={() => (selected = item)}
+							/>
+						</li>
+					{/each}
+				{/if}
 			</ul>
 		{/if}
 	{:else if data.library.length === 0}
@@ -278,19 +424,42 @@
 						<h2 class="text-lg font-semibold">{statusLabel(data.category, section.status)}</h2>
 					</summary>
 					<ul class="mt-3 {gridClass}">
-						{#each section.items as item (item.id)}
+						{#each section.posters as poster (poster.key)}
 							<li>
-								<PosterCard
-									title={titles(data.category, item).main}
-									year={item.year}
-									earlyAccess={item.earlyAccess}
-									posterUrl={item.posterUrl}
-									loading={item.metadataUpdatedAt === null}
-									people={data.together[item.id]}
-									selected={selecting ? chosen.includes(item.id) : undefined}
-									onclick={() => (selecting ? pick(item.id) : (selected = item))}
-									onselect={canSelect ? (range) => pick(item.id, range) : undefined}
-								/>
+								{#if poster.kind === 'single'}
+									{@const item = poster.item}
+									<PosterCard
+										title={titles(data.category, item).main}
+										year={item.year}
+										earlyAccess={item.earlyAccess}
+										posterUrl={item.posterUrl}
+										tag={poster.tag}
+										loading={item.metadataUpdatedAt === null}
+										people={data.together[item.id]}
+										selected={selecting ? chosen.includes(item.id) : undefined}
+										onclick={() => (selecting ? pick(poster.ids) : (selected = item))}
+										onselect={canSelect ? (range) => pick(poster.ids, range) : undefined}
+									/>
+								{:else}
+									<PosterCard
+										title={poster.name}
+										year={poster.face.year}
+										info={[seriesLine(poster.series, poster.face)]}
+										stack
+										posterUrl={poster.face.posterUrl}
+										people={poster.people}
+										selected={selecting ? poster.ids.every((id) => chosen.includes(id)) : undefined}
+										onclick={() =>
+											selecting
+												? pick(poster.ids)
+												: (stackOf = {
+														part: poster.face.id,
+														status: poster.status,
+														ids: poster.ids
+													})}
+										onselect={canSelect ? (range) => pick(poster.ids, range) : undefined}
+									/>
+								{/if}
 							</li>
 						{/each}
 					</ul>
@@ -298,6 +467,23 @@
 			{/each}
 		</div>
 	{/if}
+
+	<!-- The parts of an anime series; a part opens the status window on top of it -->
+	<SeriesSheet
+		series={openSeries ?? openStack?.series ?? null}
+		name={openStack?.name}
+		face={openSeries ? seriesFace(openSeries) : openStack?.face}
+		onpick={(hit) => {
+			selected = hit;
+			if (stackOf && openStack && 'id' in hit) {
+				stackOf = { part: hit.id as number, status: openStack.status, ids: openStack.ids };
+			}
+		}}
+		onclose={() => {
+			seriesKey = null;
+			stackOf = null;
+		}}
+	/>
 
 	<ItemSheet
 		category={data.category}

@@ -3,7 +3,7 @@
 // sharing.ts.) Independent of push notifications: these notices are written for everybody.
 //
 // Unread until the user has seen it; read notices are removed after a week.
-import { and, eq, isNotNull, isNull, lt, ne, or, type SQL } from 'drizzle-orm';
+import { and, eq, isNotNull, isNull, lt, ne, notInArray, or, type SQL } from 'drizzle-orm';
 import type { Person } from '#lib/avatar.js';
 import type { Category } from '#lib/status.js';
 import { trackedEvents } from './dashboard';
@@ -81,6 +81,8 @@ export type NoticeLine = {
 		lastEpisode: number | null;
 		date: string | null;
 	} | null;
+	// A new season that became known: its number (series; none for anime) and start, if known
+	announced: { season: number | null; date: string | null } | null;
 };
 
 // The user's notices, newest first.
@@ -139,7 +141,8 @@ export function listNotices(userId: number): NoticeLine[] {
 							lastEpisode: null,
 							date: notice.date
 						}
-					: null
+					: null,
+			announced: notice.kind === 'announced' ? { season: notice.season, date: notice.date } : null
 		});
 	}
 	for (const [key, group] of episodes) {
@@ -166,7 +169,8 @@ export function listNotices(userId: number): NoticeLine[] {
 						.map((n) => n.date ?? '')
 						.sort()
 						.at(-1) || null
-			}
+			},
+			announced: null
 		});
 	}
 	// Newest first; what was released on the same run by its date, then A–Z
@@ -207,7 +211,13 @@ export function clearRead(userId: number, now = new Date()) {
 			and(
 				eq(notices.userId, userId),
 				isNotNull(notices.readAt),
-				or(ne(notices.kind, 'release'), lt(notices.date, since))
+				// Releases and new seasons of the last days stay (hidden), so the hourly task neither
+				// notes them again nor loses the push that is built from them (announcements.ts)
+				or(
+					notInArray(notices.kind, ['release', 'announced']),
+					and(eq(notices.kind, 'release'), lt(notices.date, since)),
+					and(eq(notices.kind, 'announced'), lt(notices.createdAt, new Date(`${since}T00:00:00`)))
+				)
 			)
 		)
 		.run();

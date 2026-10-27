@@ -15,8 +15,11 @@ import { airedEpisodes, getShowDetails, hasEpisodes, setEpisodes } from '#lib/se
 import { ProviderError, today, type SearchResult } from '#lib/server/providers/types.js';
 import { searchCategory } from '#lib/server/search.js';
 import { refreshPending } from '#lib/server/releases.js';
+import { recentFacts } from '#lib/server/providers/anilist.js';
+import { trackSeries } from '#lib/server/animeSeasons.js';
 import { serverMessages } from '#lib/server/i18n.js';
-import { filterFactsOf } from '#lib/server/itemDetails.js';
+import { animeFactsOf, filterFactsOf } from '#lib/server/itemDetails.js';
+import type { AnimeFacts } from '#lib/animeSeries.js';
 import {
 	companionsByItem,
 	inviteMany,
@@ -24,6 +27,20 @@ import {
 	shareablePeople
 } from '#lib/server/sharing.js';
 import type { Actions, PageServerLoad } from './$types';
+
+// What each anime of the library is and what it belongs with (stored with its details). A title
+// whose details are still loading – just added – takes it from a recent search, so a series stands
+// as one stack right away.
+async function animeFactsFor(library: LibraryItem[]) {
+	const facts = animeFactsOf(library.map((item) => item.id));
+	const waiting = library.filter((item) => !facts.has(item.id));
+	const recent = await recentFacts(waiting.map((item) => item.externalId));
+	for (const item of waiting) {
+		const found = recent.get(item.externalId);
+		if (found) facts.set(item.id, found);
+	}
+	return Object.fromEntries(facts) as Record<number, AnimeFacts>;
+}
 
 export const load: PageServerLoad = async ({ params, url, locals }) => {
 	const me = locals.user!.id;
@@ -47,6 +64,8 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 			together,
 			// Genres, streaming services, stores, platforms of the titles, for the filter (stored details)
 			facts: filterFacts(library.map((item) => item.id)),
+			// Anime: what each one is and what it belongs with, to show series as one
+			anime: category === 'anime' ? await animeFactsFor(library) : {},
 			people: shareablePeople(me),
 			// The user's open invitations: title -> (invited user -> invitation)
 			pending: pendingByItem(me),
@@ -75,6 +94,7 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 		library: [] as LibraryItem[],
 		together: {} as Record<number, Person[]>,
 		facts: {} as ReturnType<typeof filterFacts>,
+		anime: {} as Record<number, AnimeFacts>,
 		people: [] as Person[],
 		pending: {} as Record<number, Record<number, number>>,
 		results,
@@ -122,6 +142,16 @@ export const actions: Actions = {
 		}
 		saveItem(me, category, item, status);
 		refreshPending(); // new titles: load release dates for the dashboard
+
+		// A new anime season brings the other seasons of its series along (animeSeasons.ts). If
+		// AniList fails, the title is saved anyway – just without the others.
+		if (category === 'anime' && !existing) {
+			try {
+				await trackSeries(me, item.externalId, status);
+			} catch (err) {
+				console.error('Could not add the other seasons', err);
+			}
+		}
 
 		// "Gesehen" for a series/anime also ticks all aired episodes.
 		if (status === 'completed' && hasEpisodes(category)) {

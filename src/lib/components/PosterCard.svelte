@@ -14,6 +14,12 @@
 		earlyAccess?: boolean;
 		// Details (year, ...) not loaded yet, e.g. right after an import
 		loading?: boolean;
+		// Lines under the title instead of the year (e.g. "2013 · TV · 25 episodes")
+		info?: string[];
+		// Several titles behind one poster (an anime series): cards peek out behind it
+		stack?: boolean;
+		// Small label in the top left corner (what kind of title: "Movie", "OVA" …)
+		tag?: string | null;
 		// Who tracks this title along with the user (small profile pictures on the poster)
 		people?: Person[];
 		// While titles are being selected: whether this one is (undefined = no selection going on)
@@ -33,6 +39,9 @@
 		badge = null,
 		earlyAccess = false,
 		loading = false,
+		info,
+		stack = false,
+		tag = null,
 		people = [],
 		selected,
 		onselect,
@@ -107,63 +116,84 @@
 		? 'select-none [-webkit-touch-callout:none]'
 		: ''}"
 >
-	<div
-		class="relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-zinc-900 transition-shadow duration-100 group-hover/poster:ring-2 group-hover/poster:ring-(--accent) group-focus-visible/poster:ring-2 group-focus-visible/poster:ring-(--accent) {selected
-			? 'ring-2 ring-(--accent)'
-			: 'ring-1 ring-zinc-800'}"
-	>
-		{#if img(posterUrl)}
-			<img
-				src={img(posterUrl)}
-				alt={title}
-				loading="lazy"
-				draggable="false"
-				referrerpolicy="no-referrer"
-				class="h-full w-full object-cover transition-[filter] duration-100 group-hover/poster:brightness-60"
-			/>
-		{:else}
-			<div class="flex h-full items-center justify-center text-zinc-600">
-				<ImageOff size={28} />
-			</div>
+	<div class="relative">
+		{#if stack}
+			<!-- Two cards peeking out at the top right, into the gap between the posters -->
+			<div
+				class="absolute inset-0 translate-x-1.5 -translate-y-1.5 rounded-lg bg-zinc-800 ring-1 ring-zinc-700"
+			></div>
+			<div
+				class="absolute inset-0 translate-x-[3px] -translate-y-[3px] rounded-lg bg-zinc-700 ring-1 ring-zinc-600"
+			></div>
 		{/if}
-		{#if onselect && selected === undefined}
-			<!-- Computer: a circle appears while the mouse is over the poster – click it to select -->
-			<span
-				data-select
-				title={m.share.select}
-				class="absolute top-1 left-1 hidden size-6 rounded-full border-2 border-white/80 bg-black/50 hover:bg-(--accent) [@media(hover:hover)]:group-hover/poster:block"
-			></span>
-		{/if}
-		{#if selected !== undefined}
-			<!-- Selecting: a tick on the chosen ones, an empty circle on the others -->
-			<span
-				class="absolute top-1 left-1 flex size-6 items-center justify-center rounded-full ring-2 ring-zinc-950 {selected
-					? 'bg-(--accent) text-white'
-					: 'border-2 border-white/80 bg-black/50 text-transparent ring-0'}"
-			>
-				<Check size={15} strokeWidth={3} />
-			</span>
-		{/if}
-		<!-- Who tracks along: small in the corner (above the status strip of a search hit) -->
-		<TogetherMark {people} corner class="absolute right-1 {badge ? 'bottom-7' : 'bottom-1'}" />
-		{#if badge}
-			<span
-				class="absolute inset-x-1 bottom-1 truncate rounded bg-(--accent) px-1.5 py-0.5 text-center text-[11px] font-semibold text-white"
-			>
-				{badge}
-			</span>
-		{/if}
+		<div
+			class="relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-zinc-900 transition-shadow duration-100 group-hover/poster:ring-2 group-hover/poster:ring-(--accent) group-focus-visible/poster:ring-2 group-focus-visible/poster:ring-(--accent) {selected
+				? 'ring-2 ring-(--accent)'
+				: 'ring-1 ring-zinc-800'}"
+		>
+			{#if img(posterUrl)}
+				<img
+					src={img(posterUrl)}
+					alt={title}
+					loading="lazy"
+					draggable="false"
+					referrerpolicy="no-referrer"
+					class="h-full w-full object-cover transition-[filter] duration-100 group-hover/poster:brightness-60"
+				/>
+			{:else}
+				<div class="flex h-full items-center justify-center text-zinc-600">
+					<ImageOff size={28} />
+				</div>
+			{/if}
+			{#if tag}
+				<span
+					class="absolute top-1 left-1 rounded bg-black/70 px-1.5 py-px text-[10px] font-semibold tracking-wide text-white uppercase"
+					>{tag}</span
+				>
+			{/if}
+			{#if onselect && selected === undefined}
+				<!-- Computer: a circle appears while the mouse is over the poster – click it to select -->
+				<span
+					data-select
+					title={m.share.select}
+					class="absolute top-1 left-1 hidden size-6 rounded-full border-2 border-white/80 bg-black/50 hover:bg-(--accent) [@media(hover:hover)]:group-hover/poster:block"
+				></span>
+			{/if}
+			{#if selected !== undefined}
+				<!-- Selecting: a tick on the chosen ones, an empty circle on the others -->
+				<span
+					class="absolute top-1 left-1 flex size-6 items-center justify-center rounded-full ring-2 ring-zinc-950 {selected
+						? 'bg-(--accent) text-white'
+						: 'border-2 border-white/80 bg-black/50 text-transparent ring-0'}"
+				>
+					<Check size={15} strokeWidth={3} />
+				</span>
+			{/if}
+			<!-- Who tracks along: small in the corner (above the status strip of a search hit) -->
+			<TogetherMark {people} corner class="absolute right-1 {badge ? 'bottom-7' : 'bottom-1'}" />
+			{#if badge}
+				<span
+					class="absolute inset-x-1 bottom-1 truncate rounded bg-(--accent) px-1.5 py-0.5 text-center text-[11px] font-semibold text-white"
+				>
+					{badge}
+				</span>
+			{/if}
+		</div>
 	</div>
 	<p
 		class="mt-1.5 line-clamp-2 text-sm leading-tight font-medium transition-colors duration-100 group-hover/poster:text-(--accent)"
 	>
 		{title}
 	</p>
-	<!-- No year: still loading ("…") or not announced yet ("TBA"), explained on hover -->
-	<p class="text-xs text-zinc-500">
-		{#if year}{year}{earlyAccess ? ` · ${m.common.earlyAccess}` : ''}{:else if loading}<span
-				title={m.common.loadingDetails}
-				class="animate-pulse">…</span
-			>{:else}<span title={m.common.tbaHint}>{m.common.tba}</span>{/if}
-	</p>
+	{#if info}
+		{#each info as text, i (i)}<p class="truncate text-xs text-zinc-500">{text}</p>{/each}
+	{:else}
+		<!-- No year: still loading ("…") or not announced yet ("TBA"), explained on hover -->
+		<p class="text-xs text-zinc-500">
+			{#if year}{year}{earlyAccess ? ` · ${m.common.earlyAccess}` : ''}{:else if loading}<span
+					title={m.common.loadingDetails}
+					class="animate-pulse">…</span
+				>{:else}<span title={m.common.tbaHint}>{m.common.tba}</span>{/if}
+		</p>
+	{/if}
 </svelte:element>

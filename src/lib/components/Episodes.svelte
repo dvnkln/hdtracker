@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import { enhance, type SubmitFunction } from '$app/forms';
+	import { enhance, type ActionResult, type SubmitFunction } from '$app/forms';
+	import { toast } from '#lib/toasts.svelte.js';
 	import type { ShowDetails } from '#lib/server/providers/types.js';
 	import { CalendarClock, Check, CheckCheck, ChevronRight } from '@lucide/svelte';
 	import { formatDate, formatShortDate, m } from '#lib/i18n/index.svelte.js';
@@ -84,7 +85,8 @@
 	const toggleEpisode: SubmitFunction = ({ formData }) => {
 		const k = key(Number(formData.get('season')), Number(formData.get('episode')));
 		pending = [...pending, k];
-		return async ({ update }) => {
+		return async ({ result, update }) => {
+			failed(result);
 			await update({ reset: false, navigate: false });
 			pending = pending.filter((p) => p !== k);
 		};
@@ -95,8 +97,18 @@
 		if (formData.get('watched') === '0' && !confirm(m.episodes.resetConfirm)) {
 			cancel();
 		}
-		return async ({ update }) => update({ reset: false, navigate: false });
+		return async ({ result, update }) => {
+			failed(result);
+			await update({ reset: false, navigate: false });
+		};
 	};
+
+	// The data source failed (the server could not load the episodes): nothing changed, the
+	// reason shows at the top.
+	function failed(result: ActionResult) {
+		const error = result.type === 'failure' ? result.data?.error : null;
+		if (typeof error === 'string') toast(error, { kind: 'error' });
+	}
 </script>
 
 <!-- The episodes of one season as a list with image, title and text -->

@@ -11,6 +11,7 @@ export const de = {
 		close: 'Schließen',
 		cancel: 'Abbrechen',
 		search: 'Suchen',
+		clearSearch: 'Leeren',
 		logout: 'Abmelden',
 		settings: 'Einstellungen',
 		accountMenu: 'Konto-Menü',
@@ -92,6 +93,10 @@ export const de = {
 		accepted: (name: string) => `${name} hat deine Einladung angenommen`,
 		declined: (name: string) => `${name} hat deine Einladung abgelehnt`,
 		left: (name: string) => `${name} trackt das nicht mehr mit dir`,
+		// A new season became known (series: its number; anime: the season is a title of its own)
+		announced: (season: number | null) =>
+			season ? `Staffel ${season} angekündigt` : 'Neue Staffel angekündigt',
+		startsOn: (date: string) => `ab ${date}`,
 		emptyTitle: 'Nichts Neues',
 		emptyHint: 'Neuerscheinungen und Einladungen landen hier.',
 		more: (n: number) => `${n} weitere`,
@@ -259,6 +264,42 @@ export const de = {
 		animeStart: 'Start'
 	},
 
+	// Anime search: entries that belong together shown as one series (src/lib/animeSeries.ts)
+	animeSeries: {
+		seasons: (n: number) => (n === 1 ? '1 Staffel' : `${n} Staffeln`),
+		movies: (n: number) => (n === 1 ? '1 Film' : `${n} Filme`),
+		extras: (n: number) => (n === 1 ? '1 Extra' : `${n} Extras`),
+		episodes: (n: number) => (n === 1 ? '1 Folge' : `${n} Folgen`),
+		inLibrary: (n: number) =>
+			n === 1 ? '1 Teil in deiner Bibliothek' : `${n} Teile in deiner Bibliothek`,
+		seasonShort: (n: number) => `S${n}`,
+		seasonsTitle: 'Staffeln',
+		moviesTitle: 'Filme',
+		extrasTitle: 'OVAs, Specials & Ableger',
+		add: 'Hinzufügen',
+		formats: {
+			TV: 'TV',
+			TV_SHORT: 'TV kurz',
+			MOVIE: 'Film',
+			OVA: 'OVA',
+			ONA: 'ONA',
+			SPECIAL: 'Special',
+			MUSIC: 'Musik'
+		} as Record<string, string>,
+		airSeasons: { WINTER: 'Winter', SPRING: 'Frühling', SUMMER: 'Sommer', FALL: 'Herbst' },
+		// Counting the parts of a stack: one, several (see partCounts)
+		kinds: {
+			SEASON: ['Staffel', 'Staffeln'],
+			MOVIE: ['Film', 'Filme'],
+			OVA: ['OVA', 'OVAs'],
+			ONA: ['ONA', 'ONAs'],
+			SPECIAL: ['Special', 'Specials'],
+			TV: ['Serie', 'Serien'],
+			TV_SHORT: ['Kurzserie', 'Kurzserien'],
+			MUSIC: ['Musikvideo', 'Musikvideos'],
+			OTHER: ['Extra', 'Extras']
+		} as Record<string, [string, string]>
+	},
 	library: {
 		searchPlaceholder: (category: string) => `${category} suchen…`,
 		results: (count: number, query: string) => `${count} Treffer für „${query}“`,
@@ -885,6 +926,8 @@ export const de = {
 		refused: (source: string) => `${source} lehnt Anfragen gerade ab.`,
 		tooMany: (source: string) =>
 			`${source} meldet zu viele Anfragen – bitte gleich noch einmal versuchen.`,
+		tooManyWait: (source: string, seconds: number) =>
+			`${source} bremst gerade – in etwa ${seconds} s geht es wieder.`,
 		httpError: (source: string, status: number) => `${source} antwortet mit Fehler ${status}.`,
 		reason: (source: string, reason: string) => `${source} meldet: „${reason}“`,
 		igdbBadClient: 'IGDB: Client-ID oder Secret ungültig – bitte .env prüfen.',

@@ -42,7 +42,8 @@ What changed in each version: [Changelog](CHANGELOG.md). What's planned: [Roadma
 
 - 🎬 **Four separate areas** – movies, series, anime and games, each with a library grouped by status (watching, paused, planned, completed, dropped). Don't track games or anime? Hide the areas you don't need.
 - 📅 **Dashboard** – what was released recently and what is coming up: new episodes, new seasons, cinema and home releases, game releases.
-- 📺 **Episode tracking** – tick off single episodes, whole seasons or entire shows; see upcoming episodes and announced seasons with dates. Anime get episode titles and images too.
+- 📺 **Episode tracking** – tick off single episodes, whole seasons or entire shows; see upcoming episodes and announced seasons with dates, and get told when a new season is announced. Anime get episode titles and images too.
+- 🧩 **Anime as series** – AniList lists every season, movie and OVA on its own; hdtracker stacks what belongs together into one poster, in search and library. Track one season and the others come along.
 - 🙈 **Spoiler protection** – images and descriptions of episodes you have not watched yet are blurred (can be switched off).
 - 🍿 **Where to watch** – streaming, rent and buy offers for your region (via JustWatch), with direct links where possible – one logo per service, no matter how many plans and channels it is listed under. For games: the stores that sell them, one tap away.
 - 📡 **What runs where** – everything you watch or plan to watch, sorted by streaming service: tap Netflix and see what of it is there right now – and where you could rent or buy the rest. Hide the services you never use.

@@ -3,6 +3,7 @@
 	import '@fontsource/outfit/800.css';
 	import './layout.css';
 	import { forgetPictures } from '#lib/notificationPictures.js';
+	import { guardNavigation } from '#lib/guardNavigation.svelte.js';
 	import favicon from '#lib/assets/favicon.svg';
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
 	import { page, updated } from '$app/state';
@@ -62,9 +63,15 @@
 		if (type !== 'enter') checkVersion();
 	});
 
-	beforeNavigate(({ willUnload, to, shallow, type }) => {
+	beforeNavigate((navigation) => {
+		const { willUnload, to, shallow, type } = navigation;
 		if (shallow && type === 'goto') return;
-		if (updated.current && !willUnload && to?.url) location.href = to.url.href;
+		if (updated.current && !willUnload && to?.url) {
+			location.href = to.url.href;
+			return;
+		}
+		// A detail page or search whose data source fails: stay here, say why (toast)
+		guardNavigation(navigation);
 	});
 
 	// First part of the URL, e.g. "movies" for /movies?q=dune

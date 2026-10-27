@@ -292,3 +292,54 @@ export function countByCategory(userId: number) {
 export function countTitles() {
 	return getDb().select({ n: count() }).from(libraryItems).get()?.n ?? 0;
 }
+
+// Everybody who has a title in their library, with their state of it (for what a refresh of
+// the title finds out, see announcements.ts).
+export function trackersOf(itemId: number) {
+	return getDb()
+		.select({
+			userId: trackingMembers.userId,
+			trackingId: trackingMembers.trackingId,
+			status: trackings.status,
+			notify: trackingMembers.notify
+		})
+		.from(trackingMembers)
+		.innerJoin(trackings, eq(trackings.id, trackingMembers.trackingId))
+		.where(eq(trackingMembers.itemId, itemId))
+		.all();
+}
+
+// Adds a title to the libraries of several people as one state they share (as if they had
+// accepted invitations) – for a new season of something they track together (announcements.ts).
+// Only for people who do not have the title yet.
+export function saveTogether(
+	userIds: number[],
+	category: Category,
+	item: SearchResult,
+	status: Status
+) {
+	if (userIds.length === 0) return;
+	const now = new Date();
+	getDb().transaction((tx) => {
+		tx.insert(libraryItems)
+			.values({ ...item, category })
+			.onConflictDoNothing()
+			.run();
+		const title = tx.select().from(libraryItems).where(isTitle(category, item.externalId)).get()!;
+		const tracking = tx
+			.insert(trackings)
+			.values({ itemId: title.id, status, statusChangedAt: now })
+			.returning({ id: trackings.id })
+			.get();
+		tx.insert(trackingMembers)
+			.values(
+				userIds.map((userId) => ({
+					trackingId: tracking.id,
+					userId,
+					itemId: title.id,
+					addedAt: now
+				}))
+			)
+			.run();
+	});
+}

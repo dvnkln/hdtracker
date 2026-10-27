@@ -2,7 +2,13 @@ import { and, count, eq, inArray, isNull, notInArray } from 'drizzle-orm';
 import { hasEpisodes, type Category } from '#lib/status.js';
 import { getDb } from './db';
 import { getImage } from './images';
-import { deleteDetailsOfHiddenAreas, endedShowIds, saveDetails } from './itemDetails';
+import {
+	deleteDetailsOfHiddenAreas,
+	endedShowIds,
+	saveDetails,
+	storedDetails
+} from './itemDetails';
+import { announce, newSeasons } from './announcements';
 import { libraryItems, releases, trackings, watchedEpisodes } from './db/schema';
 import { getDetails } from './details';
 import { airedEpisodes, getShowDetails } from './episodes';
@@ -78,6 +84,8 @@ export async function refreshItem(item: Title) {
 		? await getShowDetails(item.category, item.externalId)
 		: null;
 
+	// What was stored until now – to find out what is new (announcements.ts)
+	const before = storedDetails(item.id);
 	const saved = getDb().transaction((tx) => {
 		const updated = tx
 			.update(libraryItems)
@@ -107,6 +115,20 @@ export async function refreshItem(item: Title) {
 	});
 	if (!saved) return;
 	saveDetails(item.id, info, show);
+
+	// A new season that became known: told, and an anime one added. Must not fail the refresh.
+	// If adding a new anime season fails (AniList not reachable), the links stored before are
+	// kept, so the next refresh still finds it new and tries again.
+	const news = newSeasons(item.category, before, info, show);
+	try {
+		const added = await announce(item.id, news);
+		if (added.length > 0) refreshPending();
+	} catch (err) {
+		console.error(`Could not announce what is new about ${item.category} ${item.externalId}`, err);
+		if (news.some((n) => n.kind === 'sequel')) {
+			saveDetails(item.id, { ...info, anime: before?.info.anime }, show);
+		}
+	}
 
 	// Keep the images at the top of the detail page in the image store and fresh. Episode
 	// images and the posters of similar titles take a lot of space and are further down the
@@ -312,8 +334,9 @@ export async function prepareAnimeTitles() {
 // Raised whenever the stored details get something new that should not wait for each title's
 // regular refresh (which may be a month away): 1 = trailer links, 2 = stores and platforms of games,
 // 3 = one logo per streaming service, 4 = AniList's direct links on the logos of anime,
-// 5 = channels without their service left out, 6 = the same for names with a space at the end.
-export const DETAILS_VERSION = '6';
+// 5 = channels without their service left out, 6 = the same for names with a space at the end,
+// 7 = what an anime is and what it belongs with (series in the library).
+export const DETAILS_VERSION = '7';
 
 // Called at startup. After an update that changes what is stored about a title, the whole
 // library is loaded again once – in the background, with the usual pauses, like after

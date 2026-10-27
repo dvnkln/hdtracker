@@ -36,7 +36,9 @@ function failLoading(err: unknown): never {
 	error(502, err instanceof ProviderError ? err.message : t.loadFailed);
 }
 
-// Episode list of a series/anime (used by the episode form actions).
+// Episode list of a series/anime (used by the episode form actions). If the data source fails,
+// the action answers with the reason instead of an error page: the episode list stays as it
+// was and shows the reason at the top (toast).
 async function loadDetails(params: { category: string; id: string }) {
 	const category = params.category as Category;
 	if (!hasEpisodes(category) || !ID_PATTERN.test(params.id))
@@ -45,7 +47,14 @@ async function loadDetails(params: { category: string; id: string }) {
 	try {
 		({ show } = await detailsFor(category, params.id));
 	} catch (err) {
-		failLoading(err);
+		console.error('Loading details failed', err);
+		if (err instanceof ProviderError && err.status === 404)
+			error(404, serverMessages().common.notFound);
+		return {
+			failed: fail(502, {
+				error: err instanceof ProviderError ? err.message : serverMessages().common.loadFailed
+			})
+		};
 	}
 	if (!show) error(404, serverMessages().common.notFound);
 	return { category, details: show };
@@ -216,7 +225,9 @@ export const actions: Actions = {
 	// Tap on a single episode: watched <-> not watched.
 	toggle: async ({ params, request, locals }) => {
 		const me = locals.user!.id;
-		const { category, details } = await loadDetails(params);
+		const loaded = await loadDetails(params);
+		if ('failed' in loaded) return loaded.failed;
+		const { category, details } = loaded;
 		const data = await request.formData();
 		const season = readInt(data, 'season');
 		const episode = readInt(data, 'episode');
@@ -229,7 +240,9 @@ export const actions: Actions = {
 
 	// Whole season watched / not watched.
 	season: async ({ params, request, locals }) => {
-		const { category, details } = await loadDetails(params);
+		const loaded = await loadDetails(params);
+		if ('failed' in loaded) return loaded.failed;
+		const { category, details } = loaded;
 		const data = await request.formData();
 		const season = readInt(data, 'season');
 		if (season === null) return fail(400);
@@ -244,7 +257,9 @@ export const actions: Actions = {
 
 	// Whole show (without specials) watched / not watched.
 	all: async ({ params, request, locals }) => {
-		const { category, details } = await loadDetails(params);
+		const loaded = await loadDetails(params);
+		if ('failed' in loaded) return loaded.failed;
+		const { category, details } = loaded;
 		const data = await request.formData();
 		setEpisodes(
 			locals.user!.id,

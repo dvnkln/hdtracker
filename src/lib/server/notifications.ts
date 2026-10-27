@@ -2,7 +2,16 @@ import { and, eq, lt } from 'drizzle-orm';
 import { eventLabel } from '#lib/eventLabel.js';
 import { byEpisode, getDashboard, toEntry, trackedEvents, type DashboardEntry } from './dashboard';
 import { getDb } from './db';
-import { itemDetails, libraryItems, notificationsSent, releases, users } from './db/schema';
+import {
+	itemDetails,
+	libraryItems,
+	notices,
+	notificationsSent,
+	releases,
+	trackingMembers,
+	trackings,
+	users
+} from './db/schema';
 import { localeOf, serverMessages, withLocale } from './i18n';
 import { collectReleases, pruneRead } from './notices';
 import { imageSource } from '#lib/images.js';
@@ -10,7 +19,7 @@ import { LAYOUTS, preparePictures, type Layout } from './collage';
 import { signedCollagePath, signedImagePath } from './images';
 import { today } from './providers/types';
 import { deliver, hasEnabledTarget, type Notice, type PictureSource } from './targets';
-import { getUserSetting, setUserSettings } from './settings';
+import { enabledCategories, getUserSetting, setUserSettings } from './settings';
 
 // Tells the user about what came out today: new episodes and seasons, cinema and home
 // releases, game releases – exactly what shows up under "recently released" on the dashboard
@@ -55,7 +64,14 @@ export function prefsFor(userId: number) {
 const CATCH_UP_DAYS = 2;
 
 type Row = typeof releases.$inferSelect;
-type Due = { entry: DashboardEntry; itemId: number; rows: Row[] };
+// What is due: releases (`rows`), or a new season that became known (`announced`, the day it was
+// found – see announcements.ts)
+type Due = {
+	entry: DashboardEntry;
+	itemId: number;
+	rows: Row[];
+	announced?: { season: number | null; date: string | null; found: string };
+};
 
 const daysBefore = (day: string, days: number) => {
 	const date = new Date(`${day}T12:00:00`);
@@ -99,10 +115,82 @@ export function dueEvents(userId: number, day = today()): Due[] {
 			due.push({ entry, itemId: item.id, rows: episodes });
 		}
 	}
+	due.push(...dueAnnouncements(userId, since, day, sent));
 	// Like the lists of the app: A–Z
 	return due.sort((a, b) =>
 		a.entry.title.localeCompare(b.entry.title, 'de', { sensitivity: 'base' })
 	);
+}
+
+// New seasons that became known (notices written by announcements.ts) – from the day they were
+// found, like a release from its day; not for titles muted since or of hidden areas.
+function dueAnnouncements(userId: number, since: string, day: string, sent: Set<string>): Due[] {
+	const shown = enabledCategories(userId);
+	return getDb()
+		.select({ notice: notices, item: libraryItems, status: trackings.status })
+		.from(notices)
+		.innerJoin(libraryItems, eq(libraryItems.id, notices.itemId))
+		.innerJoin(
+			trackingMembers,
+			and(eq(trackingMembers.itemId, notices.itemId), eq(trackingMembers.userId, userId))
+		)
+		.innerJoin(trackings, eq(trackings.id, trackingMembers.trackingId))
+		.where(
+			and(
+				eq(notices.userId, userId),
+				eq(notices.kind, 'announced'),
+				eq(trackingMembers.notify, true)
+			)
+		)
+		.all()
+		.flatMap(({ notice, item, status }) => {
+			const found = notice.createdAt.toLocaleDateString('sv-SE');
+			const key = sentKey({
+				itemId: item.id,
+				kind: 'announced',
+				season: notice.season,
+				episode: 0,
+				date: found
+			});
+			if (found < since || found > day || sent.has(key) || !shown.includes(item.category)) {
+				return [];
+			}
+			const entry: DashboardEntry = {
+				itemId: item.id,
+				category: item.category,
+				externalId: item.externalId,
+				title: item.title,
+				originalTitle: item.originalTitle,
+				posterUrl: item.posterUrl,
+				status,
+				kind: 'release',
+				date: notice.date,
+				season: notice.season,
+				episode: null,
+				lastSeason: null,
+				lastEpisode: null
+			};
+			return [
+				{
+					entry,
+					itemId: item.id,
+					rows: [],
+					announced: { season: notice.season, date: notice.date, found }
+				}
+			];
+		});
+}
+
+// What a message says about one thing that is due: what was released – or that a new season
+// became known, with its start if known ("Season 8 announced · from Apr 12, 2027").
+function labelOf(d: Due, m: ReturnType<typeof serverMessages>) {
+	if (!d.announced) return eventLabel(d.entry, m);
+	const what = m.inbox.announced(d.announced.season);
+	if (!d.announced.date) return what;
+	const date = new Intl.DateTimeFormat(m.locale, { dateStyle: 'medium' }).format(
+		new Date(`${d.announced.date}T12:00:00`)
+	);
+	return `${what} · ${m.inbox.startsOn(date)}`;
 }
 
 // The title as the user sees it everywhere (anime: English or Romaji on top, see settings).
@@ -160,7 +248,7 @@ export function buildMessages(
 		const titles = [...new Set(due.map((d) => d.itemId))].length;
 		const lines = due
 			.slice(0, DIGEST_LINES)
-			.map((d) => `${shownTitle(d.entry, romaji)} – ${eventLabel(d.entry, m)}`);
+			.map((d) => `${shownTitle(d.entry, romaji)} – ${labelOf(d, m)}`);
 		if (due.length > DIGEST_LINES) lines.push(m.notifications.more(due.length - DIGEST_LINES));
 		const posters = [...new Set(due.map((d) => d.entry.posterUrl))].filter(
 			(address): address is string => !!address && imageSource(address) !== null
@@ -185,7 +273,7 @@ export function buildMessages(
 	for (const d of due) perItem.set(d.itemId, [...(perItem.get(d.itemId) ?? []), d]);
 	return [...perItem.values()].map((own) => ({
 		title: shownTitle(own[0].entry, romaji),
-		body: own.map((d) => eventLabel(d.entry, m)).join(' · '),
+		body: own.map((d) => labelOf(d, m)).join(' · '),
 		url: `/${own[0].entry.category}/${own[0].entry.externalId}`,
 		tag: `item-${own[0].itemId}`,
 		icon: ICON,
@@ -223,8 +311,20 @@ export function sampleMessage(userId: number): Notice {
 }
 
 function markSent(userId: number, due: Due[]) {
-	const values = due.flatMap((d) =>
-		d.rows.map((r) => ({
+	const values = due.flatMap((d) => [
+		...(d.announced
+			? [
+					{
+						userId,
+						itemId: d.itemId,
+						kind: 'announced' as const,
+						season: d.announced.season ?? 0,
+						episode: 0,
+						date: d.announced.found
+					}
+				]
+			: []),
+		...d.rows.map((r) => ({
 			userId,
 			itemId: r.itemId,
 			kind: r.kind,
@@ -232,7 +332,7 @@ function markSent(userId: number, due: Due[]) {
 			episode: r.episode ?? 0,
 			date: r.date!
 		}))
-	);
+	]);
 	for (let i = 0; i < values.length; i += 200) {
 		getDb()
 			.insert(notificationsSent)

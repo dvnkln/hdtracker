@@ -15,6 +15,16 @@ export function pickOne(selection: Selection, id: number): Selection {
 	return { chosen, anchor: id, base: chosen };
 }
 
+// A stack of posters (an anime series in the library) counts as one: all of it more, or – if all
+// of it was chosen – all of it less. Its first title becomes the anchor.
+export function pickGroup(selection: Selection, ids: number[]): Selection {
+	const all = ids.every((id) => selection.chosen.includes(id));
+	const chosen = all
+		? selection.chosen.filter((id) => !ids.includes(id))
+		: [...new Set([...selection.chosen, ...ids])];
+	return { chosen, anchor: ids[0], base: chosen };
+}
+
 // Everything from the anchor up to `id`, in the order of the page (`order`: the posters one
 // can see). Without an anchor in sight it is a single pick.
 export function pickRange(selection: Selection, order: number[], id: number): Selection {
