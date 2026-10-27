@@ -113,10 +113,20 @@
 	const posterName = (p: Poster) =>
 		p.kind === 'single' ? titles(data.category, p.item).main : p.name;
 	// Who tracks along on a stack: everybody of any of its titles, once
+	// Who tracks along on several titles: `all` – on every one of them, `some` – on only some
 	function peopleOf(ids: number[]) {
-		const all = new Map<number, Person>();
-		for (const id of ids) for (const person of data.together[id] ?? []) all.set(person.id, person);
-		return [...all.values()];
+		const count = new Map<number, { person: Person; n: number }>();
+		for (const id of ids) {
+			for (const person of data.together[id] ?? []) {
+				const seen = count.get(person.id);
+				count.set(person.id, { person, n: (seen?.n ?? 0) + 1 });
+			}
+		}
+		const list = [...count.values()];
+		return {
+			all: list.filter((c) => c.n === ids.length).map((c) => c.person),
+			some: list.filter((c) => c.n < ids.length).map((c) => c.person)
+		};
 	}
 	// Anime: series as stacks (the rules are in libraryEntries, src/lib/animeSeries.ts)
 	let animeLibrary = $derived(
@@ -141,7 +151,11 @@
 					face: entry.face,
 					name: titles('anime', entry.named).main,
 					status,
-					people: peopleOf(ids)
+					// On the poster only who shares all of it – the seasons, if it holds any (they belong
+					// together); who shares only some shows in its window
+					people: peopleOf(
+						entry.series.seasons.length ? entry.series.seasons.map((part) => part.id) : ids
+					).all
 				};
 			})
 			.sort((a, b) => posterName(a).localeCompare(posterName(b), 'de', { sensitivity: 'base' }));
@@ -183,6 +197,23 @@
 			stacks.find((p) => p.status === status && p.ids.some((id) => ids.includes(id))) ??
 			null
 		);
+	});
+	// Bell and inviting for all seasons of the open stack's series (only seasons belong together)
+	let seriesInviting = $state(false);
+	let seasonControls = $derived.by(() => {
+		const list = (openStack?.series.seasons ?? []) as LibraryTitle[];
+		if (list.length === 0) return null;
+		const ids = list.map((season) => season.id);
+		const on = list.filter((season) => season.notify).length;
+		return {
+			ids,
+			notify:
+				on === list.length ? ('on' as const) : on === 0 ? ('off' as const) : ('some' as const),
+			together: peopleOf(ids).all,
+			partly: peopleOf(ids).some,
+			waiting: ids.some((id) => Object.keys(data.pending[id] ?? {}).length > 0),
+			canInvite: data.people.length > 0
+		};
 	});
 	// The part a series poster shows (poster, year, status): the one the user is on – what they
 	// watch, the next one planned, the latest one watched; none if no part is tracked
@@ -472,6 +503,8 @@
 	<SeriesSheet
 		series={openSeries ?? openStack?.series ?? null}
 		name={openStack?.name}
+		seasons={seasonControls}
+		oninvite={() => (seriesInviting = true)}
 		face={openSeries ? seriesFace(openSeries) : openStack?.face}
 		onpick={(hit) => {
 			selected = hit;
@@ -484,6 +517,19 @@
 			stackOf = null;
 		}}
 	/>
+
+	{#if seasonControls}
+		<PeopleSheet
+			open={seriesInviting}
+			people={data.people}
+			ids={seasonControls.ids}
+			onclose={() => (seriesInviting = false)}
+			ondone={(answer) => {
+				seriesInviting = false;
+				invited(answer);
+			}}
+		/>
+	{/if}
 
 	<ItemSheet
 		category={data.category}

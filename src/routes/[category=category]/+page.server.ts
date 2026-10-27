@@ -9,6 +9,7 @@ import {
 	parseItem,
 	removeItem,
 	saveItem,
+	setNotify,
 	type LibraryItem
 } from '#lib/server/library.js';
 import { airedEpisodes, getShowDetails, hasEpisodes, setEpisodes } from '#lib/server/episodes.js';
@@ -103,6 +104,19 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 };
 
 export const actions: Actions = {
+	// The bell of several titles at once (the seasons of an anime series, see SeriesSheet).
+	// Only the user's own titles change (setNotify).
+	notifyMany: async ({ request, locals }) => {
+		const data = await request.formData();
+		const ids = data.getAll('id').map(Number);
+		if (ids.length === 0 || ids.length > 500 || !ids.every((n) => Number.isInteger(n) && n > 0)) {
+			return fail(400, { error: serverMessages().common.invalidData });
+		}
+		const on = data.get('notify') === '1';
+		for (const id of ids) setNotify(locals.user!.id, id, on);
+		return { notify: on };
+	},
+
 	// Tracking together: invite one person to the titles selected in the library.
 	invite: async ({ request, locals }) => {
 		const data = await request.formData();

@@ -270,6 +270,12 @@ export const en: Messages = {
 		moviesTitle: 'Movies',
 		extrasTitle: 'OVAs, specials & spin-offs',
 		add: 'Add',
+		muteSeasons: 'Mute all seasons',
+		unmuteSeasons: 'Unmute all seasons',
+		someMuted: 'Some seasons are muted – tap to mute all',
+		inviteSeasons: 'Invite to all seasons',
+		partlyShared: (names: string) =>
+			`Only some seasons shared with ${names} – inviting adds the rest`,
 		formats: {
 			TV: 'TV',
 			TV_SHORT: 'TV short',

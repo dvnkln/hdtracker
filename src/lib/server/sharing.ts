@@ -109,7 +109,12 @@ type Answered = { ok: true; itemId: number; from: number };
 // Accepts an invitation: the user joins the inviting person's state. A state of their own for
 // this title is replaced by it (and gone, unless they shared it with others, who keep it); the
 // day they added the title and their bell stay.
-export function accept(userId: number, invitationId: number): Answered | Failed {
+export function accept(
+	userId: number,
+	invitationId: number,
+	// Several answered at once (acceptAll): their messages are collected and sent as one
+	collect?: ShareEvent[]
+): Answered | Failed {
 	const events: ShareEvent[] = [];
 	const result = getDb().transaction((tx): Answered | Failed => {
 		const open = tx
@@ -152,12 +157,17 @@ export function accept(userId: number, invitationId: number): Answered | Failed 
 		events.push({ kind: 'accepted', actorId: userId, to: open.from, itemId: open.itemId });
 		return { ok: true, itemId: open.itemId, from: open.from } as const;
 	});
-	announceSoon(events);
+	if (collect) collect.push(...events);
+	else announceSoon(events);
 	return result;
 }
 
 // Declines an invitation. Nothing else changes.
-export function decline(userId: number, invitationId: number): Answered | Failed {
+export function decline(
+	userId: number,
+	invitationId: number,
+	collect?: ShareEvent[]
+): Answered | Failed {
 	const result = getDb().transaction((tx): Answered | Failed => {
 		const open = tx
 			.select({ id: invitations.id, from: invitations.fromUserId, itemId: trackings.itemId })
@@ -171,9 +181,32 @@ export function decline(userId: number, invitationId: number): Answered | Failed
 		return { ok: true, itemId: open.itemId, from: open.from } as const;
 	});
 	if (result.ok) {
-		announceSoon([{ kind: 'declined', actorId: userId, to: result.from, itemId: result.itemId }]);
+		const event: ShareEvent = {
+			kind: 'declined',
+			actorId: userId,
+			to: result.from,
+			itemId: result.itemId
+		};
+		if (collect) collect.push(event);
+		else announceSoon([event]);
 	}
 	return result;
+}
+
+// Answering several invitations at once (the seasons of a series as one card in the inbox): the
+// person who invited gets one message for all of them.
+export function acceptAll(userId: number, invitationIds: number[]) {
+	const events: ShareEvent[] = [];
+	const results = invitationIds.map((id) => accept(userId, id, events));
+	announceSoon(events);
+	return results;
+}
+
+export function declineAll(userId: number, invitationIds: number[]) {
+	const events: ShareEvent[] = [];
+	const results = invitationIds.map((id) => decline(userId, id, events));
+	announceSoon(events);
+	return results;
 }
 
 // Takes back an invitation the user sent.

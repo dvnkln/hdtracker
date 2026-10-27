@@ -277,6 +277,13 @@ export const de = {
 		moviesTitle: 'Filme',
 		extrasTitle: 'OVAs, Specials & Ableger',
 		add: 'Hinzufügen',
+		// Bell and inviting for all seasons of a series at once (window of a stack)
+		muteSeasons: 'Alle Staffeln stumm schalten',
+		unmuteSeasons: 'Alle Staffeln wieder melden',
+		someMuted: 'Einige Staffeln sind stumm – antippen schaltet alle stumm',
+		inviteSeasons: 'Zu allen Staffeln einladen',
+		partlyShared: (names: string) =>
+			`Mit ${names} nur bei einigen Staffeln gemeinsam – Einladen ergänzt den Rest`,
 		formats: {
 			TV: 'TV',
 			TV_SHORT: 'TV kurz',

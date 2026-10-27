@@ -75,6 +75,12 @@ test('anime search: a series is one poster with its parts', async ({ page }) => 
 	await expect(rows.nth(0)).toContainText('Watched');
 	await expect(rows.nth(1)).toContainText('Watching');
 
+	// Only seasons in it: the bell for all seasons at the top – muting mutes both
+	await parts.getByRole('button', { name: 'Mute all seasons' }).click();
+	await expect(parts.getByRole('button', { name: 'Unmute all seasons' })).toBeVisible();
+	await parts.getByRole('button', { name: 'Unmute all seasons' }).click();
+	await expect(parts.getByRole('button', { name: 'Mute all seasons' })).toBeVisible();
+
 	// Season 2 watched as well: everything of the series is watched now, so the stack moves to
 	// "Watched" (with the movie) – and its window stays open
 	await rows.nth(1).getByRole('button').click();
@@ -82,6 +88,11 @@ test('anime search: a series is one poster with its parts', async ({ page }) => 
 	await expect(page.locator('dialog[open]')).toHaveCount(1);
 	await expect(rows).toHaveCount(3);
 	await expect(rows.nth(2)).toContainText('Test Saga: The Movie');
+	// With the movie in it, the bell stands at "Seasons" (it is for the seasons only)
+	const seasonsRow = parts
+		.locator('div')
+		.filter({ has: page.getByRole('heading', { name: 'Seasons' }) });
+	await expect(seasonsRow.getByRole('button', { name: 'Mute all seasons' })).toBeVisible();
 
 	// Taking two away leaves one alone: no stack any more, the window closes
 	for (let i = 0; i < 2; i++) {

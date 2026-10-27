@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { addItem, mockFetch, testUser } from '../../tests/helpers';
-import { trackSeries } from './animeSeasons';
+import { fillSeries, trackSeries } from './animeSeasons';
+import { saveDetails } from './itemDetails';
+import type { Details } from './providers/types';
 import { clearLibrary, findItem, listLibrary } from './library';
 import { searchAnime } from './providers/anilist';
 import { forgetRateLimits } from './providers/types';
@@ -153,5 +155,49 @@ describe('tracking a season tracks the series', () => {
 		expect(added.map((a) => a.externalId)).toEqual(['1', '2']);
 		// The chain was not asked for (only the episodes of the watched ones are loaded)
 		expect(asked.filter((what) => what === 'chain')).toEqual([]);
+	});
+
+	it('once, fills the gaps of series that were in the library before', async () => {
+		anilist();
+		// Only season 2, watching – and a series whose only season is dropped
+		const s2 = addItem({ category: 'anime', externalId: '2', status: 'active' });
+		const facts = (id: number) => {
+			const m = ANILIST.find((a) => a.id === id)!;
+			return {
+				anime: {
+					format: m.format,
+					episodes: 12,
+					season: null,
+					start: `${m.startDate.year}-04-01`,
+					links: m.relations.edges.map((e) => ({
+						type: e.relationType,
+						id: String(e.node.id),
+						format: ANILIST.find((a) => a.id === e.node.id)?.format ?? null
+					}))
+				}
+			} as unknown as Details;
+		};
+		saveDetails(s2.id, facts(2), null);
+		const done = finish(fillSeries());
+		expect(await done).toBe(2);
+		expect([statusOf('1'), statusOf('2'), statusOf('3')]).toEqual([
+			'completed',
+			'active',
+			'planned'
+		]);
+	});
+
+	it('leaves a series alone whose current season is dropped', async () => {
+		const calls = anilist();
+		const s2 = addItem({ category: 'anime', externalId: '2', status: 'dropped' });
+		saveDetails(
+			s2.id,
+			{
+				anime: { format: 'TV', episodes: 12, season: null, start: '2017-04-01', links: [] }
+			} as unknown as Details,
+			null
+		);
+		expect(await finish(fillSeries())).toBe(0);
+		expect(calls).toHaveLength(0);
 	});
 });

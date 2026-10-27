@@ -66,11 +66,13 @@ export async function announce(itemId: number, news: News[]) {
 		const newcomers = people.filter((t) => !findItem(t.userId, 'anime', item.externalId));
 		if (newcomers.length === 0) continue;
 		// Who tracks the season before together gets the new one together as well
-		const byTracking = new Map<number, number[]>();
+		// (each keeps the bell they had for the season before: muted stays muted)
+		const byTracking = new Map<number, { userId: number; notify: boolean }[]>();
 		for (const t of newcomers) {
-			byTracking.set(t.trackingId, [...(byTracking.get(t.trackingId) ?? []), t.userId]);
+			const member = { userId: t.userId, notify: t.notify };
+			byTracking.set(t.trackingId, [...(byTracking.get(t.trackingId) ?? []), member]);
 		}
-		for (const userIds of byTracking.values()) saveTogether(userIds, 'anime', item, 'planned');
+		for (const members of byTracking.values()) saveTogether(members, 'anime', item, 'planned');
 		added.push(item.externalId);
 		const title = findItem(newcomers[0].userId, 'anime', item.externalId)!;
 		addAnnouncement(

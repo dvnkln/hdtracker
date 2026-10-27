@@ -160,7 +160,7 @@
 				<span class="text-sm font-normal text-zinc-500">{data.incoming.length}</span>
 			</h2>
 			<ul class="mt-2 flex flex-col gap-3">
-				{#each data.incoming as invitation (invitation.id)}
+				{#each data.incoming as invitation (invitation.ids[0])}
 					{@const cat = CATEGORIES[invitation.item.category]}
 					<li
 						style:--accent={cat.accent}
@@ -199,6 +199,12 @@
 											class="line-clamp-2 leading-snug font-medium transition-colors duration-100 group-hover/row:text-(--accent)"
 										>
 											{titles(invitation.item.category, invitation.item).main}
+											{#if invitation.seasons}
+												<!-- The seasons of a series, answered together -->
+												<span class="font-normal text-zinc-500">
+													· {m.animeSeries.seasons(invitation.seasons)}</span
+												>
+											{/if}
 										</p>
 										<p class="mt-0.5 flex items-start gap-1.5 text-sm text-zinc-400">
 											<cat.icon size={14} class="mt-[3px] shrink-0 text-(--accent)" />
@@ -214,13 +220,17 @@
 								</div>
 								<div class="mt-2.5 flex flex-wrap items-center gap-1.5 sm:gap-2">
 									<form method="POST" action="?/accept" use:enhance>
-										<input type="hidden" name="id" value={invitation.id} />
+										{#each invitation.ids as id (id)}
+											<input type="hidden" name="id" value={id} />
+										{/each}
 										<button class="{pill} ui-primary bg-zinc-100 text-zinc-900 hover:bg-zinc-300"
 											>{m.share.accept}</button
 										>
 									</form>
 									<form method="POST" action="?/decline" use:enhance>
-										<input type="hidden" name="id" value={invitation.id} />
+										{#each invitation.ids as id (id)}
+											<input type="hidden" name="id" value={id} />
+										{/each}
 										<button class="{pill} border border-zinc-600 hover:bg-zinc-800"
 											>{m.share.decline}</button
 										>

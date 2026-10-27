@@ -1,11 +1,12 @@
 import { fail } from '@sveltejs/kit';
 import { serverMessages } from '#lib/server/i18n.js';
-import { trailersOf } from '#lib/server/itemDetails.js';
+import { animeFactsOf, trailersOf } from '#lib/server/itemDetails.js';
+import { invitationCards } from '#lib/server/invitationCards.js';
 import { allItems } from '#lib/server/library.js';
 import { clearRead, listNotices, markRead } from '#lib/server/notices.js';
 import {
-	accept,
-	decline,
+	acceptAll,
+	declineAll,
 	incoming,
 	outgoing,
 	withdraw,
@@ -21,15 +22,22 @@ export const load: PageServerLoad = ({ locals }) => {
 	const invitations = incoming(me);
 	// A trailer to look at before answering, where the title has one
 	const trailers = trailersOf(invitations.map((invitation) => invitation.item.id));
+	// The seasons of one anime series from the same person are one card (invitationCards.ts)
+	const facts = animeFactsOf(
+		invitations.filter((i) => i.item.category === 'anime').map((i) => i.item.id)
+	);
+	const cards = invitationCards(invitations, facts);
+	const itemOf = new Map(invitations.map((i) => [i.id, i.item.id]));
 	return {
-		incoming: invitations.map(({ id, item, from, status }) => ({
-			id,
-			item,
-			from,
+		incoming: cards.map(({ ids, lead, status, seasons }) => ({
+			ids,
+			item: lead.item,
+			from: lead.from,
 			status,
-			// Set if the user tracks the title already: accepting replaces that state
-			own: mine.get(item.id) ?? null,
-			trailerUrl: trailers.get(item.id) ?? null
+			seasons,
+			// Set if the user tracks a title of it already: accepting replaces that state
+			own: ids.map((id) => mine.get(itemOf.get(id)!)).find((own) => own !== undefined) ?? null,
+			trailerUrl: trailers.get(lead.item.id) ?? null
 		})),
 		notices: listNotices(me),
 		outgoing: outgoing(me).map(({ id, item, to }) => ({ id, item, to }))
@@ -41,6 +49,14 @@ const refused = (error: SharingError) => fail(400, { error: serverMessages().sha
 async function invitationId(request: Request) {
 	const id = Number((await request.formData()).get('id'));
 	return Number.isInteger(id) && id > 0 ? id : null;
+}
+
+// The invitations of one card (one, or the seasons of a series)
+async function invitationIds(request: Request) {
+	const ids = (await request.formData()).getAll('id').map(Number);
+	return ids.length > 0 && ids.length <= 100 && ids.every((id) => Number.isInteger(id) && id > 0)
+		? ids
+		: null;
 }
 
 export const actions: Actions = {
@@ -55,17 +71,18 @@ export const actions: Actions = {
 		clearRead(locals.user!.id);
 		return { done: true };
 	},
+	// Answering a card: all its invitations, one message to the person who invited
 	accept: async ({ request, locals }) => {
-		const id = await invitationId(request);
-		if (id === null) return fail(400, { error: serverMessages().common.invalidData });
-		const result = accept(locals.user!.id, id);
-		return result.ok ? { done: true } : refused(result.error);
+		const ids = await invitationIds(request);
+		if (ids === null) return fail(400, { error: serverMessages().common.invalidData });
+		const failed = acceptAll(locals.user!.id, ids).find((result) => !result.ok);
+		return failed && !failed.ok ? refused(failed.error) : { done: true };
 	},
 	decline: async ({ request, locals }) => {
-		const id = await invitationId(request);
-		if (id === null) return fail(400, { error: serverMessages().common.invalidData });
-		const result = decline(locals.user!.id, id);
-		return result.ok ? { done: true } : refused(result.error);
+		const ids = await invitationIds(request);
+		if (ids === null) return fail(400, { error: serverMessages().common.invalidData });
+		const failed = declineAll(locals.user!.id, ids).find((result) => !result.ok);
+		return failed && !failed.ok ? refused(failed.error) : { done: true };
 	},
 	withdraw: async ({ request, locals }) => {
 		const id = await invitationId(request);

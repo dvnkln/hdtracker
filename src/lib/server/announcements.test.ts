@@ -141,6 +141,9 @@ describe('announce', () => {
 		expect(findItem(me, 'anime', '3')?.status).toBe('planned');
 		expect(findItem(friend, 'anime', '3')?.status).toBe('planned');
 		expect(findItem(gone, 'anime', '3')).toBeUndefined();
+		// Muted stays muted
+		expect(findItem(me, 'anime', '3')?.notify).toBe(true);
+		expect(findItem(friend, 'anime', '3')?.notify).toBe(false);
 		const s3 = findItem(me, 'anime', '3')!;
 		expect(noticesOf(me).map((n) => [n.itemId, n.season, n.date])).toEqual([
 			[s3.id, null, '2027-04-05']

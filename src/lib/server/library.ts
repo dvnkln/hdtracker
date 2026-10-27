@@ -311,14 +311,15 @@ export function trackersOf(itemId: number) {
 
 // Adds a title to the libraries of several people as one state they share (as if they had
 // accepted invitations) – for a new season of something they track together (announcements.ts).
-// Only for people who do not have the title yet.
+// Each keeps their own bell (`notify`: taken over from the season before). Only for people who
+// do not have the title yet.
 export function saveTogether(
-	userIds: number[],
+	members: { userId: number; notify: boolean }[],
 	category: Category,
 	item: SearchResult,
 	status: Status
 ) {
-	if (userIds.length === 0) return;
+	if (members.length === 0) return;
 	const now = new Date();
 	getDb().transaction((tx) => {
 		tx.insert(libraryItems)
@@ -333,11 +334,12 @@ export function saveTogether(
 			.get();
 		tx.insert(trackingMembers)
 			.values(
-				userIds.map((userId) => ({
+				members.map(({ userId, notify }) => ({
 					trackingId: tracking.id,
 					userId,
 					itemId: title.id,
-					addedAt: now
+					addedAt: now,
+					notify
 				}))
 			)
 			.run();

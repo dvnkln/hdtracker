@@ -2,6 +2,7 @@ import { existsSync, statSync } from 'node:fs';
 import { eq } from 'drizzle-orm';
 import { deleteExpiredSessions, pruneLoginFailures } from '../auth';
 import { pruneCache } from '../cache';
+import { prepareSeriesFill } from '../animeSeasons';
 import { DB_PATH } from '../config';
 import { getDb } from '../db';
 import { pruneImages } from '../images';
@@ -254,6 +255,7 @@ export function startScheduler() {
 	setTimeout(() => {
 		prepareStoredDetails();
 		refreshPending();
+		prepareSeriesFill();
 		void prepareAnimeTitles();
 		prepareNotificationPictures();
 	}, 5_000).unref();

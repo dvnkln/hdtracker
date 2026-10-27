@@ -1,10 +1,15 @@
+import { currentPart, groupAnime } from '#lib/animeSeries.js';
 import type { Status } from '#lib/status.js';
+import { getDb } from './db';
+import { users } from './db/schema';
+import { animeFactsOf } from './itemDetails';
 import type { SearchResult } from './providers/types';
 import { airedEpisodes, getShowDetails, setEpisodes } from './episodes';
-import { findItem, saveItem } from './library';
+import { findItem, listLibrary, saveItem } from './library';
 import { seriesSeasons } from './providers/anilist';
 import { runInBackground } from './providers/types';
-import { refreshPending } from './releases';
+import { pendingStatus, refreshPending } from './releases';
+import { getSetting, setSettings } from './settings';
 
 // Tracking a season of an anime tracks the series, as with a series of TMDB (decided with the
 // user, 27.10.2026): when an anime is added, the other seasons of its series come along. The
@@ -65,4 +70,60 @@ function addSeasons(
 		}
 	});
 	return { added, ticked };
+}
+
+// ---- Once, for the libraries from before ----
+
+// After the update that brought this, the libraries hold series with seasons missing (only
+// season 2 of something, say). Once, every series gets its missing seasons as if the season the
+// user is on (the one its stack stands for) had just been added: earlier ones like its status,
+// later ones planned. A series whose current season is dropped stays as it is; what is in the
+// library stays as it is; a season removed afterwards does not come back (it runs only once).
+// It needs the stored details (they say what belongs together), so it waits until they are
+// loaded – after the update they are loaded again once.
+export const SERIES_FILL = '1';
+
+export async function fillSeries() {
+	let added = 0;
+	for (const { id: userId } of getDb().select({ id: users.id }).from(users).all()) {
+		const items = listLibrary(userId, 'anime');
+		const facts = animeFactsOf(items.map((item) => item.id));
+		const hits = items
+			.filter((item) => facts.has(item.id))
+			.map((item) => ({ ...item, anime: facts.get(item.id) }));
+		for (const entry of groupAnime(hits)) {
+			const seasons = entry.kind === 'series' ? entry.seasons : [entry.hit];
+			const isSeason = (h: (typeof hits)[number]) =>
+				['TV', 'TV_SHORT', 'ONA'].includes(h.anime?.format ?? '');
+			const own = seasons.filter(isSeason);
+			if (own.length === 0) continue;
+			const now =
+				entry.kind === 'series'
+					? currentPart({ ...entry, seasons: own, movies: [], extras: [] })!
+					: own[0];
+			try {
+				const { done } = await trackSeries(userId, now.externalId, now.status);
+				added += (await done).added.length;
+			} catch (err) {
+				console.error(`Could not add the missing seasons of anime ${now.externalId}`, err);
+			}
+		}
+	}
+	return added;
+}
+
+// Called at startup: runs fillSeries once, as soon as no details are waiting to be loaded.
+export function prepareSeriesFill() {
+	if (getSetting('seriesFill') === SERIES_FILL) return;
+	const check = () => {
+		if (pendingStatus().pending > 0) return;
+		clearInterval(timer);
+		setSettings({ seriesFill: SERIES_FILL });
+		void runInBackground(fillSeries)
+			.then((added) => added > 0 && console.log(`Added ${added} missing anime seasons`))
+			.catch((err) => console.error('Adding the missing anime seasons failed', err));
+	};
+	const timer = setInterval(check, 60_000);
+	timer.unref();
+	check();
 }

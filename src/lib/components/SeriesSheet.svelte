@@ -52,7 +52,10 @@
 	import { statusLabel } from '#lib/i18n/index.svelte.js';
 	import { STATUS_ICONS } from '#lib/statusIcons.js';
 	import { titles } from '#lib/titles.svelte.js';
-	import { Plus, X } from '@lucide/svelte';
+	import { enhance, type SubmitFunction } from '$app/forms';
+	import Avatar from '#lib/components/Avatar.svelte';
+	import type { Person } from '#lib/avatar.js';
+	import { Bell, BellOff, Plus, UserPlus, X } from '@lucide/svelte';
 
 	// The parts of an anime series (one poster in the search): seasons in order, films, extras,
 	// each with its status. Tapping a part opens the status window on top of this one.
@@ -62,10 +65,29 @@
 		name?: string;
 		// The part whose poster the stack shows (so the window shows the same one)
 		face?: AnimeHit | null;
+		// Library: the bell and inviting for all seasons of the series in it at once (`ids`: their
+		// titles). Only the seasons belong together – films and OVAs keep their own, in their
+		// status window. Shown at the top when the stack holds only seasons, else at "Seasons".
+		seasons?: {
+			ids: number[];
+			notify: 'on' | 'off' | 'some';
+			together: Person[];
+			// Who tracks only some of the seasons along (inviting adds the rest)
+			partly: Person[];
+			waiting: boolean;
+			canInvite: boolean;
+		} | null;
+		oninvite?: () => void;
 		onpick: (hit: AnimeHit) => void;
 		onclose: () => void;
 	};
-	let { series, name, face, onpick, onclose }: Props = $props();
+	let { series, name, face, seasons = null, oninvite, onpick, onclose }: Props = $props();
+	let onlySeasons = $derived(!!series && series.movies.length + series.extras.length === 0);
+	// The bell saves in the background; the window stays open and shows the new state
+	const stay: SubmitFunction =
+		() =>
+		async ({ update }) =>
+			update({ navigate: false });
 	let poster = $derived((face ?? series?.cover)?.posterUrl);
 
 	let dialog: HTMLDialogElement;
@@ -129,9 +151,90 @@
 	</li>
 {/snippet}
 
-{#snippet block(label: string, list: AnimeHit[], numbered = false)}
+<!-- Bell and inviting for all seasons – the same round symbols as in the status window -->
+{#snippet controls()}
+	{#if seasons}
+		<div class="flex items-center gap-2">
+			<form method="POST" action="?/notifyMany" use:enhance={stay}>
+				{#each seasons.ids as id (id)}<input type="hidden" name="id" value={id} />{/each}
+				<input type="hidden" name="notify" value={seasons.notify === 'off' ? '1' : '0'} />
+				<button
+					class="ui-btn relative inline-flex items-center rounded-full border border-zinc-600 p-2 transition hover:bg-zinc-800 {seasons.notify ===
+					'off'
+						? 'text-zinc-500'
+						: ''}"
+					aria-pressed={seasons.notify !== 'off'}
+					aria-label={seasons.notify === 'off'
+						? m.animeSeries.unmuteSeasons
+						: m.animeSeries.muteSeasons}
+					title={seasons.notify === 'some'
+						? m.animeSeries.someMuted
+						: seasons.notify === 'off'
+							? m.animeSeries.unmuteSeasons
+							: m.animeSeries.muteSeasons}
+				>
+					{#if seasons.notify === 'off'}<BellOff size={16} />{:else}<Bell size={16} />{/if}
+					{#if seasons.notify === 'some'}
+						<span
+							class="absolute -top-0.5 -right-0.5 size-2.5 rounded-full bg-zinc-400 ring-2 ring-zinc-900"
+						></span>
+					{/if}
+				</button>
+			</form>
+			{#if seasons.canInvite}
+				<button
+					type="button"
+					onclick={() => oninvite?.()}
+					aria-label={m.animeSeries.inviteSeasons}
+					title={m.animeSeries.inviteSeasons}
+					class="ui-btn relative inline-flex items-center rounded-full border transition hover:bg-zinc-800 {seasons
+						.together.length > 0
+						? 'ui-keep border-(--accent) p-1'
+						: 'border-zinc-600 p-2 text-zinc-400'}"
+				>
+					{#if seasons.together.length > 0}
+						<span class="flex -space-x-1.5">
+							{#each seasons.together.slice(0, 3) as person (person.id)}
+								<Avatar {person} class="size-6 text-[10px] ring-2 ring-zinc-900" />
+							{/each}
+						</span>
+						{#if seasons.together.length > 3}
+							<span class="px-1.5 text-xs font-medium">+{seasons.together.length - 3}</span>
+						{/if}
+					{:else}
+						<UserPlus size={16} />
+						{#if seasons.waiting}
+							<span
+								class="absolute -top-0.5 -right-0.5 size-2.5 rounded-full bg-amber-400 ring-2 ring-zinc-900"
+							></span>
+						{/if}
+					{/if}
+				</button>
+			{/if}
+		</div>
+	{/if}
+{/snippet}
+
+<!-- Some seasons shared with somebody, others not: inviting completes it -->
+{#snippet partlyNote()}
+	{#if seasons && seasons.partly.length > 0}
+		<p class="mt-1 text-xs text-zinc-500">
+			{m.animeSeries.partlyShared(seasons.partly.map((person) => person.name).join(', '))}
+		</p>
+	{/if}
+{/snippet}
+
+{#snippet block(label: string, list: AnimeHit[], numbered = false, withControls = false)}
 	{#if list.length}
-		<h3 class="mt-4 mb-1 text-xs font-medium tracking-wide text-zinc-500 uppercase">{label}</h3>
+		{#if withControls && seasons}
+			<div class="mt-4 mb-1 flex items-center justify-between gap-2">
+				<h3 class="text-xs font-medium tracking-wide text-zinc-500 uppercase">{label}</h3>
+				{@render controls()}
+			</div>
+			{@render partlyNote()}
+		{:else}
+			<h3 class="mt-4 mb-1 text-xs font-medium tracking-wide text-zinc-500 uppercase">{label}</h3>
+		{/if}
 		<ul>
 			{#each list as hit, i (hit.externalId)}{@render part(hit, numbered ? i + 1 : null)}{/each}
 		</ul>
@@ -171,6 +274,7 @@
 					{#if tracked}
 						<p class="mt-1 text-xs text-(--accent)">{m.animeSeries.inLibrary(tracked)}</p>
 					{/if}
+					{#if onlySeasons}<div class="mt-2">{@render controls()}{@render partlyNote()}</div>{/if}
 				</div>
 				<button
 					type="button"
@@ -181,7 +285,7 @@
 					<X size={20} />
 				</button>
 			</div>
-			{@render block(m.animeSeries.seasonsTitle, series.seasons, series.numbered)}
+			{@render block(m.animeSeries.seasonsTitle, series.seasons, series.numbered, !onlySeasons)}
 			{@render block(m.animeSeries.moviesTitle, series.movies)}
 			{@render block(m.animeSeries.extrasTitle, series.extras)}
 		</div>

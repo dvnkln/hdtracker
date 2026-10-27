@@ -8,7 +8,16 @@ import { clearLibrary, removeItem } from './library';
 import { addDevice } from './push';
 import { setUserSettings } from './settings';
 import { announce, shareMessage, wantsShareNotice } from './shareNotify';
-import { accept, decline, invite, inviteMany, leaveShared, withdraw } from './sharing';
+import {
+	accept,
+	acceptAll,
+	decline,
+	declineAll,
+	invite,
+	inviteMany,
+	leaveShared,
+	withdraw
+} from './sharing';
 
 let ann: number, ben: number;
 const account = (username: string, uiLanguage = 'en') => {
@@ -98,6 +107,20 @@ describe('who is told what', () => {
 		await settled();
 		vi.mocked(fetch).mockClear();
 		clearLibrary(ben, 'all');
+		await settled();
+		expect(reached()).toEqual(['anns-phone']);
+	});
+
+	it('answering several invitations at once (one card of the inbox) is one message', async () => {
+		const ids = [film('A', '1'), film('B', '2')].map((item) => invited(ann, item.id, ben));
+		const more = [film('C', '3'), film('D', '4')].map((item) => invited(ann, item.id, ben));
+		await settled();
+		vi.mocked(fetch).mockClear();
+		expect(acceptAll(ben, ids).every((result) => result.ok)).toBe(true);
+		await settled();
+		expect(reached()).toEqual(['anns-phone']);
+		vi.mocked(fetch).mockClear();
+		expect(declineAll(ben, more).every((result) => result.ok)).toBe(true);
 		await settled();
 		expect(reached()).toEqual(['anns-phone']);
 	});
