@@ -7,26 +7,33 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
-## Upcoming release
+## 0.13.0 – 2026-10-28
+
+Anime now feel like series: seasons, movies and OVAs that belong together are stacked into one poster, tracking a season tracks the series, and new seasons are announced.
 
 ### ✨ New
 
-- 📣 New seasons are announced: when a series or anime you track gets a new season, you find it in your inbox and – if you get notified about releases – as a push message, at your usual hour. A new anime season comes into your library as planned by itself.
 - 🧩 Anime as series: in the search and in your library, seasons, movies and OVAs that belong together are stacked into one poster. The seasons stand where you are (the season you are watching), everything else of a series is grouped by its status, and the poster shows the part that counts there. Tap a stack to see its parts in order, each with its own status. Movies, OVAs and specials on their own get a small label.
+- 📣 New seasons are announced: when a series or anime you track gets a new season, you find it in your inbox and – if you get notified about releases – as a push message, at your usual hour. A new anime season comes into your library as planned by itself.
 
 ### 🔧 Improved
 
+- 📺 Tracking an anime season now tracks the series, like a TV series: when you add a season, the later seasons come along as planned and the earlier ones as watched – or as planned, if you plan to start the series (movies and OVAs stay up to you). Seasons already in your library are left as they are.
+- 🔔 One bell and one invitation for all seasons of an anime series: in the window of a series in your library, muting or inviting covers all its seasons at once (movies and OVAs keep their own). An invitation to the seasons of a series is one card in your inbox, and a new season keeps the bell of the ones before.
 - 📊 The window of an anime series shows your progress over its seasons like a TV series does, folds the seasons you have watched into one line and highlights the next one.
 - 🧩 Anime series you already track get their missing seasons once after the update (later ones as planned, earlier ones like the season you are on). Where you share only some seasons of a series with somebody, its window says so – inviting adds the rest. Profile pictures on a stack now only show who shares all of its seasons.
-- 🔔 One bell and one invitation for all seasons of an anime series: in the window of a series in your library, muting or inviting covers all its seasons at once (movies and OVAs keep their own). An invitation to the seasons of a series is one card in your inbox, and a new season keeps the bell of the ones before.
-- 📺 Tracking an anime season now tracks the series, like a TV series: when you add a season, the later seasons come along as planned and the earlier ones as watched – or as planned, if you plan to start the series (movies and OVAs stay up to you). Seasons already in your library are left as they are.
 - 💬 When a data source fails (e.g. AniList slowing down, TMDB not reachable), opening a title or searching no longer leads to an error page: you stay where you were and a short message at the top says why. The same goes for ticking off episodes.
-- 🔝 Short messages (an invitation sent, a data source failing) now all appear at the top, also above an open window – no longer under the windows that come up from the bottom.
 - 🐢 Adding many anime in a row no longer runs into AniList's limit: loading details in the background now leaves room for your searches. If AniList does slow things down, hdtracker says how many seconds it takes and waits instead of asking again (which only made the wait longer).
+- 🔝 Short messages (an invitation sent, a data source failing) now all appear at the top, also above an open window – no longer under the windows that come up from the bottom.
 
 ### 🐛 Fixed
 
 - 🔍 The x in the search field only clears it now, so you can type a new search right away – on a phone it used to close the whole search.
+
+### ⬆️ Updating
+
+- Nothing to do: pull the new image and restart.
+- After the first start, hdtracker reloads the details of your library once in the background, then fills in the missing seasons of the anime series you track. With many anime this can take a few minutes; stacks and new seasons appear as soon as it is done.
 
 ## 0.12.1 – 2026-10-23
 
