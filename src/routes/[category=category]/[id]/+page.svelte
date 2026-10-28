@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import Notice from '#lib/components/Notice.svelte';
+	import { toast } from '#lib/toasts.svelte.js';
 	import { CATEGORIES } from '#lib/categories.js';
 	import { hasEpisodes } from '#lib/status.js';
 	import {
@@ -33,6 +34,12 @@
 	} from '@lucide/svelte';
 
 	let { data, form } = $props();
+
+	// The page was asked again (after an action on it) and its data source failed: what was shown
+	// stays, the reason comes as a short message at the top
+	$effect(() => {
+		if (data.warning) toast(data.warning, { kind: 'error' });
+	});
 
 	let cat = $derived(CATEGORIES[data.category]);
 	let info = $derived(data.info);

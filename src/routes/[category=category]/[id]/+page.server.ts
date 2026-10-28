@@ -8,7 +8,7 @@ import {
 	setEpisodes,
 	watchedKeys
 } from '#lib/server/episodes.js';
-import { detailsFor } from '#lib/server/itemDetails.js';
+import { detailsFor, detailsOrLast } from '#lib/server/itemDetails.js';
 import { findTitle, libraryStatusFor, setNotify } from '#lib/server/library.js';
 import { ProviderError, type Details, type ShowDetails } from '#lib/server/providers/types.js';
 import { serverMessages } from '#lib/server/i18n.js';
@@ -66,7 +66,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	try {
 		// Titles of the library come from the database, everything else from the API.
-		const { info, show } = await detailsFor(category, params.id);
+		const { info, show, failed } = await detailsOrLast(category, params.id);
+		if (failed) console.error('Loading details failed, showing the last ones', failed);
 		const item = findItem(locals.user!.id, category, info.item.externalId);
 		const similarStatus = libraryStatusFor(
 			locals.user!.id,
@@ -88,7 +89,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			notify: item ? item.notify : null,
 			watched: [...watchedKeys(item?.trackingId)],
 			similarStatus: Object.fromEntries(similarStatus),
-			hideSpoilers: getUserSetting(locals.user!.id, 'hideSpoilers') === 'on'
+			hideSpoilers: getUserSetting(locals.user!.id, 'hideSpoilers') === 'on',
+			// The source failed, what is shown came last time (said in a short message)
+			warning: failed
+				? failed instanceof ProviderError
+					? failed.message
+					: serverMessages().common.loadFailed
+				: null
 		};
 	} catch (err) {
 		// A title of the library that its data source no longer knows and that has no stored
@@ -163,7 +170,8 @@ function placeholderFor(item: NonNullable<ReturnType<typeof findItem>>, hideSpoi
 		placeholder: true,
 		sharing: null as ReturnType<typeof sharingOf>,
 		invitations: [] as ReturnType<typeof invitationsFor>,
-		notify: null as boolean | null
+		notify: null as boolean | null,
+		warning: null as string | null
 	};
 }
 

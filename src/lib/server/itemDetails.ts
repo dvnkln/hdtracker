@@ -6,7 +6,7 @@ import { itemDetails, libraryItems } from './db/schema';
 import { getDetails } from './details';
 import { getShowDetails } from './episodes';
 import { findTitle } from './library';
-import { today, type Details, type ShowDetails } from './providers/types';
+import { ProviderError, today, type Details, type ShowDetails } from './providers/types';
 import { refreshSoon } from './releases';
 import type { StoreKey } from '#lib/stores.js';
 import { shownCategories } from './settings';
@@ -158,6 +158,31 @@ export async function detailsFor(category: Category, externalId: string) {
 		hasEpisodes(category) ? getShowDetails(category, externalId) : null
 	]);
 	return { info, show };
+}
+
+// The details of the pages that came from the API last (the newest LAST_KEPT): a page asks
+// again after every action on it (adding the title, the bell …), and when the source then fails
+// it keeps showing these and says why in a short message – the user stays on the page. "Not
+// found" is not covered: that is what the source says, not a failure.
+const LAST_KEPT = 50;
+const lastLive = new Map<string, Awaited<ReturnType<typeof detailsFor>>>();
+
+export async function detailsOrLast(
+	category: Category,
+	externalId: string
+): Promise<Awaited<ReturnType<typeof detailsFor>> & { failed: unknown }> {
+	const key = `${category}:${externalId}`;
+	try {
+		const details = await detailsFor(category, externalId);
+		lastLive.delete(key);
+		lastLive.set(key, details);
+		if (lastLive.size > LAST_KEPT) lastLive.delete(lastLive.keys().next().value!);
+		return { ...details, failed: null };
+	} catch (err) {
+		const last = lastLive.get(key);
+		if (!last || (err instanceof ProviderError && err.status === 404)) throw err;
+		return { ...last, failed: err };
+	}
 }
 
 // Hidden areas are not kept up to date, so their stored details are dropped. Their titles

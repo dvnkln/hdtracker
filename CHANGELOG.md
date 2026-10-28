@@ -7,6 +7,12 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
+## Upcoming release
+
+### 🔧 Improved
+
+- 💬 A detail page no longer turns into an error page when its data source fails after you changed something on it (e.g. added the title): it stays as it was and a short message at the top says why.
+
 ## 0.13.1 – 2026-10-28
 
 A fix for the anime search after 0.13.0.
