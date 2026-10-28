@@ -21,16 +21,18 @@ export type AnimeFacts = {
 	around?: { from: string; type: string; id: string; format?: string | null }[];
 };
 
-// Links that join a series: one after the other (PREQUEL/SEQUEL), recaps (SUMMARY), and parts
-// that belong to a main entry (PARENT, SIDE_STORY) or are another version of it (ALTERNATIVE) –
-// the last three only when one side is not a series: that is how AniList links films, OVAs and
-// recap films (Attack on Titan Part I to season 1). A series linked that way to another series is
-// a work of its own: a spin-off (My Hero Academia: Vigilantes, Attack on Titan: Junior High) or
-// a remake (Fullmetal Alchemist: Brotherhood) – a TV series, that is: AniList also files web
-// releases of a few episodes as ONA ("My Hero Academia Season 5 OVA"), and those belong to it.
+// Links that join a series: one after the other (PREQUEL/SEQUEL), recaps (SUMMARY), parts that
+// belong to a main entry (PARENT, SIDE_STORY) – only when one side is not a TV series: that is how
+// AniList links films and OVAs. A TV series linked that way to another TV series is a spin-off of
+// its own (My Hero Academia: Vigilantes, Attack on Titan: Junior High); web releases of a few
+// episodes filed as ONA ("My Hero Academia Season 5 OVA") belong to it.
+// Another version (ALTERNATIVE) joins only a film or special – a recap film (Attack on Titan Part I
+// to season 1). Otherwise it is a remake, a work of its own: Fullmetal Alchemist: Brotherhood, or
+// Hunter x Hunter (2011), which AniList links to the OVAs that continue the series of 1999.
 // Spin-offs and characters never join.
 export const LINKS = ['PREQUEL', 'SEQUEL', 'PARENT', 'SIDE_STORY', 'SUMMARY', 'ALTERNATIVE'];
-const NOT_BETWEEN_SERIES = ['PARENT', 'SIDE_STORY', 'ALTERNATIVE'];
+const NOT_BETWEEN_SERIES = ['PARENT', 'SIDE_STORY'];
+const RECAP = new Set(['MOVIE', 'SPECIAL']);
 // Series formats (counted as seasons when they are in the line of prequels and sequels)
 const SERIES = new Set(['TV', 'TV_SHORT', 'ONA']);
 // A season of a series (not a film, an OVA …)
@@ -76,6 +78,8 @@ function joined<T extends Hit>(hits: T[], types: string[]) {
 		if (!types.includes(link.type)) return;
 		const format = formatOf(link.id, link.format);
 		if (NOT_BETWEEN_SERIES.includes(link.type) && isTvSeries(fromFormat) && isTvSeries(format))
+			return;
+		if (link.type === 'ALTERNATIVE' && !RECAP.has(fromFormat ?? '') && !RECAP.has(format ?? ''))
 			return;
 		const a = root(from);
 		const b = root(link.id);

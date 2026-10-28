@@ -168,6 +168,42 @@ describe('groupAnime', () => {
 		expect(ids(series.extras)).toEqual(['digest']);
 	});
 
+	it('keeps a remake apart that AniList links to the OVAs of the old series (Hunter x Hunter)', () => {
+		const ova = (id: string, start: string, links: [string, string][]) => {
+			const h = hit(id, 'OVA', start, links);
+			h.anime.links = h.anime.links.map((l) => ({
+				...l,
+				format: l.id.startsWith('tv') ? 'TV' : 'OVA'
+			}));
+			return h;
+		};
+		const entries = groupAnime([
+			hit('tv1999', 'TV', '1999-10-16', [['SEQUEL', 'ova1']]),
+			ova('ova1', '2002-01-17', [
+				['PREQUEL', 'tv1999'],
+				['SEQUEL', 'ova2'],
+				['ALTERNATIVE', 'tv2011']
+			]),
+			ova('ova2', '2003-01-17', [
+				['PREQUEL', 'ova1'],
+				['ALTERNATIVE', 'tv2011']
+			]),
+			hit('tv2011', 'TV', '2011-10-02', [
+				['SIDE_STORY', 'film'],
+				['ALTERNATIVE', 'ova1']
+			]),
+			hit('film', 'MOVIE', '2013-01-12', [['PARENT', 'tv2011']])
+		]);
+		expect(
+			entries.map((e) =>
+				e.kind === 'series' ? ids([...e.seasons, ...e.movies, ...e.extras]) : e.kind
+			)
+		).toEqual([
+			['tv1999', 'ova1', 'ova2'],
+			['tv2011', 'film']
+		]);
+	});
+
 	it('uses the first part as the cover when there is no season (only films)', () => {
 		const [series] = groupAnime([
 			hit('m2', 'MOVIE', '2016-01-01', [['PREQUEL', 'm1']]),
