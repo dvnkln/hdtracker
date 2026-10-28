@@ -6,6 +6,8 @@ import { loginOk, sheet } from './helpers';
 test('a failing data source: stay on the page, a message at the top', async ({ page }) => {
 	await loginOk(page);
 	const alert = page.getByRole('alert');
+	// The message itself (all messages lie at the top, in one place)
+	const message = page.getByRole('status').getByRole('button');
 
 	// A detail page that cannot be loaded: the search with its window stays
 	await page.goto('/movies?q=Shaky');
@@ -18,11 +20,11 @@ test('a failing data source: stay on the page, a message at the top', async ({ p
 
 	// It lies above the open window (the browser keeps everything but the window untouchable,
 	// so it goes by itself there); without a window a tap closes it
-	await expect(alert.getByRole('button')).toBeVisible();
+	await expect(message).toBeVisible();
 	await page.keyboard.press('Escape');
 	await expect(sheet(page)).toHaveCount(0);
-	await alert.getByRole('button').click();
-	await expect(alert.getByRole('button')).toHaveCount(0);
+	await message.click();
+	await expect(message).toHaveCount(0);
 
 	// A search that cannot be done: the page stays as it was
 	await page.goto('/movies');

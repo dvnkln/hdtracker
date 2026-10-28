@@ -21,6 +21,7 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 - 🔔 One bell and one invitation for all seasons of an anime series: in the window of a series in your library, muting or inviting covers all its seasons at once (movies and OVAs keep their own). An invitation to the seasons of a series is one card in your inbox, and a new season keeps the bell of the ones before.
 - 📺 Tracking an anime season now tracks the series, like a TV series: when you add a season, the later seasons come along as planned and the earlier ones as watched – or as planned, if you plan to start the series (movies and OVAs stay up to you). Seasons already in your library are left as they are.
 - 💬 When a data source fails (e.g. AniList slowing down, TMDB not reachable), opening a title or searching no longer leads to an error page: you stay where you were and a short message at the top says why. The same goes for ticking off episodes.
+- 🔝 Short messages (an invitation sent, a data source failing) now all appear at the top, also above an open window – no longer under the windows that come up from the bottom.
 - 🐢 Adding many anime in a row no longer runs into AniList's limit: loading details in the background now leaves room for your searches. If AniList does slow things down, hdtracker says how many seconds it takes and waits instead of asking again (which only made the wait longer).
 
 ### 🐛 Fixed

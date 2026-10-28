@@ -1,7 +1,7 @@
-// Short messages that lay themselves over the page for a few seconds and go away by themselves
-// (see Toasts.svelte):
-// - "done" (bottom): something went well and would otherwise go unseen.
-// - "error" (top): a data source failed, so a page could not be opened or an action not be
+// Short messages that lay themselves over the page for a few seconds and go away by themselves,
+// all at the top (see Toasts.svelte):
+// - "done": something went well and would otherwise go unseen.
+// - "error": a data source failed, so a page could not be opened or an action not be
 //   done – the user stays where they were (see guardNavigation.svelte.ts). Problems of a form on
 //   a page stay on the page as a Notice.
 export type Toast = { id: number; text: string; kind: 'done' | 'error' };
