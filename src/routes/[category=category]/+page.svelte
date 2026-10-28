@@ -299,6 +299,12 @@
 		);
 	}
 
+	// The search was asked again (after a change of status) and its source failed: the hits of
+	// the last time stay, the reason comes as a short message at the top
+	$effect(() => {
+		if (data.warning) toast(data.warning, { kind: 'error' });
+	});
+
 	// Phones: 3 posters per row; larger screens: as many as fit (at least ~10rem wide each).
 	const gridClass = 'grid grid-cols-3 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))]';
 
@@ -346,9 +352,7 @@
 		</div>
 
 		{#if data.error}
-			<p class="mt-4 rounded-lg border border-red-900 bg-red-950 p-3 text-sm text-red-300">
-				{data.error}
-			</p>
+			<Notice kind="warning" class="mt-4">{data.error}</Notice>
 		{:else if data.results.length === 0}
 			<EmptyState icon={SearchX} title={m.library.noResults} text={m.library.noResultsHint} />
 		{:else}

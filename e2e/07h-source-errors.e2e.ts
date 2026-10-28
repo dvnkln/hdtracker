@@ -37,4 +37,6 @@ test('a failing data source: stay on the page, a message at the top', async ({ p
 	await page.goto('/movies/998');
 	await expect(page.getByRole('heading', { name: 'Something went wrong' })).toBeVisible();
 	await expect(page.getByText('TMDB responded with error 503.')).toBeVisible();
+	await page.goto('/movies?q=Overloaded');
+	await expect(page.getByText('TMDB responded with error 503.')).toBeVisible();
 });

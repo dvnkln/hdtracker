@@ -14,7 +14,7 @@ import {
 } from '#lib/server/library.js';
 import { airedEpisodes, getShowDetails, hasEpisodes, setEpisodes } from '#lib/server/episodes.js';
 import { ProviderError, today, type SearchResult } from '#lib/server/providers/types.js';
-import { searchCategory } from '#lib/server/search.js';
+import { searchOrLast } from '#lib/server/search.js';
 import { refreshPending } from '#lib/server/releases.js';
 import { recentFacts } from '#lib/server/providers/anilist.js';
 import { trackSeries } from '#lib/server/animeSeasons.js';
@@ -71,14 +71,23 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 			// The user's open invitations: title -> (invited user -> invitation)
 			pending: pendingByItem(me),
 			results: [],
-			error: null
+			error: null,
+			warning: null
 		};
 	}
 
 	let results: (SearchResult & { status: Status | null })[] = [];
 	let error: string | null = null;
+	// The source failed, the hits are those of the last time (shown with a short message)
+	let warning: string | null = null;
+	const why = (err: unknown) =>
+		err instanceof ProviderError ? err.message : serverMessages().library.searchFailed;
 	try {
-		const hits = await searchCategory(category, q);
+		const { hits, failed } = await searchOrLast(category, q);
+		if (failed) {
+			console.error(`Search in ${category} failed, showing the last hits`, failed);
+			warning = why(failed);
+		}
 		const statuses = libraryStatusFor(
 			me,
 			category,
@@ -87,7 +96,7 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 		results = hits.map((h) => ({ ...h, status: statuses.get(h.externalId) ?? null }));
 	} catch (err) {
 		console.error(`Search in ${category} failed`, err);
-		error = err instanceof ProviderError ? err.message : serverMessages().library.searchFailed;
+		error = why(err);
 	}
 	return {
 		category,
@@ -99,7 +108,8 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 		people: [] as Person[],
 		pending: {} as Record<number, Record<number, number>>,
 		results,
-		error
+		error,
+		warning
 	};
 };
 
