@@ -7,11 +7,17 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
-## Upcoming release
+## 0.13.1 – 2026-10-28
+
+A fix for the anime search after 0.13.0.
 
 ### 🐛 Fixed
 
 - 🔍 Marking several titles from one search no longer swaps the results for an error: the search is kept for a while instead of being asked again after every change of status, and if the data source fails anyway, the results and an open window stay and a short message at the top says why.
+
+### ⬆️ Updating
+
+- Nothing to do: pull the new image and restart.
 
 ## 0.13.0 – 2026-10-28
 
