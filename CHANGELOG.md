@@ -7,7 +7,9 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
-## Upcoming release
+## 0.14.1 – 2026-11-02
+
+Fixes from a review of the whole code, and stronger protection against password guessing.
 
 ### 🔧 Improved
 
@@ -20,6 +22,10 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 - 🌙 The nightly refresh of movies and series no longer stops when Wikidata, which supplies the direct links to streaming services, is busy.
 - 🔒 A locked account no longer receives notifications on its devices, Pushover, ntfy or webhooks.
 - ⏱️ “Run now” on a maintenance task that is already running now says so, instead of reporting it as done.
+
+### ⬆️ Updating
+
+- Nothing to do: pull the new image and restart.
 
 ## 0.14.0 – 2026-11-02
 
