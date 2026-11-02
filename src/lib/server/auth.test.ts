@@ -1,11 +1,12 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import {
 	blockedAddresses,
-	clearLoginFailures,
+	checkPasswordGuarded,
 	createSession,
 	deleteExpiredSessions,
 	deleteOtherSessions,
 	hashPassword,
+	lockKey,
 	loginLockedFor,
 	pruneLoginFailures,
 	recordLoginFailure,
@@ -121,11 +122,41 @@ describe('login protection', () => {
 		// (addresses blocked by other tests may still be counted)
 		expect(blockedAddresses()).toBeLessThanOrEqual(before);
 	});
-	it('a successful login clears the count', () => {
-		const ip = '203.0.113.7';
+	it('attempts sent at the same moment cannot slip past the lock', async () => {
+		const ip = '203.0.113.30';
+		// A slow password check: all attempts start before the first one is answered
+		let release!: () => void;
+		const slow = new Promise<void>((resolve) => (release = resolve));
+		const wrong = () => slow.then(() => false);
+		const attempts = Array.from({ length: 50 }, () => checkPasswordGuarded(ip, wrong));
+		release();
+		const results = (await Promise.all(attempts)).map((a) => a.result);
+		expect(results.filter((r) => r === 'wrong')).toHaveLength(5);
+		expect(results.filter((r) => r === 'locked')).toHaveLength(45);
+		expect(loginLockedFor(ip)).toBe(60);
+	});
+
+	it('a right password gets in, but does not reset the count', async () => {
+		// Otherwise somebody with an account of their own could log in after every 4 guesses
+		const ip = '203.0.113.31';
 		for (let i = 0; i < 4; i++) recordLoginFailure(ip);
-		clearLoginFailures(ip);
-		recordLoginFailure(ip);
-		expect(loginLockedFor(ip)).toBe(0);
+		expect((await checkPasswordGuarded(ip, async () => true)).result).toBe('ok');
+		expect((await checkPasswordGuarded(ip, async () => false)).result).toBe('wrong');
+		expect(loginLockedFor(ip)).toBe(60);
+	});
+
+	it('IPv6: the whole /64 block is one address', () => {
+		expect(lockKey('2001:db8:1:2:aaaa:bbbb:cccc:dddd')).toBe('2001:db8:1:2::/64');
+		expect(lockKey('2001:DB8:1:2::1')).toBe('2001:db8:1:2::/64');
+		expect(lockKey('2001:db8::1')).toBe('2001:db8:0:0::/64');
+		expect(lockKey('::1')).toBe('0:0:0:0::/64');
+		expect(lockKey('fe80::1%eth0')).toBe('fe80:0:0:0::/64');
+		expect(lockKey('64:ff9b::192.0.2.1')).toBe('64:ff9b:0:0::/64');
+		expect(lockKey('203.0.113.5')).toBe('203.0.113.5');
+
+		const a = '2001:db8:5:6::1';
+		for (let i = 0; i < 5; i++) recordLoginFailure(`2001:db8:5:6::${i + 10}`);
+		expect(loginLockedFor(a)).toBe(60);
+		expect(loginLockedFor('2001:db8:5:7::1')).toBe(0);
 	});
 });

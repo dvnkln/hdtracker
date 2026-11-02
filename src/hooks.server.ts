@@ -35,6 +35,11 @@ const PASSWORD_PATHS = ['/new-password', '/logout'];
 
 const SAFE_METHODS = ['GET', 'HEAD', 'OPTIONS'];
 
+// What may be sent to the pages open without a login (login, first-run wizard): a few form
+// fields. The large limit in start.js is for uploads of logged-in users (Yamtrack import). A
+// body without a stated size (sent in pieces by some proxies) stays within that large limit.
+const PUBLIC_BODY_BYTES = 64 * 1024;
+
 function redirectTo(location: string) {
 	return new Response(null, { status: 303, headers: { location } });
 }
@@ -79,6 +84,15 @@ const respond: Handle = async ({ event, resolve }) => {
 		} else {
 			clearSessionCookie(event.cookies);
 		}
+	}
+
+	if (
+		!event.locals.user &&
+		!SAFE_METHODS.includes(request.method) &&
+		(PUBLIC_PATHS.includes(path) || path === '/setup') &&
+		Number(request.headers.get('content-length') ?? 0) > PUBLIC_BODY_BYTES
+	) {
+		return new Response('Request too large', { status: 413 });
 	}
 
 	// Everything from here on runs in the language of whoever asked: of the logged-in user, or

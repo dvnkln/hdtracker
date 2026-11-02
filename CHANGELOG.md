@@ -7,6 +7,12 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
+## Upcoming release
+
+### 🔧 Improved
+
+- 🔒 Stronger protection against password guessing: many login attempts sent at the same moment can no longer slip past the block after 5 wrong passwords, a right password in between no longer resets the count, and with IPv6 the block covers the whole network of the address (/64), not just one of its many addresses.
+
 ## 0.14.0 – 2026-11-02
 
 Filter your library by release, and movies count as released when they are out where you live.

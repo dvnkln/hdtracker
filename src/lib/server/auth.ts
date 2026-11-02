@@ -1,4 +1,5 @@
 import { createHmac, randomBytes, scrypt, timingSafeEqual } from 'node:crypto';
+import { isIP } from 'node:net';
 import { promisify } from 'node:util';
 import { error, type Cookies, type RequestEvent } from '@sveltejs/kit';
 import { and, count, eq, lt, ne } from 'drizzle-orm';
@@ -225,15 +226,69 @@ const FORGET_MS = DAY;
 type Failures = { count: number; locks: number; lockedUntil: number; lastFailure: number };
 const failures = new Map<string, Failures>();
 
+// What is counted and locked: an IPv4 address, or for IPv6 the whole block of 2^64 addresses
+// (/64) – a single connection usually gets such a block and could pick a new address for every
+// attempt.
+export function lockKey(address: string) {
+	const ip = normalizeAddress(address);
+	if (isIP(ip) !== 6) return ip;
+	const plain = ip.split('%')[0].toLowerCase();
+	const [head, tail] = plain.split('::');
+	const parts = (text: string | undefined) =>
+		(text ? text.split(':') : []).flatMap((part) => (part.includes('.') ? ['0', '0'] : [part]));
+	const front = parts(head);
+	const back = parts(tail);
+	const full = [...front, ...Array(8 - front.length - back.length).fill('0'), ...back];
+	return `${full
+		.slice(0, 4)
+		.map((part) => Number.parseInt(part, 16).toString(16))
+		.join(':')}::/64`;
+}
+
 // Returns remaining lock time in seconds, or 0 if login attempts are allowed.
 export function loginLockedFor(ip: string) {
-	const entry = failures.get(ip);
+	const entry = failures.get(lockKey(ip));
 	if (!entry || entry.lockedUntil < Date.now()) return 0;
 	return Math.ceil((entry.lockedUntil - Date.now()) / 1000);
 }
 
+// Checks of a password that are still running, per address: they count as soon as they start.
+// Otherwise many attempts sent at the same moment would all pass the lock before the first
+// wrong one is counted.
+const running = new Map<string, number>();
+
+// One check of a password (login, or the current password in the settings), with the lock
+// around it. 'locked' with the seconds to wait; 'wrong' is counted as a failure. A right
+// password does not reset the count: otherwise somebody with an account of their own could log
+// in after every 4 guesses at another one, and the lock would never come (the count is
+// forgotten a day after the last wrong password, see pruneLoginFailures).
+export async function checkPasswordGuarded(
+	ip: string,
+	check: () => Promise<boolean>
+): Promise<{ result: 'ok' | 'wrong' } | { result: 'locked'; seconds: number }> {
+	const key = lockKey(ip);
+	const locked = loginLockedFor(ip);
+	if (locked > 0) return { result: 'locked', seconds: locked };
+	const now = running.get(key) ?? 0;
+	// As many running as would lock the address if they all fail: wait for them
+	if (now + (failures.get(key)?.count ?? 0) >= MAX_FAILURES)
+		return { result: 'locked', seconds: 1 };
+	running.set(key, now + 1);
+	let ok: boolean;
+	try {
+		ok = await check();
+	} finally {
+		const left = (running.get(key) ?? 1) - 1;
+		if (left > 0) running.set(key, left);
+		else running.delete(key);
+	}
+	if (!ok) recordLoginFailure(ip);
+	return { result: ok ? 'ok' : 'wrong' };
+}
+
 export function recordLoginFailure(ip: string) {
-	const entry = failures.get(ip) ?? { count: 0, locks: 0, lockedUntil: 0, lastFailure: 0 };
+	const key = lockKey(ip);
+	const entry = failures.get(key) ?? { count: 0, locks: 0, lockedUntil: 0, lastFailure: 0 };
 	entry.count++;
 	entry.lastFailure = Date.now();
 	// One line per wrong password in the container log (never the password or the user name
@@ -244,18 +299,14 @@ export function recordLoginFailure(ip: string) {
 		entry.count = 0;
 		entry.locks++;
 		entry.lockedUntil = Date.now() + minutes * 60 * 1000;
-		console.warn(`Login blocked: ${ip} for ${minutes} min after ${MAX_FAILURES} wrong passwords`);
+		console.warn(`Login blocked: ${key} for ${minutes} min after ${MAX_FAILURES} wrong passwords`);
 	}
-	failures.set(ip, entry);
+	failures.set(key, entry);
 }
 
 // How many addresses are blocked right now (shown in the server overview).
 export function blockedAddresses() {
 	return [...failures.values()].filter((entry) => entry.lockedUntil > Date.now()).length;
-}
-
-export function clearLoginFailures(ip: string) {
-	failures.delete(ip);
 }
 
 // Forgets addresses without a wrong password for a day (hourly task "cache").

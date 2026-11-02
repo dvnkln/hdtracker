@@ -4,11 +4,9 @@ import { eq } from 'drizzle-orm';
 import { getDb } from '#lib/server/db/index.js';
 import { users } from '#lib/server/db/schema.js';
 import {
-	clearLoginFailures,
+	checkPasswordGuarded,
 	clientAddress,
 	createSession,
-	loginLockedFor,
-	recordLoginFailure,
 	setSessionCookie,
 	verifyDummy,
 	verifyPassword
@@ -26,22 +24,19 @@ export const actions: Actions = {
 		const username = String(data.get('username') ?? '').trim();
 		const password = String(data.get('password') ?? '');
 
-		const locked = loginLockedFor(ip);
-		if (locked > 0) {
-			return fail(429, { username, error: serverMessages().auth.tooManyAttempts(locked) });
+		// (The account is only looked up once the address may try: a locked one costs nothing.)
+		let user: typeof users.$inferSelect | undefined;
+		const checked = await checkPasswordGuarded(ip, () => {
+			user = getDb().select().from(users).where(eq(users.username, username)).get();
+			return user ? verifyPassword(password, user.passwordHash) : verifyDummy(password);
+		});
+		if (checked.result === 'locked') {
+			return fail(429, { username, error: serverMessages().auth.tooManyAttempts(checked.seconds) });
 		}
-
-		const user = getDb().select().from(users).where(eq(users.username, username)).get();
-		const ok = user
-			? await verifyPassword(password, user.passwordHash)
-			: await verifyDummy(password);
-
-		if (!user || !ok) {
-			recordLoginFailure(ip);
+		if (!user || checked.result === 'wrong') {
 			return fail(400, { username, error: serverMessages().auth.wrongCredentials });
 		}
 
-		clearLoginFailures(ip);
 		// Only told to whoever knows the password
 		if (user.disabled) {
 			return fail(403, { username, error: serverMessages().auth.accountLocked });

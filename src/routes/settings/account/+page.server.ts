@@ -3,11 +3,9 @@ import { eq } from 'drizzle-orm';
 import { MIN_PASSWORD_LENGTH as MIN_PASSWORD, USERNAME_PATTERN } from '#lib/limits.js';
 import {
 	SESSION_COOKIE,
-	clearLoginFailures,
+	checkPasswordGuarded,
 	clientAddress,
 	deleteOtherSessions,
-	loginLockedFor,
-	recordLoginFailure,
 	verifyPassword
 } from '#lib/server/auth.js';
 import { getDb } from '#lib/server/db/index.js';
@@ -46,15 +44,12 @@ export const load: PageServerLoad = ({ locals }) => {
 // Returns an error text, or null if the password is right.
 async function checkCurrentPassword(event: RequestEvent, password: string) {
 	const t = serverMessages();
-	const ip = clientAddress(event);
-	const locked = loginLockedFor(ip);
-	if (locked > 0) return t.auth.tooManyAttempts(locked);
 	const row = getDb().select().from(users).where(eq(users.id, event.locals.user!.id)).get();
-	if (!row || !(await verifyPassword(password, row.passwordHash))) {
-		recordLoginFailure(ip);
-		return t.settings.wrongPassword;
-	}
-	clearLoginFailures(ip);
+	const checked = await checkPasswordGuarded(clientAddress(event), async () =>
+		row ? verifyPassword(password, row.passwordHash) : false
+	);
+	if (checked.result === 'locked') return t.auth.tooManyAttempts(checked.seconds);
+	if (checked.result === 'wrong') return t.settings.wrongPassword;
 	return null;
 }
 
