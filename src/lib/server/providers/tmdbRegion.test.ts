@@ -60,4 +60,15 @@ describe('when a movie is out in the region', () => {
 		const m = movie('2025-11-20', [{ country: 'DE', type: 3, date: '2026-01-08' }]);
 		expect(movieInRegion(m, 'DE').item.year).toBe(2025);
 	});
+
+	it('an old movie with only a re-release in the region stays out', () => {
+		const m = movie('1999-06-01', [
+			{ country: 'DE', type: 5, date: '2026-12-01' },
+			{ country: 'DE', type: 3, date: '2026-12-24' }
+		]);
+		expect(movieInRegion(m, 'DE').item.releaseDate).toBe('1999-06-01');
+		// A start in the region within a year still counts
+		const late = movie('2025-11-20', [{ country: 'DE', type: 3, date: '2026-11-19' }]);
+		expect(movieInRegion(late, 'DE').item.releaseDate).toBe('2026-11-19');
+	});
 });

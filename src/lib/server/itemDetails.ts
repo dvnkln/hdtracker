@@ -9,7 +9,7 @@ import { findTitle } from './library';
 import { ProviderError, today, type Details, type ShowDetails } from './providers/types';
 import { refreshSoon } from './releases';
 import type { StoreKey } from '#lib/stores.js';
-import { shownCategories } from './settings';
+import { getSetting, shownCategories } from './settings';
 
 // Everything a detail page shows is kept in the database for the titles of the library, so
 // their pages open without asking TMDB, IGDB or AniList. refreshItem() (releases.ts) fills it:
@@ -151,36 +151,44 @@ export async function detailsFor(category: Category, externalId: string) {
 		: undefined;
 	if (item && stored) {
 		if (stored.fetchedAt.getTime() < Date.now() - FRESH_MS) refreshSoon(item);
-		return { info: stored.info, show: stored.show ? withAiredToday(stored.show) : null };
+		return {
+			info: stored.info,
+			show: stored.show ? withAiredToday(stored.show) : null,
+			live: false
+		};
 	}
 	const [info, show] = await Promise.all([
 		getDetails(category, externalId),
 		hasEpisodes(category) ? getShowDetails(category, externalId) : null
 	]);
-	return { info, show };
+	return { info, show, live: true };
 }
 
 // The details of the pages that came from the API last (the newest LAST_KEPT): a page asks
 // again after every action on it (adding the title, the bell …), and when the source then fails
 // it keeps showing these and says why in a short message – the user stays on the page. "Not
-// found" is not covered: that is what the source says, not a failure.
+// found" is not covered: that is what the source says, not a failure; nor is a fault of our own.
+// Stored details need no stand-in (they come without asking the source). The language and region
+// are part of the key: after changing them, the old version is not shown again.
 const LAST_KEPT = 50;
 const lastLive = new Map<string, Awaited<ReturnType<typeof detailsFor>>>();
 
 export async function detailsOrLast(
 	category: Category,
 	externalId: string
-): Promise<Awaited<ReturnType<typeof detailsFor>> & { failed: unknown }> {
-	const key = `${category}:${externalId}`;
+): Promise<Awaited<ReturnType<typeof detailsFor>> & { failed: ProviderError | null }> {
+	const key = `${category}:${externalId}:${getSetting('language')}:${getSetting('region')}`;
 	try {
 		const details = await detailsFor(category, externalId);
-		lastLive.delete(key);
-		lastLive.set(key, details);
-		if (lastLive.size > LAST_KEPT) lastLive.delete(lastLive.keys().next().value!);
+		if (details.live) {
+			lastLive.delete(key);
+			lastLive.set(key, details);
+			if (lastLive.size > LAST_KEPT) lastLive.delete(lastLive.keys().next().value!);
+		}
 		return { ...details, failed: null };
 	} catch (err) {
 		const last = lastLive.get(key);
-		if (!last || (err instanceof ProviderError && err.status === 404)) throw err;
+		if (!last || !(err instanceof ProviderError) || err.status === 404) throw err;
 		return { ...last, failed: err };
 	}
 }

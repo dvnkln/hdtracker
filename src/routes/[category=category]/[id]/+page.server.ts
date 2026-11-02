@@ -91,11 +91,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			similarStatus: Object.fromEntries(similarStatus),
 			hideSpoilers: getUserSetting(locals.user!.id, 'hideSpoilers') === 'on',
 			// The source failed, what is shown came last time (said in a short message)
-			warning: failed
-				? failed instanceof ProviderError
-					? failed.message
-					: serverMessages().common.loadFailed
-				: null
+			warning: failed?.message ?? null
 		};
 	} catch (err) {
 		// A title of the library that its data source no longer knows and that has no stored

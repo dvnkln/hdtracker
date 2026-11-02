@@ -222,13 +222,24 @@ function regionalDates(releaseDates: TmdbReleaseDates, region: string) {
 // whichever came first. Without dates for the region: the general release date of TMDB (often
 // the premiere in its own country or at a festival). The year stays the general one – a movie
 // "from 2025" stays one, even if it starts here in 2026.
+// For old movies TMDB often lists only a re-release in the region (a 4K disc, back in cinemas):
+// a date in the region more than a year after the general one is such a re-release, not the
+// start – the general date counts then.
 // Also gives the two dates in the region, for the dashboard and the detail page.
 export function movieInRegion(m: TmdbMovieFull, region: string) {
 	const { cinema, home } = regionalDates(m.release_dates, region);
 	const regional = [cinema, home].filter((d) => d !== undefined).sort()[0];
 	const general = movieToResult(m);
-	const item: SearchResult = regional ? { ...general, releaseDate: regional } : general;
+	const reRelease =
+		!!regional && !!general.releaseDate && regional > yearLater(general.releaseDate);
+	const item: SearchResult =
+		regional && !reRelease ? { ...general, releaseDate: regional } : general;
 	return { item, cinema, home };
+}
+
+// YYYY-MM-DD one year on
+function yearLater(date: string) {
+	return `${Number(date.slice(0, 4)) + 1}${date.slice(4)}`;
 }
 
 // ---- One movie with everything the app needs ----

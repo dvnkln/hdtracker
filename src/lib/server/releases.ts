@@ -342,11 +342,24 @@ export const DETAILS_VERSION = '8';
 // Called at startup. After an update that changes what is stored about a title, the whole
 // library is loaded again once – in the background, with the usual pauses, like after
 // changing the content language. A new installation has nothing to load again.
+// A version that only concerns some areas reloads only those – when coming from the version
+// right before it; from older ones everything.
+const ONLY_AREAS: Record<string, Category[]> = { '8': ['movies'] };
+
 export function prepareStoredDetails() {
-	if (getSetting('detailsVersion') === DETAILS_VERSION) return;
-	const any = getDb().select({ id: libraryItems.id }).from(libraryItems).limit(1).get();
+	const from = getSetting('detailsVersion');
+	if (from === DETAILS_VERSION) return;
+	const only =
+		Number(from) === Number(DETAILS_VERSION) - 1 ? ONLY_AREAS[DETAILS_VERSION] : undefined;
+	const which = only ? inArray(libraryItems.category, only) : undefined;
+	const any = getDb()
+		.select({ id: libraryItems.id })
+		.from(libraryItems)
+		.where(which)
+		.limit(1)
+		.get();
 	if (any) {
-		getDb().update(libraryItems).set({ metadataUpdatedAt: null }).run();
+		getDb().update(libraryItems).set({ metadataUpdatedAt: null }).where(which).run();
 		refreshPending();
 	}
 	setSettings({ detailsVersion: DETAILS_VERSION });

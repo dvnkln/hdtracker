@@ -50,4 +50,11 @@ describe('detailsOrLast', () => {
 		vi.mocked(getDetails).mockRejectedValueOnce(new ProviderError('not found', 404));
 		await expect(detailsOrLast('movies', '2')).rejects.toThrow('not found');
 	});
+
+	it('a fault of our own is not covered up with the last details', async () => {
+		vi.mocked(getDetails).mockResolvedValueOnce(movie('Fine'));
+		await detailsOrLast('movies', '3');
+		vi.mocked(getDetails).mockRejectedValueOnce(new TypeError('bug'));
+		await expect(detailsOrLast('movies', '3')).rejects.toThrow('bug');
+	});
 });
