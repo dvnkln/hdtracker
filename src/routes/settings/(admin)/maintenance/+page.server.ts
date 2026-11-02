@@ -146,6 +146,8 @@ export const actions: Actions = {
 		requireAdmin(locals.user);
 		const key = readKey(await request.formData());
 		if (!key) return fail(400, { key, error: serverMessages().common.invalidData });
+		// Started meanwhile by its schedule (the page was opened before): it is not run twice
+		if (isRunning(key)) return { key, message: serverMessages().maintenance.stillRunning };
 		// Long tasks (refreshing a big library) keep running in the background; the request only
 		// waits a moment, so it never runs into a timeout of the browser or a reverse proxy.
 		const slow = Symbol('slow');
