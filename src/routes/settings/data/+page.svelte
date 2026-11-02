@@ -45,8 +45,11 @@
 	// While titles still wait for their details (e.g. after an import): ask every few seconds
 	// how many are left. Depends only on the server, so it also shows after leaving the page.
 	let sawLoading = $state(false);
+	// (The number itself, not `data`: every refresh brings a new `data`, which would start the
+	// timers below over and over)
+	const pending = $derived(data.pending);
 	$effect(() => {
-		if (data.pending === 0) return;
+		if (pending === 0) return;
 		sawLoading = true;
 		const timer = setInterval(() => refreshAll(), 3000);
 		// The number has not moved for a minute (a source that keeps failing, a missing key): stop

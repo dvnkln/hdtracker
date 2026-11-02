@@ -207,6 +207,20 @@ describe('reading', () => {
 		]);
 	});
 
+	it('a notice of the same second as the page stays unread – it may have come after it', () => {
+		const film = title({ title: 'Same second', category: 'movies' }, []);
+		decline(ben, invited(ann, film.id, ben));
+		const stored = listNotices(ann)[0];
+		// The page was loaded half a second into the second the notice was written in
+		const second = Math.floor(Date.now() / 1000) * 1000;
+		getDb()
+			.update(notices)
+			.set({ createdAt: new Date(second) })
+			.run();
+		markRead(ann, undefined, new Date(second + 500));
+		expect(listNotices(ann).find((line) => line.key === stored.key)?.unread).toBe(true);
+	});
+
 	it('the time a page sends back: anything odd counts as now', () => {
 		const now = 1_800_000_000_000;
 		expect(shownAt(String(now - 5000), now).getTime()).toBe(now - 5000);

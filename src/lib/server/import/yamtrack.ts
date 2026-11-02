@@ -208,7 +208,13 @@ export async function importYamtrack(
 			const mapped = STATUS[row.status] ?? 'planned';
 			const status = isStatusFor(category, mapped) ? mapped : 'planned';
 			const addedAt = parseDate(row.created_at) ?? new Date();
-			const changedAt = parseDate(row.end_date) ?? parseDate(row.progressed_at) ?? addedAt;
+			// Without a date of its own a finished title counts as finished now: the episodes of a
+			// series are ticked up to that day (releases.ts) – the day it was added would leave
+			// everything aired since then open
+			const changedAt =
+				parseDate(row.end_date) ??
+				parseDate(row.progressed_at) ??
+				(status === 'completed' ? new Date() : addedAt);
 
 			saveItem(userId, category, item, status, tx);
 			const inserted = findItem(userId, category, item.externalId, tx)!;

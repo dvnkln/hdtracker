@@ -90,7 +90,9 @@ const respond: Handle = async ({ event, resolve }) => {
 		!event.locals.user &&
 		!SAFE_METHODS.includes(request.method) &&
 		(PUBLIC_PATHS.includes(path) || path === '/setup') &&
-		Number(request.headers.get('content-length') ?? 0) > PUBLIC_BODY_BYTES
+		// Without a size (sent in pieces) it could not be judged before reading: refused too –
+		// browsers always say the size of a form
+		!(Number(request.headers.get('content-length') ?? NaN) <= PUBLIC_BODY_BYTES)
 	) {
 		return new Response('Request too large', { status: 413 });
 	}

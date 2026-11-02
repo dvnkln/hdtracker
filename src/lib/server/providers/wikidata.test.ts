@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { mockFetch } from '../../../tests/helpers';
 import { getStreamingLinks, preloadStreamingLinks } from './wikidata';
+import { forgetRateLimits, runInBackground } from './types';
 
 // What the query service answers: one row per title and ID at a streaming service.
 const row = (id: string, property: string, value: string) => ({
@@ -67,5 +68,24 @@ describe('preloadStreamingLinks', () => {
 			netflix: 'https://www.netflix.com/title/8015'
 		});
 		expect(calls).toHaveLength(1);
+	});
+});
+
+describe('while Wikidata asks to wait', () => {
+	it('no title asks on its own – the links are an extra', async () => {
+		const calls: string[] = [];
+		vi.mocked(fetch).mockImplementation(async (input) => {
+			calls.push(String(input));
+			return new Response('slow down', { status: 429, headers: { 'retry-after': '30' } });
+		});
+		await expect(preloadStreamingLinks(['Q901', 'Q902'])).rejects.toThrow();
+		expect(calls).toHaveLength(1);
+		// In the background (nightly refresh) a request would wait the 30 s and then ask
+		const asked = runInBackground(() =>
+			Promise.all([getStreamingLinks('Q901'), getStreamingLinks('Q902')])
+		);
+		expect(await asked).toEqual([{}, {}]);
+		expect(calls).toHaveLength(1);
+		forgetRateLimits();
 	});
 });

@@ -101,6 +101,11 @@ function tooMany(source: string) {
 	return new ProviderError(serverMessages().errors.tooManyWait(source, seconds), 429, until);
 }
 
+// Whether a service is resting after "too many requests" (nothing can be asked right now).
+export function isBlocked(source: string) {
+	return (blockedUntil[source] ?? 0) > Date.now();
+}
+
 // Room for the user: services that say how many requests are left this minute (AniList:
 // X-RateLimit-Remaining) keep the last few for searches and pages. Background work that would
 // take them waits for the next minute instead.

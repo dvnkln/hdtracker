@@ -19,6 +19,7 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 - 📺 A series marked as watched without ticking single episodes no longer gets the episodes of later seasons ticked off when the library is loaded again (for example after changing the content language) – only what had aired when you marked it.
 - 🌙 The nightly refresh of movies and series no longer stops when Wikidata, which supplies the direct links to streaming services, is busy.
 - 🔒 A locked account no longer receives notifications on its devices, Pushover, ntfy or webhooks.
+- ⏱️ “Run now” on a maintenance task that is already running now says so, instead of reporting it as done.
 
 ## 0.14.0 – 2026-11-02
 

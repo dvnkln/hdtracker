@@ -3,7 +3,7 @@ import { addItem, mockFetch, testUser } from '../../../tests/helpers';
 import { getDb } from '../db';
 import { watchedEpisodes } from '../db/schema';
 import { exportYamtrack } from '../export/yamtrack';
-import { allItems, clearLibrary } from '../library';
+import { allItems, clearLibrary, findItem } from '../library';
 import { importYamtrack, parseCsv } from './yamtrack';
 
 // The import starts loading details in the background afterwards – not part of these tests.
@@ -139,5 +139,17 @@ describe('export and import', () => {
 			{ title: 'Home video', reason: 'manual' },
 			{ title: 'A manga', reason: 'unsupported' }
 		]);
+	});
+
+	it('a finished title without a date of its own counts as finished at the import', async () => {
+		const csv =
+			'"media_id","source","media_type","title","image","season_number","episode_number","score","status","notes","start_date","end_date","progress","created_at","progressed_at"\n' +
+			'"7701","tmdb","tv","Done long ago","","","","","Completed","","","","","2019-01-01 10:00:00+00:00",""\n' +
+			'"7702","tmdb","tv","Still planned","","","","","Planning","","","","","2019-01-01 10:00:00+00:00",""\n';
+		await importYamtrack(testUser(), csv);
+		const changed = (id: string) => findItem(testUser(), 'series', id)!.statusChangedAt;
+		// (Else only what had aired by 2019 would be ticked off once the details are loaded)
+		expect(Date.now() - changed('7701').getTime()).toBeLessThan(60_000);
+		expect(changed('7702').getFullYear()).toBe(2019);
 	});
 });

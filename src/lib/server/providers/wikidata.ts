@@ -2,7 +2,7 @@ import { eq, inArray, lt } from 'drizzle-orm';
 import pkg from '../../../../package.json';
 import { getDb } from '../db';
 import { wikidataLinks } from '../db/schema';
-import { fetchJson } from './types';
+import { fetchJson, isBlocked } from './types';
 
 const DAY = 24 * 60 * 60 * 1000;
 // Links to streaming services rarely change: a stored answer is used for a month, so the
@@ -139,6 +139,8 @@ export async function getStreamingLinks(
 	const db = getDb();
 	const stored = db.select().from(wikidataLinks).where(eq(wikidataLinks.id, wikidataId)).get();
 	if (stored && stored.fetchedAt.getTime() > Date.now() - KEEP_MS) return stored.links;
+	// Wikidata asked us to wait: the links are an extra, nobody waits for them
+	if (isBlocked('Wikidata')) return stored?.links ?? {};
 
 	let pending = loading.get(wikidataId);
 	if (!pending) {
