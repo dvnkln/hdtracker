@@ -23,7 +23,8 @@ import {
 	listLibrary,
 	removeItem,
 	saveItem,
-	setNotify
+	setNotify,
+	storedReleases
 } from './library';
 import type { SearchResult, ShowDetails } from './providers/types';
 import { busiestStatus } from './releases';
@@ -239,5 +240,30 @@ describe('the refresh follows whoever needs a title most', () => {
 		expect(status.get(a.id)).toBe('completed');
 		expect(status.get(b.id)).toBe('planned');
 		expect(status.get(c.id)).toBe('dropped');
+	});
+});
+
+describe('stored release dates for search hits', () => {
+	it('gives the stored date of loaded titles only, whoever tracks them', () => {
+		const loaded = new Date();
+		addItem({ externalId: '11', releaseDate: '2026-01-08', metadataUpdatedAt: loaded });
+		addItem({ externalId: '12', releaseDate: '2025-01-01', metadataUpdatedAt: null });
+		addItem({
+			externalId: '13',
+			releaseDate: '2025-01-01',
+			metadataUpdatedAt: loaded,
+			sourceMissingSince: loaded
+		});
+		addItem({
+			externalId: '11',
+			category: 'series',
+			releaseDate: '2020-01-01',
+			metadataUpdatedAt: loaded
+		});
+		const stored = storedReleases('movies', ['11', '12', '13', '14']);
+		expect([...stored.entries()]).toEqual([
+			['11', { releaseDate: '2026-01-08', earlyAccess: false }]
+		]);
+		expect(storedReleases('movies', []).size).toBe(0);
 	});
 });

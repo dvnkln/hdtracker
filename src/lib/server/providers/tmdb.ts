@@ -133,7 +133,7 @@ type TmdbCommon = {
 	'watch/providers': TmdbWatch;
 	external_ids: { wikidata_id: string | null };
 };
-type TmdbMovieFull = TmdbMovie &
+export type TmdbMovieFull = TmdbMovie &
 	TmdbCommon & {
 		runtime: number | null;
 		release_dates: {
@@ -218,6 +218,19 @@ function regionalDates(releaseDates: TmdbReleaseDates, region: string) {
 	return { cinema: earliest([2, 3]), home: earliest([4, 5]) };
 }
 
+// A movie as the app keeps it: out once it could be seen in the region – in cinemas or at home,
+// whichever came first. Without dates for the region: the general release date of TMDB (often
+// the premiere in its own country or at a festival). The year stays the general one – a movie
+// "from 2025" stays one, even if it starts here in 2026.
+// Also gives the two dates in the region, for the dashboard and the detail page.
+export function movieInRegion(m: TmdbMovieFull, region: string) {
+	const { cinema, home } = regionalDates(m.release_dates, region);
+	const regional = [cinema, home].filter((d) => d !== undefined).sort()[0];
+	const general = movieToResult(m);
+	const item: SearchResult = regional ? { ...general, releaseDate: regional } : general;
+	return { item, cinema, home };
+}
+
 // ---- One movie with everything the app needs ----
 
 // Release dates and the detail page come from a single request per movie.
@@ -234,8 +247,8 @@ function loadMovie(id: string, language: string) {
 // Movie metadata and its release dates in the region (for the dashboard).
 export async function getMovieReleases(id: string, language: string, region: string) {
 	const m = await loadMovie(id, language);
-	const { cinema, home } = regionalDates(m.release_dates, region);
-	const info: ReleaseInfo = { item: movieToResult(m), events: [] };
+	const { item, cinema, home } = movieInRegion(m, region);
+	const info: ReleaseInfo = { item, events: [] };
 	const event = (kind: 'cinema' | 'home' | 'release', date: string | null) =>
 		info.events.push({ kind, date, season: null, episode: null });
 	if (cinema) event('cinema', cinema);
@@ -247,14 +260,14 @@ export async function getMovieReleases(id: string, language: string, region: str
 
 export async function getMovieInfo(id: string, language: string, region: string): Promise<Details> {
 	const m = await loadMovie(id, language);
-	const { cinema, home } = regionalDates(m.release_dates, region);
+	const { item, cinema, home } = movieInRegion(m, region);
 	const facts: Fact[] = [];
 	if (cinema) facts.push({ key: 'cinema', value: cinema, isDate: true });
 	if (home) facts.push({ key: 'home', value: home, isDate: true });
 
 	return {
 		...common(m, language),
-		item: movieToResult(m),
+		item,
 		externalUrl: `https://www.themoviedb.org/movie/${m.id}`,
 		runtime: m.runtime || null,
 		seasonCount: null,

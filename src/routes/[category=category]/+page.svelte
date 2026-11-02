@@ -5,7 +5,7 @@
 	import { page } from '$app/state';
 	import EmptyState from '#lib/components/EmptyState.svelte';
 	import LibraryFilter from '#lib/components/LibraryFilter.svelte';
-	import { known, offered, passes } from '#lib/libraryFilter.js';
+	import { known, offered, passes, releaseOf } from '#lib/libraryFilter.js';
 	import { FunnelX, Joystick, Origami, Popcorn, SearchX, Sofa } from '@lucide/svelte';
 	import { CATEGORIES } from '#lib/categories.js';
 	import { COLLAPSED_STATUSES, statusesFor, type Status } from '#lib/status.js';
@@ -43,14 +43,18 @@
 	let cat = $derived(CATEGORIES[data.category]);
 	let label = $derived(m.categories[data.category]);
 
-	// The filter (who tracks along, streaming service, store, platform, genre – rules in
-	// libraryFilter.ts). Which
-	// filters are on stands in the address (?f=…), so a reload and the way back keep them;
-	// nothing is stored. Changing them does not ask the server: everything is on the page.
+	// The filter (who tracks along, release, streaming service, store, platform, genre – rules in
+	// libraryFilter.ts). Which filters are on stands in the address (?f=…), so a reload and the
+	// way back keep them; nothing is stored. Changing them does not ask the server: everything is
+	// on the page.
+	// (Taken again on every page change: an app left open past midnight moves on with it.)
+	const dateNow = () => new Date().toLocaleDateString('sv-SE');
+	let today = $state(dateNow());
 	let filterable = $derived(
 		data.library.map((item) => ({
 			...item,
 			people: data.together[item.id] ?? [],
+			release: releaseOf(item, today),
 			services: data.facts[item.id]?.services ?? [],
 			stores: data.facts[item.id]?.stores ?? [],
 			platforms: data.facts[item.id]?.platforms ?? [],
@@ -64,6 +68,7 @@
 	let wanted = $state<string[]>(untrack(inAddress));
 	// (This page stays when one goes from one area to another: read the address again then.)
 	afterNavigate(({ shallow, type }) => {
+		today = dateNow();
 		if (shallow && type === 'goto') return;
 
 		return (wanted = inAddress());
@@ -72,9 +77,14 @@
 	let filters = $derived(known(wanted, offer));
 	let shown = $derived(filterable.filter((item) => passes(item, filters)));
 	let canFilter = $derived(
-		[offer.people, offer.services, offer.stores, offer.platforms, offer.genres].some(
-			(group) => group.length > 0
-		)
+		[
+			offer.people,
+			offer.releases,
+			offer.services,
+			offer.stores,
+			offer.platforms,
+			offer.genres
+		].some((group) => group.length > 0)
 	);
 	function setFilters(keys: string[]) {
 		wanted = keys;

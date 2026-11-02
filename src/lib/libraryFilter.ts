@@ -1,25 +1,41 @@
-// The filter of the library: by who tracks along, by streaming service, by store and platform
-// (games), by genre.
+// The filter of the library: by who tracks along, by release, by streaming service, by store and
+// platform (games), by genre.
 // Several can be on at once – within a group one fit is enough ("comedy or action"), across
 // the groups every one has to fit ("… at this service … with this person").
 //
 // A filter is a short key, so it fits into the address of the page:
-//   'shared' · 'alone' · 'person:3' · 'service:Netflix' · 'store:steam' · 'platform:Windows' ·
-//   'genre:Comedy'
+//   'shared' · 'alone' · 'person:3' · 'release:earlyAccess' · 'service:Netflix' · 'store:steam' ·
+//   'platform:Windows' · 'genre:Comedy'
 import type { Person } from '#lib/avatar.js';
+import { isReleased } from '#lib/status.js';
 import { sellsFor } from '#lib/stores.js';
+
+// Where a title stands: out, only in early access (games), or not out yet. The three never
+// overlap – an early access game counts as released only once the full version is out.
+// Like the status tiles (isReleased()), a title whose details are still loading counts as out –
+// for a moment, until they are there. One its source no longer knows keeps its stored date.
+export const RELEASES = ['released', 'earlyAccess', 'unreleased'] as const;
+export type Release = (typeof RELEASES)[number];
+export function releaseOf(
+	item: Parameters<typeof isReleased>[0] & { earlyAccess: boolean },
+	today: string
+): Release {
+	if (!isReleased({ ...item, sourceMissingSince: null }, today)) return 'unreleased';
+	return item.earlyAccess ? 'earlyAccess' : 'released';
+}
 
 // What a title is filtered by
 export type Filterable = {
 	people: { id: number }[]; // who tracks it along (never oneself)
+	release: Release;
 	services: { name: string }[]; // who has it in their flat rate
 	stores: string[]; // games: which stores sell it (StoreKey)
 	platforms: string[]; // games: what it runs on
 	genres: string[];
 };
 
-type Group = 'people' | 'service' | 'store' | 'platform' | 'genre';
-const PREFIXED: Group[] = ['service', 'store', 'platform', 'genre'];
+type Group = 'people' | 'release' | 'service' | 'store' | 'platform' | 'genre';
+const PREFIXED: Group[] = ['release', 'service', 'store', 'platform', 'genre'];
 const groupOf = (key: string): Group =>
 	PREFIXED.find((group) => key.startsWith(`${group}:`)) ?? 'people';
 const valueOf = (key: string) => key.slice(key.indexOf(':') + 1);
@@ -29,6 +45,7 @@ function fits(item: Filterable, key: string) {
 	if (key === 'alone') return item.people.length === 0;
 	const value = valueOf(key);
 	if (key.startsWith('person:')) return item.people.some((person) => String(person.id) === value);
+	if (key.startsWith('release:')) return item.release === value;
 	if (key.startsWith('service:')) return item.services.some((service) => service.name === value);
 	if (key.startsWith('store:')) return item.stores.includes(value);
 	if (key.startsWith('platform:')) return item.platforms.includes(value);
@@ -75,11 +92,13 @@ function byCount(lists: string[][]) {
 	return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([value]) => value);
 }
 
-// What an area offers to filter by: only what occurs in it. Services, stores and platforms
-// with the most titles first, genres from A to Z.
+// What an area offers to filter by: only what occurs in it. Releases in their fixed order and
+// only when there are at least two (all released: nothing to choose), services, stores and
+// platforms with the most titles first, genres from A to Z.
 export function offered<S extends { name: string }>(
 	items: {
 		people: Person[];
+		release: Release;
 		services: S[];
 		stores: string[];
 		platforms: string[];
@@ -100,6 +119,9 @@ export function offered<S extends { name: string }>(
 	}
 	return {
 		people: [...people.values()].sort((a, b) => a.name.localeCompare(b.name, 'de')),
+		releases: twoOrMore(
+			RELEASES.filter((release) => items.some((item) => item.release === release))
+		),
 		services: [...services.values()].sort((a, b) => b.count - a.count).map((one) => one.service),
 		stores: byCount(items.map((item) => item.stores)),
 		platforms: byCount(items.map((item) => item.platforms)),
@@ -107,12 +129,15 @@ export function offered<S extends { name: string }>(
 	};
 }
 
+const twoOrMore = <T>(list: T[]) => (list.length > 1 ? list : []);
+
 // The filters named in an address (?f=…&f=…) that this area really offers – a filter that no
 // longer fits anything (somebody left, another area) is dropped instead of hiding everything.
 export function known(
 	keys: string[],
 	offer: {
 		people: { id: number }[];
+		releases: Release[];
 		services: { name: string }[];
 		stores: string[];
 		platforms: string[];
@@ -122,6 +147,7 @@ export function known(
 	const valid = new Set([
 		...(offer.people.length ? ['shared', 'alone'] : []),
 		...offer.people.map((person) => `person:${person.id}`),
+		...offer.releases.map((release) => `release:${release}`),
 		...offer.services.map((service) => `service:${service.name}`),
 		...offer.stores.map((store) => `store:${store}`),
 		...offer.platforms.map((platform) => `platform:${platform}`),

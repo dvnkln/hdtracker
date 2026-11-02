@@ -1,4 +1,4 @@
-import { and, count, eq, inArray, ne, notExists } from 'drizzle-orm';
+import { and, count, eq, inArray, isNotNull, isNull, ne, notExists } from 'drizzle-orm';
 import type { Category, Status } from '#lib/status.js';
 import { getDb } from './db';
 import { invitations, libraryItems, trackingMembers, trackings } from './db/schema';
@@ -83,6 +83,32 @@ export function libraryStatusFor(userId: number, category: Category, externalIds
 		)
 	);
 	return new Map(rows.map((r) => [r.externalId, r.status]));
+}
+
+// Release dates of titles as they are stored (whoever tracks them) – for search hits, which
+// only know the general date of a movie, not the one in the region (movieInRegion()). Only
+// titles whose details are loaded and still known to their source.
+export function storedReleases(category: Category, externalIds: string[]) {
+	if (externalIds.length === 0)
+		return new Map<string, Pick<Title, 'releaseDate' | 'earlyAccess'>>();
+	const rows = getDb()
+		.select({
+			externalId: libraryItems.externalId,
+			releaseDate: libraryItems.releaseDate,
+			earlyAccess: libraryItems.earlyAccess
+		})
+		.from(libraryItems)
+		.where(
+			and(
+				eq(libraryItems.category, category),
+				eq(libraryItems.source, SOURCE_FOR[category]),
+				inArray(libraryItems.externalId, externalIds),
+				isNotNull(libraryItems.metadataUpdatedAt),
+				isNull(libraryItems.sourceMissingSince)
+			)
+		)
+		.all();
+	return new Map(rows.map(({ externalId, ...release }) => [externalId, release]));
 }
 
 // A title as it is stored, whoever tracks it (e.g. to reuse what is already loaded about it).

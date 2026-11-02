@@ -323,6 +323,12 @@ export const en: Messages = {
 			shared: 'Tracked together',
 			alone: 'Not shared',
 			withName: (name) => `With ${name}`,
+			release: 'Release',
+			releases: {
+				released: 'Released',
+				earlyAccess: 'Early Access',
+				unreleased: 'Announced'
+			},
 			services: 'Streaming service',
 			stores: 'Store',
 			platforms: 'Platform',

@@ -4,12 +4,14 @@ import type { Category } from '#lib/categories.js';
 import { allowedStatuses, isReleased, isStatusFor, type Status } from '#lib/status.js';
 import {
 	findItem,
+	findTitle,
 	libraryStatusFor,
 	listLibrary,
 	parseItem,
 	removeItem,
 	saveItem,
 	setNotify,
+	storedReleases,
 	type LibraryItem
 } from '#lib/server/library.js';
 import { airedEpisodes, getShowDetails, hasEpisodes, setEpisodes } from '#lib/server/episodes.js';
@@ -88,12 +90,17 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 			console.error(`Search in ${category} failed, showing the last hits`, failed);
 			warning = why(failed);
 		}
-		const statuses = libraryStatusFor(
-			me,
-			category,
-			hits.map((h) => h.externalId)
-		);
-		results = hits.map((h) => ({ ...h, status: statuses.get(h.externalId) ?? null }));
+		const ids = hits.map((h) => h.externalId);
+		const statuses = libraryStatusFor(me, category, ids);
+		// A title somebody has in the library: its stored release date counts (a movie's is the
+		// one in the region, the search only knows the general one) – the status tiles of the
+		// window then lock like everywhere else.
+		const stored = storedReleases(category, ids);
+		results = hits.map((h) => ({
+			...h,
+			...stored.get(h.externalId),
+			status: statuses.get(h.externalId) ?? null
+		}));
 	} catch (err) {
 		console.error(`Search in ${category} failed`, err);
 		error = why(err);
@@ -158,9 +165,12 @@ export const actions: Actions = {
 			return fail(400, { error: serverMessages().common.invalidData });
 		}
 		// Not released yet: only "planned" – unless the user insisted (second tap on a locked
-		// status), for the case that the release date from the API is wrong.
+		// status), for the case that the release date from the API is wrong. A stored title
+		// decides with its stored date (a movie's is the one in the region), not with what the
+		// page sent along.
 		const existing = findItem(me, category, item.externalId);
-		const released = isReleased(item, today()) || (!!existing && isReleased(existing, today()));
+		const stored = existing ?? findTitle(category, item.externalId);
+		const released = isReleased(stored ?? item, today());
 		if (!allowedStatuses(category, released).includes(status) && data.get('force') !== '1') {
 			return fail(400, { error: serverMessages().common.invalidStatus });
 		}

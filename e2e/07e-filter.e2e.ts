@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { addTitle, loginOk } from './helpers';
 
-test('the library can be filtered by genre and streaming service; the address remembers it', async ({
+test('the library can be filtered by genre, streaming service and release; the address remembers it', async ({
 	page
 }) => {
 	await loginOk(page);
@@ -44,6 +44,19 @@ test('the library can be filtered by genre and streaming service; the address re
 	await page.getByRole('button', { name: 'Clear all filters' }).click();
 	await expect(beta).toBeVisible();
 	await expect(page).not.toHaveURL(/f=/);
+
+	// By release: one is out, the other one not yet
+	await funnel.click();
+	await expect(window.getByRole('heading', { name: 'Release' })).toBeVisible();
+	await window.getByRole('checkbox', { name: /^Announced/ }).click();
+	await window.getByRole('button', { name: 'Show 1 title' }).click();
+	await expect(beta).toBeVisible();
+	await expect(alpha).toHaveCount(0);
+	await expect(page).toHaveURL(/f=release(%3A|:)unreleased/);
+	await expect(page.getByRole('button', { name: 'Remove the filter “Announced”' })).toBeVisible();
+	await page.getByRole('button', { name: 'Remove the filter “Announced”' }).click();
+	await expect(alpha).toBeVisible();
+
 	await funnel.click();
 	await window.getByRole('checkbox', { name: /^Drama/ }).click();
 	await window.getByRole('button', { name: 'Close' }).click();

@@ -333,6 +333,12 @@ export const de = {
 			shared: 'Gemeinsam getrackt',
 			alone: 'Nicht geteilt',
 			withName: (name: string) => `Mit ${name}`,
+			release: 'Veröffentlichung',
+			releases: {
+				released: 'Erschienen',
+				earlyAccess: 'Early Access',
+				unreleased: 'Angekündigt'
+			},
 			services: 'Streaming-Dienst',
 			stores: 'Store',
 			platforms: 'Plattform',

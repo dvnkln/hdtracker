@@ -157,7 +157,8 @@ export const libraryItems = sqliteTable(
 		title: text('title').notNull(),
 		originalTitle: text('original_title'),
 		year: integer('year'),
-		// First release anywhere (YYYY-MM-DD), empty = not announced; see isReleased in status.ts
+		// First release anywhere – movies: in the region (YYYY-MM-DD), empty = not announced; see
+		// isReleased in status.ts and movieInRegion in providers/tmdb.ts
 		releaseDate: text('release_date'),
 		// Games: currently only available in early access
 		earlyAccess: integer('early_access', { mode: 'boolean' }).notNull().default(false),

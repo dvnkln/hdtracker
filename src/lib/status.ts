@@ -25,9 +25,9 @@ export function isStatusFor(category: Category, value: string): value is Status 
 	return (statusesFor(category) as string[]).includes(value);
 }
 
-// Whether a title is out yet (first release anywhere, `today` as YYYY-MM-DD). Library items
-// whose details are still loading (metadataUpdatedAt empty) or that their data source no longer
-// knows count as released: unknown must not lock anything.
+// Whether a title is out yet (`today` as YYYY-MM-DD; a movie once it was out in the region, see
+// movieInRegion()). Library items whose details are still loading (metadataUpdatedAt empty) or
+// that their data source no longer knows count as released: unknown must not lock anything.
 export function isReleased(
 	item: {
 		releaseDate: string | null;

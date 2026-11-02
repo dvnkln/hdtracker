@@ -1,14 +1,21 @@
 import { describe, expect, it } from 'vitest';
 import type { Person } from '#lib/avatar.js';
-import { countWith, known, offered, passes } from './libraryFilter';
+import { countWith, known, offered, passes, releaseOf, type Release } from './libraryFilter';
 
 const hans: Person = { id: 3, name: 'Hans', color: 20, picture: null };
 const anna: Person = { id: 4, name: 'Anna', color: 340, picture: null };
 const netflix = { name: 'Netflix', logoUrl: 'n' };
 const prime = { name: 'Prime Video', logoUrl: 'p' };
-const title = (name: string, genres: string[], services = [netflix], people: Person[] = []) => ({
+const title = (
+	name: string,
+	genres: string[],
+	services = [netflix],
+	people: Person[] = [],
+	release: Release = 'released'
+) => ({
 	name,
 	genres,
+	release,
 	services,
 	stores: [] as string[],
 	platforms: [] as string[],
@@ -71,6 +78,7 @@ describe('filter of the library', () => {
 		expect(offer.genres).toEqual(['Action', 'Comedy', 'Drama']);
 		expect(offered([title('Solo', [], [])])).toEqual({
 			people: [],
+			releases: [],
 			services: [],
 			stores: [],
 			platforms: [],
@@ -141,5 +149,61 @@ describe('filter of the library', () => {
 		// A store alone or a platform alone works as before
 		expect(left(['store:playstation'])).toEqual(['Dredge', 'Bot']);
 		expect(left(['platform:Windows'])).toEqual(['Dredge', 'Linux game']);
+	});
+
+	it('by release: out, early access, not out yet – one of them is enough', () => {
+		const titles = [
+			title('Out', ['Drama']),
+			title('Early', ['Drama'], [], [], 'earlyAccess'),
+			title('Soon', ['Comedy'], [], [], 'unreleased')
+		];
+		const left = (keys: string[]) => titles.filter((t) => passes(t, keys)).map((t) => t.name);
+		expect(left(['release:released'])).toEqual(['Out']);
+		expect(left(['release:earlyAccess', 'release:unreleased'])).toEqual(['Early', 'Soon']);
+		expect(left(['release:released', 'genre:Comedy'])).toEqual([]);
+		expect(countWith(titles, ['genre:Drama'], 'release:unreleased')).toBe(0);
+
+		// Offered in their fixed order, only what occurs
+		const offer = offered(titles);
+		expect(offer.releases).toEqual(['released', 'earlyAccess', 'unreleased']);
+		expect(offered(titles.slice(0, 2).reverse()).releases).toEqual(['released', 'earlyAccess']);
+		expect(known(['release:unreleased', 'release:demo'], offered(titles))).toEqual([
+			'release:unreleased'
+		]);
+	});
+
+	it('everything out: nothing to choose, so no release filter at all', () => {
+		const offer = offered([title('A', []), title('B', [])]);
+		expect(offer.releases).toEqual([]);
+		expect(known(['release:released'], offer)).toEqual([]);
+	});
+
+	it('where a title stands', () => {
+		const today = '2026-11-02';
+		const loaded = new Date();
+		const at = (releaseDate: string | null, earlyAccess = false) =>
+			releaseOf({ releaseDate, earlyAccess, metadataUpdatedAt: loaded }, today);
+		expect(at('2026-11-02')).toBe('released');
+		expect(at('2026-11-03')).toBe('unreleased');
+		// No date known yet: not out
+		expect(at(null)).toBe('unreleased');
+		// Early access counts only while it is the current state
+		expect(at('2025-04-01', true)).toBe('earlyAccess');
+		// The source no longer knows it: the stored date still tells
+		expect(
+			releaseOf(
+				{
+					releaseDate: '2027-01-01',
+					earlyAccess: false,
+					metadataUpdatedAt: loaded,
+					sourceMissingSince: loaded
+				},
+				today
+			)
+		).toBe('unreleased');
+		// Details still loading: like the status tiles, nothing is held back
+		expect(
+			releaseOf({ releaseDate: null, earlyAccess: false, metadataUpdatedAt: null }, today)
+		).toBe('released');
 	});
 });

@@ -3,7 +3,7 @@
 	import type { Person } from '#lib/avatar.js';
 	import { m } from '#lib/i18n/index.svelte.js';
 	import { img } from '#lib/images.js';
-	import { countWith, type Filterable } from '#lib/libraryFilter.js';
+	import { countWith, type Filterable, type Release } from '#lib/libraryFilter.js';
 	import Avatar from '#lib/components/Avatar.svelte';
 	import StoreLogo from '#lib/components/StoreLogo.svelte';
 	import { STORES, type StoreKey } from '#lib/stores.js';
@@ -15,6 +15,7 @@
 		// What this area offers (see offered())
 		offer: {
 			people: Person[];
+			releases: Release[];
 			services: { name: string; logoUrl: string }[];
 			stores: string[];
 			platforms: string[];
@@ -44,9 +45,11 @@
 					? m.library.filter.withName(
 							offer.people.find((person) => String(person.id) === value)?.name ?? ''
 						)
-					: key.startsWith('store:')
-						? (STORES[value as StoreKey]?.name ?? value)
-						: value;
+					: key.startsWith('release:')
+						? m.library.filter.releases[value as Release]
+						: key.startsWith('store:')
+							? (STORES[value as StoreKey]?.name ?? value)
+							: value;
 	};
 
 	const mark =
@@ -190,6 +193,14 @@
 					{/each}
 				{/if}
 				{@render personRow('alone', m.library.filter.alone)}
+			{/if}
+			{#if offer.releases.length > 0}
+				<h3 class={groupTitle}>{m.library.filter.release}</h3>
+				<div class="flex flex-wrap gap-1.5">
+					{#each offer.releases as release (release)}
+						{@render wordChip(`release:${release}`, m.library.filter.releases[release])}
+					{/each}
+				</div>
 			{/if}
 			{#if offer.services.length > 0}
 				<h3 class={groupTitle}>{m.library.filter.services}</h3>

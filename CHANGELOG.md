@@ -9,8 +9,13 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 
 ## Upcoming release
 
+### ✨ New
+
+- 🗓️ Filter your library by release: released, Early Access (games) or announced.
+
 ### 🔧 Improved
 
+- 🎬 Whether a movie is out now follows your region: it counts as released once it was in cinemas or out at home there – not when it premiered somewhere else.
 - 💬 A detail page no longer turns into an error page when its data source fails after you changed something on it (e.g. added the title): it stays as it was and a short message at the top says why.
 
 ## 0.13.1 – 2026-10-28
