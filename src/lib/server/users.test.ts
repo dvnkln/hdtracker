@@ -11,6 +11,7 @@ import {
 	sendToChannel
 } from './channels';
 import { getDb } from './db';
+import { hasEnabledTarget } from './targets';
 import { libraryItems, sessions, trackingMembers, userSettings, users } from './db/schema';
 import { localeOf } from './i18n';
 import { allItems } from './library';
@@ -335,5 +336,24 @@ describe('targets with an address of one’s own (webhook, ntfy)', () => {
 		// (No request was made: the test would fail on any)
 		expect(sent).toEqual({ ok: false, error: 'notAllowed' });
 		expect(listChannels(id)[0].lastError).toBe('notAllowed');
+	});
+
+	it('such a target counts as nobody there, so nothing waits for it', async () => {
+		const { id } = await add('anna');
+		setSettings({ customTargets: 'all' });
+		await webhook(id);
+		expect(hasEnabledTarget(id)).toBe(true);
+		setSettings({ customTargets: 'admins' });
+		expect(hasEnabledTarget(id)).toBe(false);
+	});
+
+	it('a locked account gets no messages', async () => {
+		const { id } = await add('anna');
+		setSettings({ customTargets: 'all' });
+		await webhook(id);
+		setDisabled(id, true, admin);
+		expect(hasEnabledTarget(id)).toBe(false);
+		setDisabled(id, false, admin);
+		expect(hasEnabledTarget(id)).toBe(true);
 	});
 });

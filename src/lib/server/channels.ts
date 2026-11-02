@@ -48,6 +48,9 @@ export function mayUseCustomTargets(userId: number) {
 }
 const allowed = (userId: number, kind: string) =>
 	!CUSTOM_KINDS.includes(kind) || mayUseCustomTargets(userId);
+// A channel that would be used now: switched on and still allowed
+export const usable = (row: { userId: number; kind: string; enabled: boolean }) =>
+	row.enabled && allowed(row.userId, row.kind);
 
 // A message on its way out of hdtracker: what a channel may need of it.
 export type Outgoing = {

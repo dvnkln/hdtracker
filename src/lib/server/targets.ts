@@ -1,5 +1,15 @@
 import { composePosters, type Layout } from './collage';
-import { getChannel, listChannels, publicChannel, sendToChannel, type Outgoing } from './channels';
+import { eq } from 'drizzle-orm';
+import {
+	getChannel,
+	listChannels,
+	publicChannel,
+	sendToChannel,
+	usable,
+	type Outgoing
+} from './channels';
+import { getDb } from './db';
+import { users } from './db/schema';
 import { serverMessages } from './i18n';
 import { getImage, type Image } from './images';
 import { allowedOrigins } from './origins';
@@ -57,9 +67,17 @@ export function listTargets(userId: number) {
 	return [...devices, ...channels];
 }
 
-// Whether any target is switched on – without one there is nobody to tell.
+// Whether any target is switched on – without one there is nobody to tell. A webhook or ntfy
+// that is no longer allowed does not count (it would only fail), nor does anything of a locked
+// account: locking logs the person out everywhere, messages included.
 export function hasEnabledTarget(userId: number) {
-	return listTargets(userId).some((target) => target.enabled);
+	const user = getDb()
+		.select({ disabled: users.disabled })
+		.from(users)
+		.where(eq(users.id, userId))
+		.get();
+	if (!user || user.disabled) return false;
+	return listDevices(userId).some((device) => device.enabled) || listChannels(userId).some(usable);
 }
 
 // The address the app is reached at from outside, for links in messages: the first https
