@@ -3,7 +3,7 @@
 // sharing.ts.) Independent of push notifications: these notices are written for everybody.
 //
 // Unread until the user has seen it; read notices are removed after a week.
-import { and, eq, isNotNull, isNull, lt, ne, notInArray, or, type SQL } from 'drizzle-orm';
+import { and, eq, isNotNull, isNull, lt, lte, ne, notInArray, or, type SQL } from 'drizzle-orm';
 import type { Person } from '#lib/avatar.js';
 import type { Category } from '#lib/status.js';
 import { trackedEvents } from './dashboard';
@@ -188,15 +188,24 @@ export function countOpen(userId: number) {
 }
 
 // The user has seen their notices – all of them (the inbox), or only the releases (the
-// dashboard shows those as well).
-export function markRead(userId: number, only?: 'release') {
+// dashboard shows those as well). `until`: when the page that showed them was loaded – what
+// came later was not on it and stays unread.
+export function markRead(userId: number, only?: 'release', until?: Date) {
 	const where: SQL[] = [eq(notices.userId, userId), isNull(notices.readAt)];
 	if (only) where.push(eq(notices.kind, only));
+	if (until) where.push(lte(notices.createdAt, until));
 	getDb()
 		.update(notices)
 		.set({ readAt: new Date() })
 		.where(and(...where))
 		.run();
+}
+
+// When the page that reports "seen" was loaded (sent back by it, see seen.ts). Anything odd
+// counts as now.
+export function shownAt(value: FormDataEntryValue | null, now = Date.now()) {
+	const at = Number(value);
+	return new Date(Number.isInteger(at) && at > 0 && at <= now ? at : now);
 }
 
 // The user empties their inbox before the week is over: what they have read goes, what is

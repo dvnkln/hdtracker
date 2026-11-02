@@ -13,6 +13,10 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 
 - 🔒 Stronger protection against password guessing: many login attempts sent at the same moment can no longer slip past the block after 5 wrong passwords, a right password in between no longer resets the count, and with IPv6 the block covers the whole network of the address (/64), not just one of its many addresses.
 
+### 🐛 Fixed
+
+- 📬 Emptying the inbox (or just opening it) no longer swallows notices that arrived after the page was opened – they stay unread until you see them.
+
 ## 0.14.0 – 2026-11-02
 
 Filter your library by release, and movies count as released when they are out where you live.

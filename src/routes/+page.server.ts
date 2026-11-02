@@ -2,7 +2,7 @@ import { fail } from '@sveltejs/kit';
 import { isDashboardSection, isOrder } from '#lib/dashboardOrder.js';
 import { getDashboard } from '#lib/server/dashboard.js';
 import { serverMessages } from '#lib/server/i18n.js';
-import { markRead } from '#lib/server/notices.js';
+import { markRead, shownAt } from '#lib/server/notices.js';
 import { companionsByItem } from '#lib/server/sharing.js';
 import { setUserSettings } from '#lib/server/settings.js';
 import type { Actions, PageServerLoad } from './$types';
@@ -11,13 +11,15 @@ import type { Actions, PageServerLoad } from './$types';
 export const load: PageServerLoad = ({ locals }) => ({
 	...getDashboard(locals.user!.id),
 	// Who tracks a title along (by the title's number), for the profile pictures in the rows
-	together: Object.fromEntries(companionsByItem(locals.user!.id))
+	together: Object.fromEntries(companionsByItem(locals.user!.id)),
+	// When this was loaded: "seen" only counts what was on the page
+	shownAt: Date.now()
 });
 
 export const actions: Actions = {
 	// The dashboard is on screen: what it lists as released counts as read in the inbox.
-	seen: ({ locals }) => {
-		markRead(locals.user!.id, 'release');
+	seen: async ({ request, locals }) => {
+		markRead(locals.user!.id, 'release', shownAt((await request.formData()).get('shownAt')));
 	},
 	// Remembers the order of one of the two lists.
 	order: async ({ request, locals }) => {

@@ -4,7 +4,15 @@ import { addItem } from '../../tests/helpers';
 import { getDb } from './db';
 import { libraryItems, notices, releases, trackingMembers, users } from './db/schema';
 import { removeItem, setNotify } from './library';
-import { clearRead, collectReleases, countOpen, listNotices, markRead, pruneRead } from './notices';
+import {
+	clearRead,
+	collectReleases,
+	countOpen,
+	listNotices,
+	markRead,
+	pruneRead,
+	shownAt
+} from './notices';
 import { sendDueNotifications } from './notifications';
 import { accept, decline, invite, leaveShared, withdraw } from './sharing';
 
@@ -178,6 +186,33 @@ describe('reading', () => {
 		title({ title: 'Next', category: 'movies' }, [['cinema', now]]);
 		expect(collectReleases(ann, now)).toBe(1);
 		expect(listNotices(ann).map((line) => line.item.title)).toEqual(['Next']);
+	});
+
+	it('what came after the page was loaded stays unread – also when emptying', () => {
+		const film = title({ title: 'Shared', category: 'movies' }, []);
+		decline(ben, invited(ann, film.id, ben));
+		// The page was loaded a minute ago; the next answer came after that
+		const loaded = new Date(Date.now() - 60_000);
+		getDb()
+			.update(notices)
+			.set({ createdAt: new Date(loaded.getTime() - 60_000) })
+			.run();
+		const other = title({ title: 'Later', category: 'movies' }, []);
+		decline(ben, invited(ann, other.id, ben));
+
+		markRead(ann, undefined, loaded);
+		clearRead(ann);
+		expect(listNotices(ann).map((line) => [line.item.title, line.unread])).toEqual([
+			['Later', true]
+		]);
+	});
+
+	it('the time a page sends back: anything odd counts as now', () => {
+		const now = 1_800_000_000_000;
+		expect(shownAt(String(now - 5000), now).getTime()).toBe(now - 5000);
+		for (const odd of [null, '', 'x', '-1', '1.5', String(now + 1000)]) {
+			expect(shownAt(odd, now).getTime()).toBe(now);
+		}
 	});
 
 	it('what was not read stays, however old', () => {
