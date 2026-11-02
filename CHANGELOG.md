@@ -7,7 +7,9 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
-## Upcoming release
+## 0.14.0 – 2026-11-02
+
+Filter your library by release, and movies count as released when they are out where you live.
 
 ### ✨ New
 
@@ -17,6 +19,10 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 
 - 🎬 Whether a movie is out now follows your region: it counts as released once it was in cinemas or out at home there – not when it premiered somewhere else.
 - 💬 A detail page no longer turns into an error page when its data source fails after you changed something on it (e.g. added the title): it stays as it was and a short message at the top says why.
+
+### ⬆️ Updating
+
+- Nothing to do: pull the new image and restart. After the first start, your movies are loaded again once in the background (a few minutes with many movies) – until then the release filter may show every movie as released.
 
 ## 0.13.1 – 2026-10-28
 
