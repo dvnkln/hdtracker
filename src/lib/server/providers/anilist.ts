@@ -506,8 +506,9 @@ export async function getAnimeInfo(id: string): Promise<Details> {
 	// Offers for the configured region (TMDB/JustWatch) replace the links of AniList, which
 	// are not checked for any region; without a match or without offers the links stay.
 	// A logo of a service AniList has a link for goes straight to the anime there.
+	// (AniList's links are edited by its users: only web addresses go into the page)
 	const streaming = m.externalLinks
-		.filter((l) => l.type === 'STREAMING')
+		.filter((l) => l.type === 'STREAMING' && /^https?:\/\//i.test(l.url))
 		.map((l) => ({ name: l.site, url: l.url }));
 	const watch = texts?.watch ? withDirectLinks(texts.watch, streaming) : null;
 	const studio = m.studios.nodes.map((s) => s.name).join(', ');

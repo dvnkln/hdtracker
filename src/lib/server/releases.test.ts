@@ -2,7 +2,8 @@ import { eq } from 'drizzle-orm';
 import { describe, expect, it, vi } from 'vitest';
 import { addItem, mockFetch } from '../../tests/helpers';
 import { getDb } from './db';
-import { itemDetails, libraryItems, releases } from './db/schema';
+import { itemDetails, libraryItems, releases, trackings } from './db/schema';
+import { watchedKeys } from './episodes';
 import { isDue, refreshBatch, refreshItem } from './releases';
 import { saveDetails } from './itemDetails';
 import { forgetRateLimits, type Details } from './providers/types';
@@ -201,6 +202,84 @@ describe('refreshBatch for TMDB', () => {
 			.where(eq(itemDetails.itemId, items[1].id))
 			.get();
 		expect(stored?.info.watch?.flatrate[0].url).toBe('https://www.netflix.com/title/80902');
+	});
+
+	it('Wikidata slowing down does not stop the movies and series', async () => {
+		forgetRateLimits();
+		const items = [911, 912].map((id) => addItem({ externalId: String(id) }));
+		vi.mocked(fetch).mockImplementation(async (input) => {
+			const url = String(input);
+			if (url.includes('api.themoviedb.org'))
+				return Response.json(movie(Number(/movie\/(\d+)/.exec(url)![1])));
+			if (url.includes('wikidata.org'))
+				return new Response('slow down', { status: 429, headers: { 'retry-after': '1' } });
+			throw new Error('no images in this test');
+		});
+		const result = await refreshBatch('tmdb', items);
+		forgetRateLimits();
+		expect(result).toEqual({ failed: [], stopped: false });
+		const stored = getDb()
+			.select()
+			.from(itemDetails)
+			.where(eq(itemDetails.itemId, items[0].id))
+			.get();
+		// Without the direct link: a search on the service
+		expect(stored?.info.watch?.flatrate[0].url).toContain('netflix.com/search');
+	});
+});
+
+// What TMDB answers for a series with two seasons: one aired in 2024, one in 2025.
+const series = (id: number) => {
+	const season = (n: number, year: number) => ({
+		season_number: n,
+		name: `Season ${n}`,
+		air_date: `${year}-01-10`,
+		episodes: [1, 2].map((e) => ({
+			episode_number: e,
+			name: `Episode ${e}`,
+			air_date: `${year}-01-${10 + e}`,
+			overview: '',
+			still_path: null,
+			runtime: 30
+		}))
+	});
+	return {
+		id,
+		name: `Series ${id}`,
+		original_name: `Series ${id}`,
+		first_air_date: '2024-01-10',
+		poster_path: null,
+		overview: '',
+		genres: [],
+		vote_average: 0,
+		vote_count: 0,
+		backdrop_path: null,
+		status: 'Returning Series',
+		number_of_seasons: 2,
+		number_of_episodes: 4,
+		episode_run_time: [],
+		networks: [],
+		recommendations: { results: [] },
+		external_ids: { wikidata_id: null },
+		'watch/providers': { results: {} },
+		seasons: [{ season_number: 1 }, { season_number: 2 }],
+		'season/1': season(1, 2024),
+		'season/2': season(2, 2025)
+	};
+};
+
+describe('a watched series without single episodes (imported, or marked watched)', () => {
+	it('gets the episodes ticked that had aired when it was marked watched – not later ones', async () => {
+		const item = addItem({ category: 'series', externalId: '921', status: 'completed' });
+		getDb()
+			.update(trackings)
+			.set({ statusChangedAt: new Date('2024-06-01T12:00:00') })
+			.where(eq(trackings.id, item.trackingId))
+			.run();
+		mockFetch({ 'api.themoviedb.org': series(921) });
+		const result = await refreshBatch('tmdb', [item]);
+		expect(result.failed).toEqual([]);
+		expect([...watchedKeys(item.trackingId)].sort()).toEqual(['1:1', '1:2']);
 	});
 });
 

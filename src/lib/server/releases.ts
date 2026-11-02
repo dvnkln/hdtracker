@@ -201,14 +201,16 @@ export function refreshSoon(item: Title) {
 
 const isRateLimited = (err: unknown) => err instanceof ProviderError && err.status === 429;
 
-// A finished series imported without single episodes: tick all aired episodes once – for
-// every state of the title that is "completed" and has no episode ticked.
+// A finished series imported without single episodes: tick the aired episodes once – for
+// every state of the title that is "completed" and has no episode ticked. Only what had aired
+// on the day it became "completed": a season that came later was not watched with it (this
+// also runs when the library is loaded again, e.g. after changing the content language).
 async function tickAllEpisodesIfImported(item: Title) {
 	if (item.category !== 'series') return;
 	const db = getDb();
 	const untouched = () =>
 		db
-			.select({ id: trackings.id })
+			.select({ id: trackings.id, since: trackings.statusChangedAt })
 			.from(trackings)
 			.where(and(eq(trackings.itemId, item.id), eq(trackings.status, 'completed')))
 			.all()
@@ -218,9 +220,15 @@ async function tickAllEpisodesIfImported(item: Title) {
 			);
 	if (untouched().length === 0) return;
 	const details = await getShowDetails('series', item.externalId);
+	const airedOn = (season: number, episode: number) =>
+		details.seasons.find((s) => s.number === season)?.episodes.find((e) => e.number === episode)
+			?.airDate ?? null;
 	// Asked again: a state may have been removed or changed while loading.
-	for (const { id } of untouched()) {
+	for (const { id, since } of untouched()) {
+		const day = since.toLocaleDateString('sv-SE');
 		for (const e of airedEpisodes(details)) {
+			const date = airedOn(e.season, e.episode);
+			if (date && date > day) continue;
 			db.insert(watchedEpisodes)
 				.values({ trackingId: id, season: e.season, episode: e.episode })
 				.onConflictDoNothing()

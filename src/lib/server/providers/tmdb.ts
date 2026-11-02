@@ -491,7 +491,7 @@ export async function preloadTvSeasons(id: string, requests: SeasonRequest[], la
 // request for several titles) and then looks up the direct links to streaming services for all
 // of them with a single request to Wikidata. The following get…() calls for these titles are
 // answered from the cache. Titles that cannot be loaded are left to fail on their own, except
-// for "too many requests", which stops the batch.
+// for "too many requests" from TMDB, which stops the batch.
 export async function preloadTmdb(
 	titles: { category: string; externalId: string }[],
 	language: string,
@@ -510,7 +510,10 @@ export async function preloadTmdb(
 			if (err instanceof ProviderError && err.status === 429) throw err;
 		}
 	}
-	await preloadStreamingLinks(wikidataIds);
+	// The links are an extra: Wikidata failing (or slowing down) must not stop the titles
+	await preloadStreamingLinks(wikidataIds).catch((err) =>
+		console.error('Looking up streaming links at once failed', err)
+	);
 }
 
 // ---- Choices for the settings page ----

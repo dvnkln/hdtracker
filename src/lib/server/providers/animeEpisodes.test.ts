@@ -266,7 +266,9 @@ describe('an anime with texts from TMDB', () => {
 						},
 						studios: { nodes: [] },
 						externalLinks: [
-							{ site: 'Crunchyroll', url: 'https://crunchyroll.com/x', type: 'STREAMING' }
+							{ site: 'Crunchyroll', url: 'https://crunchyroll.com/x', type: 'STREAMING' },
+							// Edited in by somebody: not a web address, never a link
+							{ site: 'Odd', url: 'javascript:alert(1)', type: 'STREAMING' }
 						],
 						recommendations: { nodes: [] }
 					}

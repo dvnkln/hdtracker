@@ -16,6 +16,8 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
 ### 🐛 Fixed
 
 - 📬 Emptying the inbox (or just opening it) no longer swallows notices that arrived after the page was opened – they stay unread until you see them.
+- 📺 A series marked as watched without ticking single episodes no longer gets the episodes of later seasons ticked off when the library is loaded again (for example after changing the content language) – only what had aired when you marked it.
+- 🌙 The nightly refresh of movies and series no longer stops when Wikidata, which supplies the direct links to streaming services, is busy.
 
 ## 0.14.0 – 2026-11-02
 
