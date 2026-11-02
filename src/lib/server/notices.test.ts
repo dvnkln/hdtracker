@@ -10,8 +10,9 @@ import {
 	countOpen,
 	listNotices,
 	markRead,
+	newestNotice,
 	pruneRead,
-	shownAt
+	shownUpTo
 } from './notices';
 import { sendDueNotifications } from './notifications';
 import { accept, decline, invite, leaveShared, withdraw } from './sharing';
@@ -191,42 +192,26 @@ describe('reading', () => {
 	it('what came after the page was loaded stays unread – also when emptying', () => {
 		const film = title({ title: 'Shared', category: 'movies' }, []);
 		decline(ben, invited(ann, film.id, ben));
-		// The page was loaded a minute ago; the next answer came after that
-		const loaded = new Date(Date.now() - 60_000);
-		getDb()
-			.update(notices)
-			.set({ createdAt: new Date(loaded.getTime() - 60_000) })
-			.run();
+		// The page is loaded; the next answer comes after that – in the same second
+		const shown = newestNotice(ann);
 		const other = title({ title: 'Later', category: 'movies' }, []);
 		decline(ben, invited(ann, other.id, ben));
 
-		markRead(ann, undefined, loaded);
+		markRead(ann, undefined, shown);
 		clearRead(ann);
 		expect(listNotices(ann).map((line) => [line.item.title, line.unread])).toEqual([
 			['Later', true]
 		]);
+		// Seen on the next visit: read now, also within the same second
+		expect(countOpen(ann)).toBe(1);
+		markRead(ann, undefined, newestNotice(ann));
+		expect(countOpen(ann)).toBe(0);
 	});
 
-	it('a notice of the same second as the page stays unread – it may have come after it', () => {
-		const film = title({ title: 'Same second', category: 'movies' }, []);
-		decline(ben, invited(ann, film.id, ben));
-		const stored = listNotices(ann)[0];
-		// The page was loaded half a second into the second the notice was written in
-		const second = Math.floor(Date.now() / 1000) * 1000;
-		getDb()
-			.update(notices)
-			.set({ createdAt: new Date(second) })
-			.run();
-		markRead(ann, undefined, new Date(second + 500));
-		expect(listNotices(ann).find((line) => line.key === stored.key)?.unread).toBe(true);
-	});
-
-	it('the time a page sends back: anything odd counts as now', () => {
-		const now = 1_800_000_000_000;
-		expect(shownAt(String(now - 5000), now).getTime()).toBe(now - 5000);
-		for (const odd of [null, '', 'x', '-1', '1.5', String(now + 1000)]) {
-			expect(shownAt(odd, now).getTime()).toBe(now);
-		}
+	it('what a page sends back: anything odd means everything there is now', () => {
+		expect(shownUpTo('7')).toBe(7);
+		expect(shownUpTo('0')).toBe(0);
+		for (const odd of [null, '', 'x', '-1', '1.5']) expect(shownUpTo(odd)).toBeUndefined();
 	});
 
 	it('what was not read stays, however old', () => {

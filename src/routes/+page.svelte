@@ -26,7 +26,7 @@
 
 	// What is listed here as released counts as read in the inbox once it is on screen.
 	onMount(() => {
-		if (page.data.open > 0) reportSeen('/?/seen', data.shownAt);
+		if (page.data.open > 0) reportSeen('/?/seen', data.shownUpTo);
 	});
 
 	// Entries grouped by day (in the given order); entries without a date form the last group.

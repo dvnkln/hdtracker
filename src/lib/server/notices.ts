@@ -3,7 +3,19 @@
 // sharing.ts.) Independent of push notifications: these notices are written for everybody.
 //
 // Unread until the user has seen it; read notices are removed after a week.
-import { and, eq, isNotNull, isNull, lt, ne, notInArray, or, type SQL } from 'drizzle-orm';
+import {
+	and,
+	desc,
+	eq,
+	isNotNull,
+	isNull,
+	lt,
+	lte,
+	ne,
+	notInArray,
+	or,
+	type SQL
+} from 'drizzle-orm';
 import type { Person } from '#lib/avatar.js';
 import type { Category } from '#lib/status.js';
 import { trackedEvents } from './dashboard';
@@ -188,14 +200,14 @@ export function countOpen(userId: number) {
 }
 
 // The user has seen their notices – all of them (the inbox), or only the releases (the
-// dashboard shows those as well). `until`: when the page that showed them was loaded – what
-// came later was not on it and stays unread.
-export function markRead(userId: number, only?: 'release', until?: Date) {
+// dashboard shows those as well). `upTo`: the newest notice there was when the page that
+// showed them was loaded (see newestNotice) – what came later was not on it and stays unread.
+// (By number, not by time: times are stored to the second, and a notice of the same second
+// as the page could have come before or after it.)
+export function markRead(userId: number, only?: 'release', upTo?: number) {
 	const where: SQL[] = [eq(notices.userId, userId), isNull(notices.readAt)];
 	if (only) where.push(eq(notices.kind, only));
-	// (Stored to the second: a notice of the same second as the page may have come after it –
-	// it stays unread rather than being missed)
-	if (until) where.push(lt(notices.createdAt, until));
+	if (upTo !== undefined) where.push(lte(notices.id, upTo));
 	getDb()
 		.update(notices)
 		.set({ readAt: new Date() })
@@ -203,11 +215,24 @@ export function markRead(userId: number, only?: 'release', until?: Date) {
 		.run();
 }
 
-// When the page that reports "seen" was loaded (sent back by it, see seen.ts). Anything odd
-// counts as now.
-export function shownAt(value: FormDataEntryValue | null, now = Date.now()) {
-	const at = Number(value);
-	return new Date(Number.isInteger(at) && at > 0 && at <= now ? at : now);
+// The number of the user's newest notice right now (0: none) – a page keeps it as "what I
+// showed" and sends it back when it reports "seen".
+export function newestNotice(userId: number) {
+	return (
+		getDb()
+			.select({ id: notices.id })
+			.from(notices)
+			.where(eq(notices.userId, userId))
+			.orderBy(desc(notices.id))
+			.limit(1)
+			.get()?.id ?? 0
+	);
+}
+
+// What a page sent back (see seen.ts). Anything odd: no limit – everything there is now.
+export function shownUpTo(value: FormDataEntryValue | null) {
+	const id = Number(value);
+	return value !== null && value !== '' && Number.isInteger(id) && id >= 0 ? id : undefined;
 }
 
 // The user empties their inbox before the week is over: what they have read goes, what is

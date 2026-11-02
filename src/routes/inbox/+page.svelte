@@ -39,7 +39,7 @@
 	// Now that it is on screen, everything here counts as read. What was unread keeps its
 	// mark until the page is left.
 	onMount(() => {
-		if (data.notices.some((line) => line.unread)) reportSeen('?/seen', data.shownAt);
+		if (data.notices.some((line) => line.unread)) reportSeen('?/seen', data.shownUpTo);
 	});
 
 	// What a notice says, below the title
@@ -293,7 +293,7 @@
 				<!-- Empties the list before the week is over (only what was read – and opening this
 				     page reads everything) -->
 				<form method="POST" action="?/clear" use:enhance class="ml-auto">
-					<input type="hidden" name="shownAt" value={data.shownAt} />
+					<input type="hidden" name="shownUpTo" value={data.shownUpTo} />
 					<button
 						class="rounded-lg p-1.5 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-100"
 						title={m.inbox.clearRead}

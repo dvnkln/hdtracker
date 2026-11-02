@@ -3,7 +3,7 @@ import { serverMessages } from '#lib/server/i18n.js';
 import { animeFactsOf, trailersOf } from '#lib/server/itemDetails.js';
 import { invitationCards } from '#lib/server/invitationCards.js';
 import { allItems } from '#lib/server/library.js';
-import { clearRead, listNotices, markRead, shownAt } from '#lib/server/notices.js';
+import { clearRead, listNotices, markRead, newestNotice, shownUpTo } from '#lib/server/notices.js';
 import {
 	acceptAll,
 	declineAll,
@@ -39,9 +39,9 @@ export const load: PageServerLoad = ({ locals }) => {
 			own: ids.map((id) => mine.get(itemOf.get(id)!)).find((own) => own !== undefined) ?? null,
 			trailerUrl: trailers.get(lead.item.id) ?? null
 		})),
+		// The newest notice there is now: "seen" and the bin only count what was on the page
+		shownUpTo: newestNotice(me),
 		notices: listNotices(me),
-		// When this was loaded: "seen" and the bin only count what was on the page
-		shownAt: Date.now(),
 		outgoing: outgoing(me).map(({ id, item, to }) => ({ id, item, to }))
 	};
 };
@@ -70,12 +70,12 @@ async function invitationIds(request: Request) {
 export const actions: Actions = {
 	// The page is on screen: everything on it counts as read.
 	seen: async ({ request, locals }) => {
-		markRead(locals.user!.id, undefined, shownAt((await request.formData()).get('shownAt')));
+		markRead(locals.user!.id, undefined, shownUpTo((await request.formData()).get('shownUpTo')));
 	},
 	// The bin next to "News": removes what was read. Whatever is on the page counts as read
 	// (it is on screen), also if the report of that has not arrived yet.
 	clear: async ({ request, locals }) => {
-		markRead(locals.user!.id, undefined, shownAt((await request.formData()).get('shownAt')));
+		markRead(locals.user!.id, undefined, shownUpTo((await request.formData()).get('shownUpTo')));
 		clearRead(locals.user!.id);
 		return { done: true };
 	},
