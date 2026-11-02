@@ -49,7 +49,13 @@
 		if (data.pending === 0) return;
 		sawLoading = true;
 		const timer = setInterval(() => refreshAll(), 3000);
-		return () => clearInterval(timer);
+		// The number has not moved for a minute (a source that keeps failing, a missing key): stop
+		// asking. (A new number starts this over.)
+		const quiet = setTimeout(() => clearInterval(timer), 60_000);
+		return () => {
+			clearInterval(timer);
+			clearTimeout(quiet);
+		};
 	});
 </script>
 
