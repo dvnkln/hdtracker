@@ -204,6 +204,32 @@ describe('groupAnime', () => {
 		]);
 	});
 
+	it('takes the line with the most seasons as the main line, not the first series hit (Code Geass)', () => {
+		const [series] = groupAnime([
+			hit('roze', 'ONA', '2024-06-21', [
+				['PARENT', 'tv1'],
+				['PREQUEL', 'resurrection']
+			]),
+			hit('resurrection', 'MOVIE', '2019-02-09', [
+				['PREQUEL', 'film3'],
+				['SEQUEL', 'roze']
+			]),
+			hit('tv1', 'TV', '2006-10-06', [
+				['SEQUEL', 'r2'],
+				['ALTERNATIVE', 'film1']
+			]),
+			hit('nunnally', 'OVA', '2012-07-27', [['PARENT', 'r2']]),
+			hit('r2', 'TV', '2008-04-06', [['PREQUEL', 'tv1']]),
+			hit('film3', 'MOVIE', '2018-05-26', [['SEQUEL', 'resurrection']]),
+			hit('film1', 'MOVIE', '2017-10-21', [['ALTERNATIVE', 'tv1']])
+		]);
+		if (series.kind !== 'series') throw new Error();
+		expect(ids(series.seasons)).toEqual(['tv1', 'r2']);
+		expect(series.cover.externalId).toBe('tv1');
+		expect(ids(series.movies)).toEqual(['film1', 'film3', 'resurrection']);
+		expect(ids(series.extras)).toEqual(['nunnally', 'roze']);
+	});
+
 	it('uses the first part as the cover when there is no season (only films)', () => {
 		const [series] = groupAnime([
 			hit('m2', 'MOVIE', '2016-01-01', [['PREQUEL', 'm1']]),

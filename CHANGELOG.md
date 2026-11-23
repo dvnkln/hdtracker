@@ -7,6 +7,12 @@ All notable changes to hdtracker. Each version is also published as a [GitHub re
      "## X.Y.Z – date". Sections (leave out empty ones): ### ✨ New, ### 🔧 Improved, ### 🐛 Fixed,
      ### 🗑️ Removed, and on release ### ⬆️ Updating (what users have to do when updating). -->
 
+## Upcoming release
+
+### 🐛 Fixed
+
+- 🧩 Anime series whose later parts continue through films (like Code Geass) now list their real seasons as seasons instead of under “OVAs, specials & spin-offs”
+
 ## 0.14.1 – 2026-11-02
 
 Fixes from a review of the whole code, and stronger protection against password guessing.

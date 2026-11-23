@@ -104,12 +104,14 @@ function joined<T extends Hit>(hits: T[], types: string[]) {
 export function groupAnime<T extends Hit>(hits: T[]): AnimeEntry<T>[] {
 	return joined(hits, LINKS).map((members): AnimeEntry<T> => {
 		if (members.length === 1) return { kind: 'single', hit: members[0] };
-		// The main line: prequels and sequels around the first series among the hits
-		const first = members.find(isSeriesFormat);
-		const line = first
-			? joined(members, ['PREQUEL', 'SEQUEL']).find((group) => group.includes(first))!
-			: [];
-		const seasons = line.filter(isSeriesFormat).sort(byStart);
+		// The main line: the line of prequels and sequels with the most seasons, the earliest among
+		// equals. Not the line of the first series among the hits: in Code Geass that is the ONA
+		// Rozé of the Recapture (2024), whose line runs through the recap films and not through the
+		// two TV seasons.
+		const lines = joined(members, ['PREQUEL', 'SEQUEL'])
+			.map((group) => group.filter(isSeriesFormat).sort(byStart))
+			.filter((seasons) => seasons.length > 0);
+		const seasons = lines.sort((a, b) => b.length - a.length || byStart(a[0], b[0]))[0] ?? [];
 		const movies = members.filter((h) => h.anime?.format === 'MOVIE').sort(byStart);
 		const extras = members.filter((h) => !seasons.includes(h) && !movies.includes(h));
 		const years = members.map((h) => h.year).filter((y): y is number => y !== null);
